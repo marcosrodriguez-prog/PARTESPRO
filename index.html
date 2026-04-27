@@ -864,14 +864,18 @@ async function sbGet(tabla, filtros='') {
 }
 
 async function sbUpsert(tabla, datos) {
-  const r = await fetch(`${sbBase()}/rest/v1/${tabla}`, {
+  // Supabase REST upsert requires on_conflict param to know which column is the PK
+  const url = `${sbBase()}/rest/v1/${tabla}?on_conflict=id`;
+  const r = await fetch(url, {
     method: 'POST',
     headers: sbHeaders({ 'Prefer': 'resolution=merge-duplicates,return=representation' }),
     body: JSON.stringify(datos)
   });
   if (!r.ok) {
     const txt = await r.text();
-    throw new Error(`Error ${r.status} al guardar en ${tabla}: ${txt}`);
+    // Show the full error so we can debug
+    console.error('sbUpsert error:', r.status, txt);
+    throw new Error(`Error ${r.status}: ${txt}`);
   }
   return r.json();
 }
