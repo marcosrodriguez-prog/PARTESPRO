@@ -1257,11 +1257,20 @@ async function guardarRt(){
   } catch(e) { showSM('mrt-sm','er','Error: '+e.message); }
 }
 async function eliminarRt(id){
-  if(!confirm('¿Eliminar este responsable?')) return;
+  const rt = responsables.find(r=>r.id===id);
+  if(rt?.pin){
+    const pinIntroducido = prompt('Introduce el PIN de '+rt.nombre+' para eliminarlo:');
+    if(pinIntroducido === null) return;
+    if(pinIntroducido.trim() !== String(rt.pin).trim()){
+      alert('❌ PIN incorrecto. No puedes eliminar este responsable.');
+      return;
+    }
+  }
+  if(!confirm('¿Eliminar a '+(rt?.nombre||'este responsable')+'? Esta acción no se puede deshacer.')) return;
   try {
     await sbDelete('responsables', id);
     responsables = responsables.filter(r=>r.id!==id);
-    saveRtLocal();
+    localStorage.setItem('pp_rts', JSON.stringify(responsables));
     syncAll(false);
   } catch(e) { alert('Error: '+e.message); }
 }
