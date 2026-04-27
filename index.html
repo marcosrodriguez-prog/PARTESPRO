@@ -587,10 +587,11 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 
   <div class="card" style="border:1.5px solid #7C3AED;background:#FAFAFF">
-    <div class="ct" style="color:#4F46E5">✨ Inteligencia Artificial — Claude API</div>
-    <p style="font-size:13px;color:var(--mu);margin-bottom:6px">La IA está <strong style="color:#4F46E5">activa</strong> para todos los usuarios. Usa el botón morado <strong>✨ Crear desde documento</strong> en la pantalla de Nuevo parte.</p>
+    <div class="ct" style="color:#4F46E5">✨ Inteligencia Artificial — Google Gemini</div>
+    <p style="font-size:13px;color:#4F46E5;margin-bottom:6px">La IA está <strong>activa</strong> para todos los usuarios. Completamente gratuita.</p>
     <div style="background:#F5F3FF;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:#4F46E5">
-      📄 Sube una foto o PDF de un albarán, parte manuscrito o factura → la IA rellena el formulario automáticamente.
+      📄 Sube una foto o PDF de un albarán, parte manuscrito o factura →<br>la IA rellena el formulario automáticamente.<br><br>
+      Pulsa <strong>✨ Crear desde documento</strong> en la pantalla de Nuevo parte.
     </div>
   </div>
 
@@ -849,10 +850,18 @@ function checkAuth() {
 // ══════════════════════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════════════════════
+function saveGeminiKey(){
+  const val=(document.getElementById('gemini-key-input')?.value||'').trim();
+  if(!val||!val.startsWith('AIza')){ showSM('ai-sm','er','Key inválida. Debe empezar por AIza...'); return; }
+  localStorage.setItem('pp_gemini_key',val);
+  showSM('ai-sm','ok','✓ API Key de Gemini guardada. La IA ya está lista.');
+}
 function loadConfig() {
   try {
     const c = JSON.parse(localStorage.getItem('pp_cfg')||'{}');
     emailCc = c.emailCc||[];
+    const gk = document.getElementById('gemini-key-input');
+    if(gk && getGeminiKey() !== 'GEMINI_KEY_AQUI') gk.value = getGeminiKey();
     const inputs = document.querySelectorAll('.cc-input');
     emailCc.forEach((a,i)=>{ if(inputs[i]) inputs[i].value=a; });
   } catch(e){}
@@ -2031,8 +2040,8 @@ function initApp(){
 // ══════════════════════════════════════════════════════════════
 //  INTELIGENCIA ARTIFICIAL — CREAR PARTE DESDE DOCUMENTO
 // ══════════════════════════════════════════════════════════════
-const ANTHROPIC_KEY_DEFAULT = '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';
-function getAnthropicKey(){ return ANTHROPIC_KEY_DEFAULT; }
+const GEMINI_KEY_DEFAULT = 'AIzaSyDW-vGgeEdTltmbHuTEtUdON2vepv6xzq4';
+function getGeminiKey(){ return GEMINI_KEY_DEFAULT; }
 
 let iaFileData=null, iaFileType=null, iaFileName=null;
 
@@ -2084,101 +2093,111 @@ function processIAFile(file){
 
 async function analizarDocumento(){
   if(!iaFileData){ alert('Selecciona un documento primero.'); return; }
-  const key=getAnthropicKey();
-  if(!key){ alert('Configura la API Key de Anthropic primero.'); return; }
+  const key = getGeminiKey();
+  if(!key || key==='GEMINI_KEY_AQUI'){ alert('Configura la API Key de Google Gemini en Configuración.'); return; }
 
-  const btn=document.getElementById('ia-btn-analizar');
+  const btn = document.getElementById('ia-btn-analizar');
   if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Analizando...';}
-  showSM('ia-sm','ok','Enviando documento a Claude AI...');
+  showSM('ia-sm','ok','Enviando documento a Google Gemini...');
 
-  // Build context about known subcontratas
-  const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(no hay subcontratas registradas)';
+  const scNombres = subcontratas.map(s=>s.nombre).join(', ')||'(ninguna registrada)';
 
-  const prompt=`Eres un asistente experto en análisis de partes de trabajo industriales y albaranes.
-Analiza este documento y extrae TODOS los datos que puedas encontrar.
+  const prompt = `Eres un asistente experto en análisis de partes de trabajo industriales, albaranes y facturas de proveedores.
+Analiza este documento y extrae TODOS los datos visibles.
 
 Subcontratas conocidas en el sistema: ${scNombres}
 
-Devuelve SOLO un objeto JSON válido con esta estructura exacta (sin texto adicional, sin markdown):
+Devuelve SOLO un objeto JSON válido sin texto adicional ni bloques de código:
 {
-  "subcontrata_nombre": "nombre de la empresa/proveedor del documento o la más similar de las conocidas",
+  "subcontrata_nombre": "nombre empresa/proveedor o la más similar de las conocidas",
   "trabajador": "nombre del trabajador o técnico si aparece",
   "area": "zona, área o ubicación del trabajo",
-  "fecha": "YYYY-MM-DD formato, la fecha principal del documento",
-  "h_normal": número de horas normales (0 si no aparece),
-  "h_extra": número de horas extra (0 si no aparece),
-  "h_noct": número de horas nocturnas o festivas (0 si no aparece),
+  "fecha": "YYYY-MM-DD, la fecha principal del documento",
+  "h_normal": horas normales como número (0 si no aparece),
+  "h_extra": horas extra como número (0 si no aparece),
+  "h_noct": horas nocturnas/festivas como número (0 si no aparece),
   "trabajos": "descripción completa de los trabajos realizados",
   "materiales": "materiales, piezas o equipos mencionados",
   "permiso": "número de permiso o referencia si aparece",
   "expediente": "número de expediente, pedido u orden de trabajo si aparece",
-  "coste_total": número total en euros (0 si no aparece),
+  "coste_total": importe total en euros como número (0 si no aparece),
   "lineas": [
-    {"concepto": "nombre del concepto/pieza/servicio", "unidad": "h/u/m/kg/etc", "cantidad": número, "precio": precio unitario en euros}
+    {"concepto": "nombre del concepto/pieza/servicio", "unidad": "h/u/m/kg", "cantidad": número, "precio": precio unitario en euros}
   ],
-  "notas": "cualquier observación relevante del documento"
+  "notas": "cualquier observación relevante"
 }
-
-Si un campo no aparece en el documento, usa "" para texto y 0 para números. Las lineas pueden estar vacías [].`;
+Campos no encontrados: usa "" para texto y 0 para números. lineas puede ser [].`;
 
   try {
-    // For PDF: convert to image description approach; for images: direct vision
-    const contentBlock = iaFileType==='application/pdf'
-      ? { type:'document', source:{ type:'base64', media_type:'application/pdf', data:iaFileData } }
-      : { type:'image',    source:{ type:'base64', media_type:iaFileType, data:iaFileData } };
+    // Build Gemini request — supports images and PDFs inline
+    const part = {
+      inline_data: {
+        mime_type: iaFileType,
+        data: iaFileData
+      }
+    };
 
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 1500,
-        messages:[{ role:'user', content:[contentBlock, {type:'text',text:prompt}] }]
-      })
+    const body = {
+      contents: [{
+        parts: [
+          part,
+          { text: prompt }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 1500
+      }
+    };
+
+    const model = 'gemini-1.5-flash'; // free tier, fast, supports vision + PDF
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
 
     if(!resp.ok){
-      const err=await resp.json().catch(()=>({}));
-      throw new Error((err.error?.message)||'Error '+resp.status+' de la API de Anthropic');
+      const err = await resp.json().catch(()=>({}));
+      const msg = err.error?.message || '';
+      if(resp.status===400) throw new Error('Archivo no soportado o demasiado grande. Prueba con una imagen JPG/PNG.');
+      if(resp.status===403) throw new Error('API Key inválida. Verifica que la copiaste bien desde aistudio.google.com');
+      if(resp.status===429) throw new Error('Límite de uso alcanzado. Espera 1 minuto e inténtalo de nuevo.');
+      throw new Error(msg || 'Error '+resp.status+' de Google Gemini');
     }
 
-    const data=await resp.json();
-    const text=data.content?.[0]?.text||'';
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text) throw new Error('Gemini no devolvió respuesta. Intenta con una imagen más clara.');
 
-    // Parse JSON from response
     let extracted;
     try {
-      const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-      extracted=JSON.parse(clean);
+      const clean = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      extracted = JSON.parse(clean);
     } catch(e){
-      throw new Error('No se pudo interpretar la respuesta de la IA. Intenta con otra imagen más clara.');
+      throw new Error('No se pudo interpretar la respuesta. Prueba con una imagen más nítida.');
     }
 
-    // Show what was found
-    const resumen=[];
+    // Show extracted summary
+    const resumen = [];
     if(extracted.subcontrata_nombre) resumen.push('🏭 Empresa: '+extracted.subcontrata_nombre);
-    if(extracted.trabajador) resumen.push('👤 Trabajador: '+extracted.trabajador);
-    if(extracted.fecha) resumen.push('📅 Fecha: '+extracted.fecha);
-    if(extracted.trabajos) resumen.push('🔧 Trabajos: '+extracted.trabajos.slice(0,80)+'...');
-    if(extracted.coste_total) resumen.push('💶 Importe: '+extracted.coste_total+' €');
-    if(extracted.lineas?.length) resumen.push('📋 '+extracted.lineas.length+' concepto(s) detectado(s)');
+    if(extracted.trabajador)          resumen.push('👤 Trabajador: '+extracted.trabajador);
+    if(extracted.fecha)               resumen.push('📅 Fecha: '+extracted.fecha);
+    if(extracted.trabajos)            resumen.push('🔧 Trabajos: '+extracted.trabajos.slice(0,80)+'...');
+    if(extracted.coste_total)         resumen.push('💶 Importe: '+extracted.coste_total+' €');
+    if(extracted.lineas?.length)      resumen.push('📋 '+extracted.lineas.length+' concepto(s) detectado(s)');
 
-    const resultEl=document.getElementById('ia-result');
-    resultEl.style.display='block';
-    resultEl.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+resumen.join('<br>');
+    const resultEl = document.getElementById('ia-result');
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '<strong style="color:var(--act)">✓ Datos extraídos por Gemini:</strong><br>'+resumen.join('<br>');
 
     showSM('ia-sm','ok','✅ Documento analizado. Aplicando datos al formulario...');
 
-    // Fill the form
     setTimeout(()=>{
       aplicarDatosIA(extracted);
       cerrarModal('modal-ia');
-      showSM('ia-sm','ok',''); // clear
     }, 1200);
 
     if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
