@@ -583,9 +583,10 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 
   <div class="card">
     <div class="ct">Google Apps Script — solo para envío de correo</div>
-    <p style="font-size:13px;color:var(--mu);margin-bottom:13px">URL del script que envía los PDFs por correo. Los datos no dependen de este script.</p>
-    <div class="fg fg1"><div class="field"><label>URL del script de correo</label><input type="url" id="gas-email-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:11px;font-family:var(--mono)"/></div></div>
-    <div class="brow" style="margin-top:10px"><button class="btn btn-f btn-sm" onclick="saveGasEmailUrl()">Guardar URL de correo</button></div>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Script que envía los PDFs por correo. Los datos no dependen de este script.</p>
+    <div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--mu);word-break:break-all">
+      https://script.google.com/macros/s/AKfycbwoUiDWKiecxYNAA-XJgB3fCXdt9uuk_lFbSWcPZulGFmuA7DRp6LlGMCl4s-zIvG5GYA/exec
+    </div>
   </div>
 
   <div class="card">
@@ -1647,7 +1648,17 @@ async function guardarEdicion(){
   } catch(e) { showSM('mep-sm','er','Error: '+e.message); }
 }
 async function eliminarParte(id){
-  if(!confirm('¿Eliminar este parte permanentemente?')) return;
+  const p = partesCache.find(x=>x.id===id);
+  const rt = p ? responsables.find(r=>r.id===p.responsable_id||r.nombre===p.responsable) : null;
+  if(rt?.pin){
+    const pinIntroducido = prompt('Solo el responsable que validó este parte puede eliminarlo.\nIntroduce el PIN de '+rt.nombre+':');
+    if(pinIntroducido === null) return;
+    if(pinIntroducido.trim() !== String(rt.pin).trim()){
+      alert('❌ PIN incorrecto. No puedes eliminar este parte.');
+      return;
+    }
+  }
+  if(!confirm('¿Eliminar el parte '+(p?.id||id)+'? Esta acción no se puede deshacer.')) return;
   try { await sbDelete('partes', id); syncAll(false); }
   catch(e) { alert('Error: '+e.message); }
 }
