@@ -1943,6 +1943,20 @@ function initApp(){
   syncAll(false).then(()=>{ startAutoRefresh(); });
 }
 window.addEventListener('load',()=>{ checkAuth(); });
+
+// Sync automático cuando el usuario vuelve a la app (desde otra app o pantalla bloqueada)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && sessionStorage.getItem('pp_auth') === '1') {
+    syncAll(true);
+  }
+});
+
+// Sync cuando la app recupera el foco (escritorio)
+window.addEventListener('focus', () => {
+  if (sessionStorage.getItem('pp_auth') === '1') {
+    syncAll(true);
+  }
+});
 </script>
 </body>
 </html>
