@@ -340,7 +340,12 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 
 <!-- ══ NUEVO PARTE ════════════════════════════════════════════ -->
 <div class="page active" id="page-nuevo">
-  <div class="ph"><div class="pt">Nuevo <em>parte</em></div><div class="ps">Rellena los datos, firma y valida.</div></div>
+  <div class="ph flex">
+    <div><div class="pt">Nuevo <em>parte</em></div><div class="ps">Rellena los datos, firma y valida.</div></div>
+    <button class="btn btn-f btn-sm" style="margin-top:5px;background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none" onclick="abrirModalIA()">
+      ✨ Crear desde documento
+    </button>
+  </div>
   <div class="stepper">
     <div class="si on" id="si1"><div class="si-dot">1</div>Datos</div><div class="sl"></div>
     <div class="si" id="si2"><div class="si-dot">2</div>Imputación</div><div class="sl"></div>
@@ -581,8 +586,21 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <button class="btn btn-o btn-sm" onclick="testSupabase()">Probar conexión</button>
   </div>
 
+  <div class="card" style="border:1.5px solid #7C3AED;background:#FAFAFF">
+    <div class="ct" style="color:#4F46E5">✨ Inteligencia Artificial — Claude API</div>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:6px">La IA está <strong style="color:#4F46E5">activa</strong> para todos los usuarios. Usa el botón morado <strong>✨ Crear desde documento</strong> en la pantalla de Nuevo parte.</p>
+    <div style="background:#F5F3FF;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:#4F46E5">
+      📄 Sube una foto o PDF de un albarán, parte manuscrito o factura → la IA rellena el formulario automáticamente.
+    </div>
+  </div>
+
   <div class="card">
     <div class="ct">Google Apps Script — solo para envío de correo</div>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Script que envía los PDFs por correo. Los datos no dependen de este script.</p>
+    <div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--mu);word-break:break-all">
+      https://script.google.com/macros/s/AKfycbwoUiDWKiecxYNAA-XJgB3fCXdt9uuk_lFbSWcPZulGFmuA7DRp6LlGMCl4s-zIvG5GYA/exec
+    </div>
+  </div>
     <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Script que envía los PDFs por correo. Los datos no dependen de este script.</p>
     <div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--mu);word-break:break-all">
       https://script.google.com/macros/s/AKfycbwoUiDWKiecxYNAA-XJgB3fCXdt9uuk_lFbSWcPZulGFmuA7DRp6LlGMCl4s-zIvG5GYA/exec
@@ -730,6 +748,37 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 </div>
 
+<!-- MODAL IA — CREAR PARTE DESDE DOCUMENTO -->
+<div class="mbg" id="modal-ia">
+  <div class="modal" style="max-width:540px">
+    <div class="mtl" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">✨ Crear parte desde documento</div>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF de un parte manuscrito, albarán o cualquier documento. La IA leerá el contenido y rellenará el formulario automáticamente.</p>
+    <div id="ia-upload-area" onclick="document.getElementById('ia-file-input').click()"
+      style="border:2px dashed var(--bors);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)"
+      ondragover="event.preventDefault();this.style.borderColor='#7C3AED';this.style.background='#F5F3FF'"
+      ondragleave="this.style.borderColor='';this.style.background='var(--bg)'"
+      ondrop="event.preventDefault();this.style.borderColor='';this.style.background='var(--bg)';handleIADrop(event)">
+      <div style="font-size:36px;margin-bottom:8px">📄</div>
+      <div style="font-size:14px;font-weight:500;color:var(--tx);margin-bottom:4px">Toca para seleccionar o arrastra aquí</div>
+      <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — fotos de documentos, albaranes, partes manuscritos</div>
+    </div>
+    <input type="file" id="ia-file-input" accept="image/*,.pdf" style="display:none" onchange="handleIAFile(this)"/>
+    <div id="ia-preview" style="display:none;margin-top:12px">
+      <div style="background:var(--bg);border-radius:var(--rs);padding:10px 14px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px" id="ia-preview-icon">📄</span>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="ia-preview-name"></div><div style="font-size:11px;color:var(--fa)" id="ia-preview-size"></div></div>
+        <button onclick="resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:16px">✕</button>
+      </div>
+    </div>
+    <div id="ia-result" style="display:none;margin-top:12px;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--act);max-height:180px;overflow-y:auto"></div>
+    <div id="ia-sm" class="sm" style="margin-top:10px"></div>
+    <div class="brow" style="margin-top:16px">
+      <button class="btn btn-o" onclick="cerrarModal('modal-ia')">Cancelar</button>
+      <button class="btn btn-f" id="ia-btn-analizar" onclick="analizarDocumento()" disabled style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none;opacity:.5">✨ Analizar y rellenar parte</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /shell -->
 
 <script>
@@ -804,8 +853,6 @@ function loadConfig() {
   try {
     const c = JSON.parse(localStorage.getItem('pp_cfg')||'{}');
     emailCc = c.emailCc||[];
-    const g = document.getElementById('gas-email-input');
-    if(g) g.value = GAS_EMAIL();
     const inputs = document.querySelectorAll('.cc-input');
     emailCc.forEach((a,i)=>{ if(inputs[i]) inputs[i].value=a; });
   } catch(e){}
@@ -1965,6 +2012,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPro
 document.getElementById('ib-si')?.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;const b=document.getElementById('ib');if(b)b.style.display='none';});
 document.getElementById('ib-no')?.addEventListener('click',()=>{const b=document.getElementById('ib');if(b)b.style.display='none';});
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+window.addEventListener('load',()=>{ checkAuth(); });
 
 // ══════════════════════════════════════════════════════════════
 //  INIT
@@ -1980,7 +2028,231 @@ function initApp(){
   // Sync from Supabase immediately
   syncAll(false).then(()=>{ startAutoRefresh(); });
 }
-window.addEventListener('load',()=>{ checkAuth(); });
+// ══════════════════════════════════════════════════════════════
+//  INTELIGENCIA ARTIFICIAL — CREAR PARTE DESDE DOCUMENTO
+// ══════════════════════════════════════════════════════════════
+const ANTHROPIC_KEY_DEFAULT = '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';
+function getAnthropicKey(){ return ANTHROPIC_KEY_DEFAULT; }
+
+let iaFileData=null, iaFileType=null, iaFileName=null;
+
+function abrirModalIA(){
+  resetIAModal();
+  document.getElementById('modal-ia').classList.add('open');
+}
+
+function resetIAModal(){
+  iaFileData=null; iaFileType=null; iaFileName=null;
+  document.getElementById('ia-upload-area').style.display='block';
+  document.getElementById('ia-preview').style.display='none';
+  document.getElementById('ia-result').style.display='none';
+  const sm=document.getElementById('ia-sm'); if(sm) sm.style.display='none';
+  const btn=document.getElementById('ia-btn-analizar');
+  if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='✨ Analizar y rellenar parte';}
+  document.getElementById('ia-file-input').value='';
+}
+
+function handleIADrop(e){
+  const file=e.dataTransfer?.files?.[0];
+  if(file) processIAFile(file);
+}
+function handleIAFile(input){
+  const file=input.files?.[0];
+  if(file) processIAFile(file);
+}
+
+function processIAFile(file){
+  const maxMB=20;
+  if(file.size>maxMB*1024*1024){ alert('El archivo es demasiado grande. Máximo '+maxMB+'MB.'); return; }
+  const allowed=['image/jpeg','image/jpg','image/png','image/webp','image/gif','application/pdf'];
+  if(!allowed.includes(file.type)){ alert('Formato no soportado. Usa JPG, PNG, WEBP o PDF.'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const b64=e.target.result.split(',')[1];
+    iaFileData=b64; iaFileType=file.type; iaFileName=file.name;
+    // Show preview
+    document.getElementById('ia-upload-area').style.display='none';
+    const prev=document.getElementById('ia-preview'); prev.style.display='block';
+    document.getElementById('ia-preview-icon').textContent=file.type==='application/pdf'?'📄':'🖼️';
+    document.getElementById('ia-preview-name').textContent=file.name;
+    document.getElementById('ia-preview-size').textContent=(file.size/1024).toFixed(0)+' KB · '+file.type;
+    const btn=document.getElementById('ia-btn-analizar');
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analizarDocumento(){
+  if(!iaFileData){ alert('Selecciona un documento primero.'); return; }
+  const key=getAnthropicKey();
+  if(!key){ alert('Configura la API Key de Anthropic primero.'); return; }
+
+  const btn=document.getElementById('ia-btn-analizar');
+  if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Analizando...';}
+  showSM('ia-sm','ok','Enviando documento a Claude AI...');
+
+  // Build context about known subcontratas
+  const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(no hay subcontratas registradas)';
+
+  const prompt=`Eres un asistente experto en análisis de partes de trabajo industriales y albaranes.
+Analiza este documento y extrae TODOS los datos que puedas encontrar.
+
+Subcontratas conocidas en el sistema: ${scNombres}
+
+Devuelve SOLO un objeto JSON válido con esta estructura exacta (sin texto adicional, sin markdown):
+{
+  "subcontrata_nombre": "nombre de la empresa/proveedor del documento o la más similar de las conocidas",
+  "trabajador": "nombre del trabajador o técnico si aparece",
+  "area": "zona, área o ubicación del trabajo",
+  "fecha": "YYYY-MM-DD formato, la fecha principal del documento",
+  "h_normal": número de horas normales (0 si no aparece),
+  "h_extra": número de horas extra (0 si no aparece),
+  "h_noct": número de horas nocturnas o festivas (0 si no aparece),
+  "trabajos": "descripción completa de los trabajos realizados",
+  "materiales": "materiales, piezas o equipos mencionados",
+  "permiso": "número de permiso o referencia si aparece",
+  "expediente": "número de expediente, pedido u orden de trabajo si aparece",
+  "coste_total": número total en euros (0 si no aparece),
+  "lineas": [
+    {"concepto": "nombre del concepto/pieza/servicio", "unidad": "h/u/m/kg/etc", "cantidad": número, "precio": precio unitario en euros}
+  ],
+  "notas": "cualquier observación relevante del documento"
+}
+
+Si un campo no aparece en el documento, usa "" para texto y 0 para números. Las lineas pueden estar vacías [].`;
+
+  try {
+    // For PDF: convert to image description approach; for images: direct vision
+    const contentBlock = iaFileType==='application/pdf'
+      ? { type:'document', source:{ type:'base64', media_type:'application/pdf', data:iaFileData } }
+      : { type:'image',    source:{ type:'base64', media_type:iaFileType, data:iaFileData } };
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1500,
+        messages:[{ role:'user', content:[contentBlock, {type:'text',text:prompt}] }]
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      throw new Error((err.error?.message)||'Error '+resp.status+' de la API de Anthropic');
+    }
+
+    const data=await resp.json();
+    const text=data.content?.[0]?.text||'';
+
+    // Parse JSON from response
+    let extracted;
+    try {
+      const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      extracted=JSON.parse(clean);
+    } catch(e){
+      throw new Error('No se pudo interpretar la respuesta de la IA. Intenta con otra imagen más clara.');
+    }
+
+    // Show what was found
+    const resumen=[];
+    if(extracted.subcontrata_nombre) resumen.push('🏭 Empresa: '+extracted.subcontrata_nombre);
+    if(extracted.trabajador) resumen.push('👤 Trabajador: '+extracted.trabajador);
+    if(extracted.fecha) resumen.push('📅 Fecha: '+extracted.fecha);
+    if(extracted.trabajos) resumen.push('🔧 Trabajos: '+extracted.trabajos.slice(0,80)+'...');
+    if(extracted.coste_total) resumen.push('💶 Importe: '+extracted.coste_total+' €');
+    if(extracted.lineas?.length) resumen.push('📋 '+extracted.lineas.length+' concepto(s) detectado(s)');
+
+    const resultEl=document.getElementById('ia-result');
+    resultEl.style.display='block';
+    resultEl.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+resumen.join('<br>');
+
+    showSM('ia-sm','ok','✅ Documento analizado. Aplicando datos al formulario...');
+
+    // Fill the form
+    setTimeout(()=>{
+      aplicarDatosIA(extracted);
+      cerrarModal('modal-ia');
+      showSM('ia-sm','ok',''); // clear
+    }, 1200);
+
+    if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+
+  } catch(e){
+    showSM('ia-sm','er','❌ '+e.message);
+    if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+  }
+}
+
+function aplicarDatosIA(d){
+  // Reset form first
+  resetForm();
+
+  // Match subcontrata by name
+  if(d.subcontrata_nombre){
+    const sc=subcontratas.find(s=>
+      s.nombre.toLowerCase().includes(d.subcontrata_nombre.toLowerCase())||
+      d.subcontrata_nombre.toLowerCase().includes(s.nombre.toLowerCase())
+    );
+    if(sc){
+      const sel=document.getElementById('sc-sel');
+      if(sel){ sel.value=sc.id; onScSel(sc.id); }
+    }
+  }
+
+  // Basic fields
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e&&v) e.value=v; };
+  set('trabajador', d.trabajador);
+  set('area', d.area);
+  set('trabajos', d.trabajos);
+  set('materiales', d.materiales);
+  set('permiso', d.permiso);
+  set('expediente', d.expediente);
+
+  // Jornada with date and hours
+  if(d.fecha||d.h_normal||d.h_extra||d.h_noct){
+    jornadas=[{
+      fecha: d.fecha||new Date().toISOString().split('T')[0],
+      h_entrada:'', h_salida:'',
+      h_normal: Number(d.h_normal)||0,
+      h_extra:  Number(d.h_extra)||0,
+      h_noct:   Number(d.h_noct)||0
+    }];
+    renderJornadas();
+  }
+
+  // Lineas de coste — si hay conceptos del documento, crear líneas libres
+  if(d.lineas&&d.lineas.length){
+    lineasCoste=d.lineas.map((l,i)=>({
+      id:'ia'+i, concepto:l.concepto||'Concepto '+(i+1),
+      unidad:l.unidad||'u', precio:Number(l.precio)||0,
+      cantidad:Number(l.cantidad)||0,
+      subtotal:(Number(l.precio)||0)*(Number(l.cantidad)||0),
+      libre:true
+    }));
+    // If no lineas from SC tariffs, use the IA ones
+    renderLineasCoste();
+  } else if(d.coste_total&&!lineasCoste.length){
+    lineasCoste=[{id:'ia0',concepto:'Importe según documento',unidad:'u',precio:Number(d.coste_total),cantidad:1,subtotal:Number(d.coste_total),libre:true}];
+    renderLineasCoste();
+  }
+
+  // Go to step 1 with data filled
+  goStep(1);
+
+  // Show success notification
+  const nota=document.createElement('div');
+  nota.style.cssText='position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:999;box-shadow:0 4px 20px rgba(124,58,237,.4)';
+  nota.textContent='✨ Formulario rellenado automáticamente';
+  document.body.appendChild(nota);
+  setTimeout(()=>nota.remove(),4000);
+}
+
 
 // Sync automático cuando el usuario vuelve a la app (desde otra app o pantalla bloqueada)
 document.addEventListener('visibilitychange', () => {
