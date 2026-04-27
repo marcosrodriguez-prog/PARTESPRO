@@ -934,11 +934,12 @@ async function syncAll(silent) {
       sbGet('responsables'),
       sbGet('partes')
     ]);
-    // Parse JSON fields
+    // Parse JSON fields in subcontratas
     rSC.forEach(sc => {
       if (typeof sc.tarifas === 'string') { try { sc.tarifas=JSON.parse(sc.tarifas); } catch(e){sc.tarifas=[];} }
       if (!Array.isArray(sc.tarifas)) sc.tarifas = [];
     });
+    // Parse JSON fields in partes
     rPT.forEach(p => {
       ['jornadas','lineas_coste'].forEach(k => {
         if (typeof p[k]==='string') { try{p[k]=JSON.parse(p[k]);}catch(e){p[k]=[];} }
@@ -946,16 +947,15 @@ async function syncAll(silent) {
       });
       ['h_normal','h_extra','h_noct','coste'].forEach(k => { p[k]=Number(p[k])||0; });
     });
-    // Keep PIN and firma from local
-    loadRtLocal();
+    // Everything comes from Supabase — PIN and firma included
     subcontratas = rSC;
-    responsables = rRT.map(rt => {
-      const l = responsables.find(x => x.id===rt.id);
-      return {...rt, pin:l?.pin||'', firma:l?.firma||null};
-    });
-    partesCache = rPT;
+    responsables = rRT; // pin and firma come from Supabase directly
+    partesCache  = rPT;
     partesCache.sort((a,b) => new Date(b.timestamp||b.created_at)-new Date(a.timestamp||a.created_at));
-    saveScLocal(); saveRtLocal(); savePartesLocal(partesCache);
+    // Update local cache as backup
+    localStorage.setItem('pp_scs',  JSON.stringify(subcontratas));
+    localStorage.setItem('pp_rts',  JSON.stringify(responsables));
+    localStorage.setItem('pp_partes', JSON.stringify(partesCache));
     populateScDDs(); populateRespDD();
     refreshCurrentPage();
     setSyncStatus('ok','conectado · '+new Date().toLocaleTimeString('es-ES')+' · '+rSC.length+' empresas · '+rPT.length+' partes');
@@ -1162,6 +1162,15 @@ function loadRtLocal(){try{responsables=JSON.parse(localStorage.getItem('pp_rts'
 function saveRtLocal(){localStorage.setItem('pp_rts',JSON.stringify(responsables));}
 function abrirModalRt(id){
   const rt=id?responsables.find(r=>r.id===id):null;
+  // Verificar PIN antes de editar un responsable existente
+  if(rt && rt.pin){
+    const pinIntroducido = prompt('Introduce el PIN de '+rt.nombre+' para editar su ficha:');
+    if(pinIntroducido === null) return; // cancelado
+    if(pinIntroducido.trim() !== String(rt.pin).trim()){
+      alert('❌ PIN incorrecto. No puedes editar esta ficha.');
+      return;
+    }
+  }
   document.getElementById('mrt-tl').textContent=rt?'Editar responsable':'Nuevo responsable técnico';
   document.getElementById('mrt-id').value=rt?.id||'';
   document.getElementById('mrt-nom').value=rt?.nombre||'';
@@ -1224,16 +1233,25 @@ async function guardarRt(){
     departamento:document.getElementById('mrt-dep')?.value||'',
     numero:document.getElementById('mrt-num')?.value||'',
     notas:document.getElementById('mrt-not')?.value||'', firma};
-  showSM('mrt-sm','ok','Guardando...');
-  // Save to Supabase (without PIN and firma — stay local only)
-  const rtSB = {id:rt.id, nombre:rt.nombre, puesto:rt.puesto, email:rt.email,
-    telefono:rt.telefono, departamento:rt.departamento, numero:rt.numero, notas:rt.notas};
+  showSM('mrt-sm','ok','Guardando en Supabase...');
+  // Todo va a Supabase: nombre, puesto, email, teléfono, PIN y firma
+  const rtSB = {
+    id:           rt.id,
+    nombre:       rt.nombre,
+    puesto:       rt.puesto,
+    email:        rt.email,
+    telefono:     rt.telefono,
+    departamento: rt.departamento,
+    numero:       rt.numero,
+    notas:        rt.notas,
+    pin:          rt.pin,
+    firma:        rt.firma || ''
+  };
   try {
     await sbUpsert('responsables', rtSB);
-    // Save PIN and firma locally
     const idx = responsables.findIndex(x => x.id===rt.id);
     if(idx>=0) responsables[idx]=rt; else responsables.push(rt);
-    saveRtLocal();
+    localStorage.setItem('pp_rts', JSON.stringify(responsables));
     cerrarModal('modal-rt');
     syncAll(false);
   } catch(e) { showSM('mrt-sm','er','Error: '+e.message); }
