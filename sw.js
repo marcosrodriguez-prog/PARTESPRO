@@ -2,7 +2,7 @@
 // Estrategia: Network-first para HTML, caché solo para assets estáticos (iconos, fuentes)
 // Los datos de Supabase NUNCA se cachean
 
-const CACHE = 'partespro-gf-v7';
+const CACHE = 'partespro-gf-v8';
 const STATIC = ['./icon-192.png','./icon-512.png','./apple-touch-icon.png','./logo.png','./manifest.json'];
 
 self.addEventListener('install', e => {
