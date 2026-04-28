@@ -342,9 +342,10 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <div class="page active" id="page-nuevo">
   <div class="ph flex">
     <div><div class="pt">Nuevo <em>parte</em></div><div class="ps">Rellena los datos, firma y valida.</div></div>
-    <button class="btn btn-f btn-sm" style="margin-top:5px;background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none" onclick="abrirModalIA()">
-      ✨ Crear desde documento
-    </button>
+    <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap">
+      <button class="btn btn-o btn-sm" style="color:var(--da);border-color:#F09595" onclick="descartarParte()">✕ Descartar parte</button>
+      <button class="btn btn-f btn-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none" onclick="abrirModalIA()">✨ Crear desde documento</button>
+    </div>
   </div>
   <div class="stepper">
     <div class="si on" id="si1"><div class="si-dot">1</div>Datos</div><div class="sl"></div>
@@ -1825,7 +1826,17 @@ function filtrar(){
 // ══════════════════════════════════════════════════════════════
 //  RESET FORM
 // ══════════════════════════════════════════════════════════════
-function resetForm(){
+function descartarParte(){
+  // Only ask confirmation if something has been filled in
+  const tieneDatos = (document.getElementById('trabajador')?.value||'').trim() ||
+                     (document.getElementById('trabajos')?.value||'').trim() ||
+                     selectedScId || jornadas.some(j=>j.h_normal||j.h_extra||j.h_noct);
+  if(tieneDatos){
+    if(!confirm('¿Descartar el parte en curso? Se borrarán todos los datos introducidos.')) return;
+  }
+  resetForm();
+}
+
   ['trabajador','area','trabajos','materiales','permiso','responsable','pin',
    'expediente','otros','centro_coste','seccion'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const scs=document.getElementById('sc-sel');if(scs)scs.value='';
