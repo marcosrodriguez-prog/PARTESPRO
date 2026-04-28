@@ -1827,7 +1827,6 @@ function filtrar(){
 //  RESET FORM
 // ══════════════════════════════════════════════════════════════
 function descartarParte(){
-  // Only ask confirmation if something has been filled in
   const tieneDatos = (document.getElementById('trabajador')?.value||'').trim() ||
                      (document.getElementById('trabajos')?.value||'').trim() ||
                      selectedScId || jornadas.some(j=>j.h_normal||j.h_extra||j.h_noct);
@@ -1837,6 +1836,7 @@ function descartarParte(){
   resetForm();
 }
 
+function resetForm(){
   ['trabajador','area','trabajos','materiales','permiso','responsable','pin',
    'expediente','otros','centro_coste','seccion'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const scs=document.getElementById('sc-sel');if(scs)scs.value='';
