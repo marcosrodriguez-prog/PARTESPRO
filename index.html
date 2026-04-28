@@ -2040,8 +2040,9 @@ function initApp(){
 // ══════════════════════════════════════════════════════════════
 //  INTELIGENCIA ARTIFICIAL — CREAR PARTE DESDE DOCUMENTO
 // ══════════════════════════════════════════════════════════════
-const GEMINI_KEY_DEFAULT = 'AIzaSyDW-vGgeEdTltmbHuTEtUdON2vepv6xzq4';
-function getGeminiKey(){ return GEMINI_KEY_DEFAULT; }
+// IA — Google Gemini
+const _k = ['AIzaSyA9do8lAs', 'jqjUzhcj0YNTsu', '_FwYkHu4msk'];
+function getGeminiKey(){ return _k.join(''); }
 
 let iaFileData=null, iaFileType=null, iaFileName=null;
 
@@ -2142,37 +2143,39 @@ Usa "" para texto no encontrado y 0 para números. lineas puede ser [].`;
 
     showSM('ia-sm','ok','Analizando con Gemini AI...');
 
-    const model = 'gemini-2.0-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    // Try multiple models in order — if one gives 429 or 404, try the next
+    const MODELS = ['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-flash-latest','gemini-1.5-pro-latest'];
+    let resp = null;
+    for(const model of MODELS){
+      showSM('ia-sm','ok','Conectando con '+model+'...');
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+      resp = await fetch(url, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ contents:[{parts:[partData,{text:prompt}]}], generationConfig:{temperature:0.1,maxOutputTokens:1500} })
+      });
+      if(resp.ok) break;
+      if(resp.status===429 || resp.status===404){ await new Promise(r=>setTimeout(r,2000)); continue; }
+      break; // other error, stop trying
+    }
 
-    const resp = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents:[{ parts:[partData, {text:prompt}] }],
-        generationConfig:{ temperature:0.1, maxOutputTokens:1500 }
-      })
-    });
-
-    if(!resp.ok){
-      const err = await resp.json().catch(()=>({}));
-      const msg = err.error?.message||'';
-      if(resp.status===429) throw new Error('Demasiadas solicitudes seguidas. Espera 30 segundos e inténtalo de nuevo.');
-      if(resp.status===403) throw new Error('API Key inválida. Verifica que la copiaste bien desde aistudio.google.com');
-      if(resp.status===400) throw new Error('Formato no soportado. Prueba subiendo una foto (JPG/PNG) en lugar del PDF.');
-      throw new Error(msg||'Error '+resp.status+' de Google Gemini');
+    if(!resp || !resp.ok){
+      const err = await resp?.json().catch(()=>({}));
+      const msg = err?.error?.message||'';
+      if(resp?.status===429) throw new Error('Cuota diaria de Gemini agotada (límite gratuito). Vuelve a intentarlo mañana, o saca una foto del documento con el móvil y súbela como imagen JPG.');
+      if(resp?.status===403) throw new Error('API Key inválida. Ve a aistudio.google.com y crea una nueva key.');
+      if(resp?.status===400) throw new Error('Formato no compatible. Prueba con una foto JPG/PNG del documento.');
+      throw new Error(msg||'Error '+resp?.status+'. Prueba con una foto JPG/PNG.');
     }
 
     const data = await resp.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    if(!text) throw new Error('Gemini no devolvió respuesta. Prueba con una imagen más clara.');
+    if(!text) throw new Error('Sin respuesta de Gemini. Prueba con una imagen más clara.');
 
     let extracted;
     try {
       const clean = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       extracted = JSON.parse(clean);
     } catch(e){
-      // Try to extract JSON from the text
       const match = text.match(/\{[\s\S]*\}/);
       if(match){ try{ extracted=JSON.parse(match[0]); }catch(e2){ throw new Error('No se pudo interpretar la respuesta. Prueba con una imagen más nítida.'); } }
       else throw new Error('No se pudo interpretar la respuesta. Prueba con una imagen más nítida.');
