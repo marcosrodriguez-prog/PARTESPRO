@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="datos_globalfeed.js"></script>
 <style>
 /* ── VARIABLES ──────────────────────────────────────────── */
 :root{
@@ -253,7 +254,21 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 .modal{background:var(--sur);border-radius:var(--r);padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;border:1px solid var(--bor)}
 .mtl{font-family:var(--serif);font-size:22px;margin-bottom:16px}
 
-/* ── INSTALL BANNER ─────────────────────────────────────── */
+/* ── SEARCHABLE COMBOBOX ─────────────────────────────────── */
+.combo-wrap{position:relative}
+.combo-input{width:100%;padding:8px 10px;border:1px solid var(--bor);border-radius:var(--rs);
+  font-size:14px;font-family:var(--sans);background:var(--bg);color:var(--tx);outline:none;transition:border-color .15s}
+.combo-input:focus{border-color:var(--ac);background:var(--sur)}
+.combo-list{display:none;position:absolute;top:100%;left:0;right:0;background:var(--sur);border:1px solid var(--bor);
+  border-radius:var(--rs);max-height:220px;overflow-y:auto;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.combo-list.open{display:block}
+.combo-item{padding:9px 12px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--bor)}
+.combo-item:last-child{border-bottom:none}
+.combo-item:hover,.combo-item.selected{background:var(--acl);color:var(--act)}
+.combo-item small{display:block;font-size:11px;color:var(--fa);margin-top:1px}
+.combo-empty{padding:10px 12px;font-size:13px;color:var(--fa);font-style:italic}
+
+/* ── DESCUENTO ───────────────────────────────────────────── */
 .ib{display:none;position:fixed;bottom:80px;left:12px;right:12px;background:var(--sur);border:1px solid var(--bor);
   border-radius:var(--r);padding:13px 15px;z-index:300;align-items:center;gap:11px}
 
@@ -329,7 +344,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <button class="ni on" onclick="showPage('nuevo')" id="nav-nuevo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>Nuevo parte</button>
     <button class="ni" onclick="showPage('dashboard')" id="nav-dashboard"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</button>
     <button class="ni" onclick="showPage('historial')" id="nav-historial"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Historial</button>
-    <button class="ni" onclick="showPage('subcontratas')" id="nav-subcontratas"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><circle cx="11" cy="5" r="2"/><path d="M1 13c0-2.2 2.2-4 5-4s5 1.8 5 4"/><path d="M13 13c0-1.5-1-2.8-2.5-3.3"/></svg>Subcontratas</button>
+    <button class="ni" onclick="showPage('subcontratas')" id="nav-subcontratas"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><circle cx="11" cy="5" r="2"/><path d="M1 13c0-2.2 2.2-4 5-4s5 1.8 5 4"/><path d="M13 13c0-1.5-1-2.8-2.5-3.3"/></svg>Proveedores</button>
     <button class="ni" onclick="showPage('responsables')" id="nav-responsables"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-2.8 2.7-5 6-5s6 2.2 6 5"/><path d="M11 8.5l1.5 1.5L14 8"/></svg>Responsables</button>
     <button class="ni" onclick="showPage('config')" id="nav-config"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.6 3.6l1 1M11.4 11.4l1 1M3.6 12.4l1-1M11.4 4.6l1-1"/></svg>Configuración</button>
   </nav>
@@ -359,8 +374,16 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   <!-- STEP 1: DATOS -->
   <div class="fstep active" id="fs1">
     <div class="card">
-      <div class="ct">Subcontrata</div>
-      <div class="field"><label>Empresa subcontrata</label><select id="sc-sel" onchange="onScSel(this.value)"><option value="">— seleccionar subcontrata —</option></select></div>
+      <div class="ct">Proveedor</div>
+      <div class="field">
+        <label>Empresa proveedora</label>
+        <div class="combo-wrap">
+          <input type="text" class="combo-input" id="sc-sel" placeholder="Buscar por nombre, cuenta o NIF..." autocomplete="off"
+            oninput="filtrarProveedores(this.value)" onfocus="filtrarProveedores(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-sc'),200)"/>
+          <input type="hidden" id="sc-sel-id"/>
+          <div class="combo-list" id="combo-sc"></div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <div class="ct">Identificación</div>
@@ -400,12 +423,29 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <div class="card">
       <div class="ct">Imputación contable</div>
       <div class="fg fg2">
-        <div class="field"><label>Expediente</label><input type="text" id="expediente" placeholder="Nº de expediente"/></div>
+        <div class="field">
+          <label>Expediente</label>
+          <div class="combo-wrap">
+            <input type="text" class="combo-input" id="expediente" placeholder="Buscar expediente..." autocomplete="off"
+              oninput="filtrarExpedientes(this.value)" onfocus="filtrarExpedientes(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-exp'),200)"/>
+            <div class="combo-list" id="combo-exp"></div>
+          </div>
+        </div>
         <div class="field"><label>Otros</label><input type="text" id="otros" placeholder="Referencia adicional"/></div>
       </div>
       <div class="fg fg2">
-        <div class="field"><label>Centro de coste</label><input type="text" id="centro_coste" placeholder="Ej. CC-401..."/></div>
-        <div class="field"><label>Sección</label><input type="text" id="seccion" placeholder="Ej. Mantenimiento..."/></div>
+        <div class="field">
+          <label>Centro de coste</label>
+          <div class="combo-wrap">
+            <input type="text" class="combo-input" id="centro_coste" placeholder="Buscar centro de coste..." autocomplete="off"
+              oninput="filtrarCentros(this.value)" onfocus="filtrarCentros(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-cc'),200)"/>
+            <div class="combo-list" id="combo-cc"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Sección</label>
+          <input type="text" id="seccion" placeholder="Se rellena al elegir centro de coste" readonly style="background:var(--bg);opacity:.7"/>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -541,7 +581,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <!-- ══ SUBCONTRATAS ════════════════════════════════════════════ -->
 <div class="page" id="page-subcontratas">
   <div class="ph flex">
-    <div><div class="pt"><em>Subcontratas</em></div><div class="ps">Gestiona las empresas y sus tarifas multi-concepto.</div></div>
+    <div><div class="pt"><em>Proveedores</em></div><div class="ps">Gestiona los proveedores y sus tarifas.</div></div>
     <button class="btn btn-f btn-sm" style="margin-top:5px" onclick="abrirModalSc()">+ Nueva subcontrata</button>
   </div>
   <div id="sc-list"></div>
@@ -758,14 +798,14 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF de un parte manuscrito, albarán o cualquier documento. La IA leerá el contenido y rellenará el formulario automáticamente.</p>
     <div id="ia-upload-area" onclick="document.getElementById('ia-file-input').click()"
       style="border:2px dashed var(--bors);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)"
-      ondragover="event.preventDefault();this.style.borderColor='#7C3AED';this.style.background='#F5F3FF'"
-      ondragleave="this.style.borderColor='';this.style.background='var(--bg)'"
-      ondrop="event.preventDefault();this.style.borderColor='';this.style.background='var(--bg)';handleIADrop(event)">
+      ondragover="event.preventDefault();this.style.borderColor='#7C3AED'"
+      ondragleave="this.style.borderColor=''"
+      ondrop="event.preventDefault();this.style.borderColor='';handleIADrop(event)">
       <div style="font-size:36px;margin-bottom:8px">📄</div>
       <div style="font-size:14px;font-weight:500;color:var(--tx);margin-bottom:4px">Toca para seleccionar o arrastra aquí</div>
-      <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — fotos de documentos, albaranes, partes manuscritos</div>
+      <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — varios archivos a la vez → crea un parte por cada uno</div>
     </div>
-    <input type="file" id="ia-file-input" accept="image/*,.pdf" style="display:none" onchange="handleIAFile(this)"/>
+    <input type="file" id="ia-file-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleIAFiles(this)"/>
     <div id="ia-preview" style="display:none;margin-top:12px">
       <div style="background:var(--bg);border-radius:var(--rs);padding:10px 14px;display:flex;align-items:center;gap:10px">
         <span style="font-size:22px" id="ia-preview-icon">📄</span>
@@ -1142,7 +1182,10 @@ function renderScList(){
 }
 function filtrarPorSc(id){showPage('historial');const s=document.getElementById('f-sc');if(s)s.value=id;filtrar();}
 function populateScDDs(){
-  ['sc-sel','f-sc','mep-sc'].forEach(id=>{
+  // Reset proveedor combobox
+  const scInp=document.getElementById('sc-sel'); if(scInp)scInp.value='';
+  const scHid=document.getElementById('sc-sel-id'); if(scHid)scHid.value='';
+  ['f-sc','mep-sc'].forEach(id=>{
     const s=document.getElementById(id); if(!s) return;
     const cur=s.value;
     s.innerHTML=id==='f-sc'?'<option value="">Todas</option>':'<option value="">— seleccionar —</option>';
@@ -1167,24 +1210,33 @@ function onScSel(id){
 function addLineaLibre(){lineasCoste.push({id:'ll'+Date.now(),concepto:'',unidad:'u',precio:0,cantidad:0,subtotal:0,libre:true});renderLineasCoste();}
 function renderLineasCoste(){
   const wrap=document.getElementById('lineas-coste-wrap');if(!wrap)return;
-  if(!lineasCoste.length){wrap.innerHTML='<p style="font-size:13px;color:var(--fa);padding:10px 0">Selecciona una subcontrata para cargar sus tarifas, o añade conceptos libres.</p>';calcTotal();return;}
-  wrap.innerHTML=`<table class="coste-tbl"><thead><tr><th>Concepto</th><th>Unidad</th><th style="text-align:right">€/unidad</th><th style="text-align:right;width:90px">Cantidad</th><th style="text-align:right">Subtotal</th><th style="width:30px"></th></tr></thead><tbody id="lineas-coste-body"></tbody></table>`;
+  if(!lineasCoste.length){wrap.innerHTML='<p style="font-size:13px;color:var(--fa);padding:10px 0">Selecciona un proveedor para cargar sus tarifas, o añade conceptos libres.</p>';calcTotal();return;}
+  wrap.innerHTML=`<table class="coste-tbl"><thead><tr><th>Concepto</th><th>Unidad</th><th style="text-align:right">€/unidad</th><th style="text-align:right;width:80px">Cantidad</th><th style="text-align:right;width:65px">Dto. %</th><th style="text-align:right">Subtotal</th><th style="width:30px"></th></tr></thead><tbody id="lineas-coste-body"></tbody></table>`;
   const tbody=document.getElementById('lineas-coste-body');
   lineasCoste.forEach((l,i)=>{
     const tr=document.createElement('tr');
-    const inStyle='width:100%;padding:4px 7px;border:1px solid var(--bor);border-radius:var(--rs);font-size:13px;background:var(--bg);outline:none;';
+    const inS='width:100%;padding:4px 7px;border:1px solid var(--bor);border-radius:var(--rs);font-size:13px;background:var(--bg);outline:none;';
+    const dto=l.descuento||0;
     tr.innerHTML=`
-      <td>${l.libre?`<input type="text" value="${l.concepto}" placeholder="Concepto..." onchange="lineasCoste[${i}].concepto=this.value" style="${inStyle}font-family:var(--sans)">`:`<span style="font-size:13.5px">${l.concepto}</span>`}</td>
-      <td style="color:var(--mu);font-size:12.5px">${l.libre?`<input type="text" value="${l.unidad}" onchange="lineasCoste[${i}].unidad=this.value" style="${inStyle}width:55px;font-family:var(--mono)">`:l.unidad}</td>
-      <td style="text-align:right;font-family:var(--mono);color:var(--mu)">${l.libre?`<input type="number" value="${l.precio}" min="0" step="0.01" onchange="lineasCoste[${i}].precio=parseFloat(this.value)||0;updateLinea(${i})" style="${inStyle}width:80px;text-align:right;font-family:var(--mono)">`:Number(l.precio).toFixed(2)+' €'}</td>
+      <td>${l.libre?`<input type="text" value="${l.concepto}" placeholder="Concepto..." onchange="lineasCoste[${i}].concepto=this.value" style="${inS}font-family:var(--sans)">`:`<span style="font-size:13.5px">${l.concepto}</span>`}</td>
+      <td style="color:var(--mu);font-size:12.5px">${l.libre?`<input type="text" value="${l.unidad}" onchange="lineasCoste[${i}].unidad=this.value" style="${inS}width:50px;font-family:var(--mono)">`:l.unidad}</td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--mu)">${l.libre?`<input type="number" value="${l.precio}" min="0" step="0.01" onchange="lineasCoste[${i}].precio=parseFloat(this.value)||0;updateLinea(${i})" style="${inS}width:75px;text-align:right;font-family:var(--mono)">`:Number(l.precio).toFixed(2)+' €'}</td>
       <td style="text-align:right"><input type="number" id="lc-${i}" value="${l.cantidad||''}" min="0" step="0.5" placeholder="0" oninput="lineasCoste[${i}].cantidad=parseFloat(this.value)||0;updateLinea(${i})"/></td>
+      <td style="text-align:right"><input type="number" id="lcd-${i}" value="${dto||''}" min="0" max="100" step="0.5" placeholder="0" oninput="lineasCoste[${i}].descuento=parseFloat(this.value)||0;updateLinea(${i})" style="width:55px;padding:4px 6px;border:1px solid var(--bor);border-radius:var(--rs);font-size:12px;font-family:var(--mono);background:var(--bg);text-align:right;outline:none"/></td>
       <td style="text-align:right;font-family:var(--mono);font-weight:500;font-size:13.5px" id="lcs-${i}">${l.cantidad>0?Number(l.subtotal).toFixed(2)+' €':'—'}</td>
       <td><button class="btn-xs btn-d" onclick="lineasCoste.splice(${i},1);renderLineasCoste()">✕</button></td>`;
     tbody.appendChild(tr);
   });
   calcTotal();
 }
-function updateLinea(i){const l=lineasCoste[i];l.subtotal=(parseFloat(l.cantidad)||0)*(parseFloat(l.precio)||0);const s=document.getElementById('lcs-'+i);if(s)s.textContent=l.cantidad>0?l.subtotal.toFixed(2)+' €':'—';calcTotal();}
+function updateLinea(i){
+  const l=lineasCoste[i];
+  const dto=parseFloat(l.descuento)||0;
+  l.subtotal=(parseFloat(l.cantidad)||0)*(parseFloat(l.precio)||0)*(1-dto/100);
+  const s=document.getElementById('lcs-'+i);
+  if(s) s.textContent=l.cantidad>0?l.subtotal.toFixed(2)+' €':'—';
+  calcTotal();
+}
 function calcTotal(){const t=lineasCoste.reduce((s,l)=>s+(parseFloat(l.subtotal)||0),0);const el=document.getElementById('c-total');if(el)el.textContent=t.toFixed(2)+' €';return t;}
 
 // ══════════════════════════════════════════════════════════════
@@ -1400,8 +1452,8 @@ function buildRecap(id){
   const sc=subcontratas.find(s=>s.id===selectedScId);
   const total=calcTotal();
   let h='';
-  h+=rs('Subcontrata y trabajador');
-  h+=rr('Subcontrata',sc?.nombre||'—');
+  h+=rs('Proveedor y trabajador');
+  h+=rr('Proveedor',sc?.nombre||'—');
   h+=rr('Trabajador',document.getElementById('trabajador')?.value);
   h+=rr('Área',document.getElementById('area')?.value);
   h+=rs('Jornadas ('+jornadas.length+')');
@@ -1738,7 +1790,7 @@ function renderDashboard(){
   if(ds)ds.innerHTML=`<div class="sc-card"><div class="slbl">Partes</div><div class="sval">${p.length}</div></div>
     <div class="sc-card"><div class="slbl">Coste total</div><div class="sval" style="font-size:20px;font-family:var(--mono)">${tc.toFixed(0)} €</div></div>
     <div class="sc-card"><div class="slbl">Horas</div><div class="sval">${th.toFixed(0)}<span style="font-size:13px;color:var(--mu)"> h</span></div></div>
-    <div class="sc-card"><div class="slbl">Subcontratas</div><div class="sval">${subcontratas.length}</div></div>`;
+    <div class="sc-card"><div class="slbl">Proveedores</div><div class="sval">${subcontratas.length}</div></div>`;
   const allC=subcontratas.map(sc=>p.filter(x=>x.subcontrata_id===sc.id).reduce((s,x)=>s+(Number(x.coste)||0),0));
   const maxC=allC.length?Math.max(1,...allC):1;
   const dc=document.getElementById('dash-cards');
@@ -1756,7 +1808,7 @@ function renderDashboard(){
   if(dr){
     const r=p.slice(0,8);
     if(!r.length){dr.innerHTML='<div style="text-align:center;padding:28px;color:var(--fa)">Sin partes registrados aún.</div>';return;}
-    dr.innerHTML=`<table class="ht"><thead><tr><th>Ref.</th><th>Fecha</th><th>Subcontrata</th><th>Trabajador</th><th>Coste</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>`+
+    dr.innerHTML=`<table class="ht"><thead><tr><th>Ref.</th><th>Fecha</th><th>Proveedor</th><th>Trabajador</th><th>Coste</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>`+
       r.map(x=>`<tr><td style="font-family:var(--mono);font-size:11px;color:var(--mu)">${x.id}</td><td>${x.fecha||'—'}</td><td>${x.subcontrata_nombre||x.empresa||'—'}</td><td>${x.trabajador||'—'}</td><td style="font-family:var(--mono);font-weight:500">${Number(x.coste)>0?Number(x.coste).toFixed(2)+' €':'—'}</td><td>${estadoBadge(x)}</td><td>${x.responsable||'—'}</td></tr>`).join('')+'</tbody></table>';
   }
 }
@@ -1801,7 +1853,7 @@ function filtrar(){
     <div class="sc-card"><div class="slbl">Empresas</div><div class="sval">${new Set(arr.map(p=>p.subcontrata_id||p.empresa)).size}</div></div>`;
   const cont=document.getElementById('hist-content');
   if(!arr.length){cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--fa)"><p style="font-size:24px">📋</p><p style="margin-top:7px">No hay partes con estos filtros.</p></div>';return;}
-  cont.innerHTML=`<table class="ht"><thead><tr><th>Ref.</th><th>Fecha</th><th>Subcontrata</th><th>Trabajador</th><th>Área</th><th>Horas</th><th>Coste</th><th>Estado</th><th>Responsable</th><th>Acciones</th></tr></thead><tbody>`+
+  cont.innerHTML=`<table class="ht"><thead><tr><th>Ref.</th><th>Fecha</th><th>Proveedor</th><th>Trabajador</th><th>Área</th><th>Horas</th><th>Coste</th><th>Estado</th><th>Responsable</th><th>Acciones</th></tr></thead><tbody>`+
     arr.map(p=>{
       const h=((Number(p.h_normal)||0)+(Number(p.h_extra)||0)+(Number(p.h_noct)||0)).toFixed(1);
       const fd=p.fechas&&p.fechas.length>1?p.fechas[0]+' – '+p.fechas[p.fechas.length-1]:p.fecha||'—';
@@ -1910,7 +1962,7 @@ function generarPDFBase64(p){
   // Header
   doc.setFillColor(44,95,46);doc.rect(0,0,W,14,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('PARTE DE TRABAJO — SUBCONTRATAS',M,9.5);
+  doc.text('PARTES GLOBALFEED',M,9.5);
   doc.setFontSize(8);doc.setFont('helvetica','normal');
   doc.text((p.id||'')+' · '+new Date(p.timestamp||Date.now()).toLocaleString('es-ES'),W-M,9.5,{align:'right'});
   y=24;
@@ -2185,26 +2237,69 @@ function aplicarDatosIA(d){
   // Reset form first
   resetForm();
 
-  // Match subcontrata by name
+  // Match proveedor by name against PROVEEDORES_GF + existing subcontratas
   if(d.subcontrata_nombre){
-    const sc=subcontratas.find(s=>
-      s.nombre.toLowerCase().includes(d.subcontrata_nombre.toLowerCase())||
-      d.subcontrata_nombre.toLowerCase().includes(s.nombre.toLowerCase())
-    );
+    const term=d.subcontrata_nombre.toLowerCase();
+    // First try subcontratas (have tarifas)
+    const sc=subcontratas.find(s=>s.nombre.toLowerCase().includes(term)||term.includes(s.nombre.toLowerCase()));
     if(sc){
-      const sel=document.getElementById('sc-sel');
-      if(sel){ sel.value=sc.id; onScSel(sc.id); }
+      const inp=document.getElementById('sc-sel'); if(inp)inp.value=sc.nombre;
+      const hid=document.getElementById('sc-sel-id'); if(hid)hid.value=sc.id;
+      selectedScId=sc.id; onScSel(sc.id);
+    } else if(typeof PROVEEDORES_GF!=='undefined'){
+      const prov=PROVEEDORES_GF.find(p=>p.nombre.toLowerCase().includes(term)||term.includes(p.nombre.toLowerCase()));
+      if(prov){
+        const inp=document.getElementById('sc-sel'); if(inp)inp.value=prov.nombre;
+        const hid=document.getElementById('sc-sel-id'); if(hid)hid.value=prov.cuenta;
+        selectedScId=prov.cuenta; lineasCoste=[]; renderLineasCoste();
+      } else {
+        const inp=document.getElementById('sc-sel'); if(inp)inp.value=d.subcontrata_nombre;
+      }
     }
   }
 
   // Basic fields
-  const set=(id,v)=>{ const e=document.getElementById(id); if(e&&v) e.value=v; };
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e&&v&&v!=='0') e.value=v; };
   set('trabajador', d.trabajador);
   set('area', d.area);
   set('trabajos', d.trabajos);
   set('materiales', d.materiales);
   set('permiso', d.permiso);
-  set('expediente', d.expediente);
+  set('otros', d.otros);
+
+  // Expediente — set input + show dropdown match
+  if(d.expediente){ const e=document.getElementById('expediente'); if(e)e.value=d.expediente; }
+
+  // Centro de coste + sección (from sello manuscrito)
+  if(d.centro_coste){
+    const cc=document.getElementById('centro_coste'); if(cc)cc.value=d.centro_coste;
+    // Try to find matching sección from data
+    const match = typeof CENTROS_COSTE_GF!=='undefined' ? CENTROS_COSTE_GF.find(c=>c.codigo.toLowerCase().includes(d.centro_coste.toLowerCase())) : null;
+    const sec=document.getElementById('seccion');
+    if(sec){ sec.value=match?.seccion||d.seccion||''; sec.removeAttribute('readonly'); sec.style.opacity='1'; }
+  } else if(d.seccion){
+    const sec=document.getElementById('seccion'); if(sec){sec.value=d.seccion;sec.removeAttribute('readonly');sec.style.opacity='1';}
+  }
+
+  // Naturaleza (Gasto/Inversión from sello)
+  if(d.naturaleza&&(d.naturaleza==='Gasto'||d.naturaleza==='Inversión')){
+    picks.naturaleza=d.naturaleza;
+    document.querySelectorAll('#pg-nat .pill').forEach(p=>{
+      if(p.textContent.trim()===d.naturaleza){p.classList.add('active');}else{p.classList.remove('active');}
+    });
+  }
+
+  // Recurso (Repuesto/M.O./Medios from sello)
+  if(d.recurso){
+    const rec=d.recurso.toLowerCase();
+    const recMap={'repuesto':'Repuesto','mano de obra':'Mano de obra','m.o':'Mano de obra','medios':'Medios'};
+    const found=Object.entries(recMap).find(([k])=>rec.includes(k));
+    if(found){ picks.recurso=found[1];
+      document.querySelectorAll('#pg-rec .pill').forEach(p=>{
+        if(p.textContent.trim()===found[1]){p.classList.add('active');}else{p.classList.remove('active');}
+      });
+    }
+  }
 
   // Jornada with date and hours
   if(d.fecha||d.h_normal||d.h_extra||d.h_noct){
@@ -2245,6 +2340,147 @@ function aplicarDatosIA(d){
   setTimeout(()=>nota.remove(),4000);
 }
 
+
+
+// ══════════════════════════════════════════════════════════════
+//  COMBOBOXES — PROVEEDORES, EXPEDIENTES, CENTROS DE COSTE
+// ══════════════════════════════════════════════════════════════
+function cerrarCombo(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); }
+
+function filtrarProveedores(q){
+  const list=document.getElementById('combo-sc'); if(!list)return;
+  const term=(q||'').toLowerCase().trim();
+  const fuente=(typeof PROVEEDORES_GF!=='undefined'&&PROVEEDORES_GF.length)?PROVEEDORES_GF:subcontratas.map(s=>({nombre:s.nombre,cuenta:s.id,nif:s.cif||''}));
+  const res=term.length<2?fuente.slice(0,30):fuente.filter(p=>p.nombre.toLowerCase().includes(term)||p.cuenta.toLowerCase().includes(term)||(p.nif||'').toLowerCase().includes(term)).slice(0,40);
+  if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados</div>';list.classList.add('open');return;}
+  list.innerHTML=res.map(p=>`<div class="combo-item" onmousedown="seleccionarProveedor('${p.cuenta}','${p.nombre.replace(/'/g,"\\'").replace(/"/g,"&quot;")}')">${p.nombre}<small>${p.cuenta}${p.nif?' · '+p.nif:''}</small></div>`).join('');
+  list.classList.add('open');
+}
+function seleccionarProveedor(cuenta,nombre){
+  const inp=document.getElementById('sc-sel');if(inp)inp.value=nombre;
+  const hid=document.getElementById('sc-sel-id');if(hid)hid.value=cuenta;
+  cerrarCombo('combo-sc');
+  const sc=subcontratas.find(s=>s.id===cuenta||s.nombre===nombre);
+  if(sc){selectedScId=sc.id;onScSel(sc.id);}
+  else{selectedScId=cuenta;const b=document.getElementById('db-coste');if(b)b.style.display='none';lineasCoste=[];renderLineasCoste();}
+}
+
+function filtrarExpedientes(q){
+  const list=document.getElementById('combo-exp');if(!list)return;
+  const fuente=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF:[];
+  const term=(q||'').toLowerCase();
+  const res=!term?fuente:fuente.filter(e=>e.toLowerCase().includes(term));
+  if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados — escribe uno nuevo</div>';list.classList.add('open');return;}
+  list.innerHTML=res.map(e=>`<div class="combo-item" onmousedown="document.getElementById('expediente').value=this.textContent.trim();cerrarCombo('combo-exp')">${e}</div>`).join('');
+  list.classList.add('open');
+}
+
+function filtrarCentros(q){
+  const list=document.getElementById('combo-cc');if(!list)return;
+  const fuente=typeof CENTROS_COSTE_GF!=='undefined'?CENTROS_COSTE_GF:[];
+  const term=(q||'').toLowerCase();
+  const res=!term?fuente:fuente.filter(c=>c.codigo.toLowerCase().includes(term)||c.nombre.toLowerCase().includes(term)||c.seccion.toLowerCase().includes(term));
+  if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados</div>';list.classList.add('open');return;}
+  list.innerHTML=res.slice(0,30).map(c=>`<div class="combo-item" onmousedown="seleccionarCentro('${c.codigo.replace(/'/g,"\\'")}','${c.seccion.replace(/'/g,"\\'")}')"> ${c.codigo}<small>${c.nombre} · ${c.seccion}</small></div>`).join('');
+  list.classList.add('open');
+}
+function seleccionarCentro(codigo,seccion){
+  const cc=document.getElementById('centro_coste');if(cc)cc.value=codigo;
+  const sec=document.getElementById('seccion');if(sec){sec.value=seccion;sec.removeAttribute('readonly');sec.style.opacity='1';}
+  cerrarCombo('combo-cc');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MULTI-FILE IA
+// ══════════════════════════════════════════════════════════════
+let iaFiles=[];
+function handleIADrop(e){const files=[...e.dataTransfer.files];if(files.length)processIAFiles(files);}
+function handleIAFiles(input){const files=[...input.files];if(files.length)processIAFiles(files);}
+function handleIAFile(input){handleIAFiles(input);}
+function processIAFiles(files){
+  iaFiles=[];
+  const allowed=['image/jpeg','image/jpg','image/png','image/webp','application/pdf'];
+  const valid=files.filter(f=>allowed.includes(f.type)&&f.size<=20*1024*1024);
+  if(!valid.length){alert('Formato no válido. Usa JPG, PNG o PDF de menos de 20MB.');return;}
+  let loaded=0;
+  valid.forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>{iaFiles.push({data:e.target.result.split(',')[1],type:file.type,name:file.name,size:file.size});loaded++;
+      if(loaded===valid.length)mostrarPreviewMulti();};
+    r.readAsDataURL(file);
+  });
+}
+function mostrarPreviewMulti(){
+  const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='none';
+  const prev=document.getElementById('ia-preview');if(!prev)return;prev.style.display='block';
+  const ic=f=>f.type==='application/pdf'?'📄':'🖼️';
+  prev.innerHTML=iaFiles.map((f,i)=>`<div style="background:var(--bg);border-radius:var(--rs);padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <span style="font-size:20px">${ic(f)}</span>
+    <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+    <div style="font-size:11px;color:var(--fa)">${(f.size/1024).toFixed(0)} KB</div></div>
+    <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
+  </div>`).join('')+`<div style="font-size:12px;color:var(--act);background:var(--acl);padding:8px 12px;border-radius:var(--rs);margin-top:4px">
+    ${iaFiles.length===1?'1 documento seleccionado':iaFiles.length+' documentos — se creará un parte por cada uno'}</div>`;
+  const btn=document.getElementById('ia-btn-analizar');
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent=iaFiles.length===1?'✨ Analizar y rellenar parte':'✨ Analizar '+iaFiles.length+' documentos';}
+}
+function resetIAModal(){
+  iaFiles=[];
+  const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='block';
+  const prev=document.getElementById('ia-preview');if(prev){prev.style.display='none';prev.innerHTML='';}
+  const res=document.getElementById('ia-result');if(res)res.style.display='none';
+  const sm=document.getElementById('ia-sm');if(sm)sm.style.display='none';
+  const btn=document.getElementById('ia-btn-analizar');
+  if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='✨ Analizar y rellenar parte';}
+  const fi=document.getElementById('ia-file-input');if(fi)fi.value='';
+}
+async function _analizarUno(){
+  const key=getGroqKey();
+  let imageBase64=iaFileData,imageMime=iaFileType;
+  if(iaFileType==='application/pdf'){const c=await pdfToImage(iaFileData);imageBase64=c.base64;imageMime='image/jpeg';}
+  const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(ninguna)';
+  const expLista=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF.join(', '):'';
+  const prompt='Analiza este documento industrial (albarán, factura, parte de trabajo).\nProveedores conocidos: '+scNombres+'\nExpedientes conocidos: '+expLista+'\nLee con ATENCIÓN los SELLOS MANUSCRITOS que indican: Gasto/Inversión, Expediente, C.Coste, Sección, Repuesto/M.O./Medios.\nDevuelve SOLO JSON:\n{"subcontrata_nombre":"proveedor","trabajador":"","area":"","fecha":"YYYY-MM-DD","h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"","materiales":"","permiso":"","expediente":"del sello si aparece","otros":"","centro_coste":"del sello","seccion":"del sello","naturaleza":"Gasto o Inversión del sello","recurso":"Repuesto/Mano de obra/Medios del sello","coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}';
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+    headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:1500,temperature:0.1,
+      messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},{type:'text',text:prompt}]}]})});
+  if(!resp.ok)throw new Error('Error '+resp.status);
+  const data=await resp.json();
+  const text=data.choices?.[0]?.message?.content||'';
+  const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+  try{return JSON.parse(clean);}catch(e){const m=text.match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null;}
+}
+const _origAnalizarDocumento=analizarDocumento;
+async function analizarDocumento(){
+  if(!iaFiles.length){alert('Selecciona al menos un documento.');return;}
+  if(iaFiles.length===1){iaFileData=iaFiles[0].data;iaFileType=iaFiles[0].type;iaFileName=iaFiles[0].name;return _origAnalizarDocumento();}
+  const btn=document.getElementById('ia-btn-analizar');if(btn){btn.disabled=true;btn.style.opacity='.6';}
+  const resultados=[];
+  for(let i=0;i<iaFiles.length;i++){
+    showSM('ia-sm','ok','Analizando documento '+(i+1)+' de '+iaFiles.length+': '+iaFiles[i].name+'...');
+    iaFileData=iaFiles[i].data;iaFileType=iaFiles[i].type;iaFileName=iaFiles[i].name;
+    try{const res=await _analizarUno();if(res)resultados.push({...res,_archivo:iaFiles[i].name});}catch(e){console.warn(e);}
+    if(i<iaFiles.length-1)await new Promise(r=>setTimeout(r,1500));
+  }
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+  if(!resultados.length){showSM('ia-sm','er','No se pudo analizar ningún documento.');return;}
+  if(resultados.length===1){cerrarModal('modal-ia');aplicarDatosIA(resultados[0]);return;}
+  window._iaResultados=resultados;
+  cerrarModal('modal-ia');
+  const modal=document.createElement('div');modal.className='mbg open';modal.id='modal-multi-ia';
+  let mhtml='<div class="modal" style="max-width:600px"><div class="mtl">✨ '+resultados.length+' partes detectados</div>'
+    +'<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Haz clic en cada uno para rellenar el formulario.</p>';
+  resultados.forEach((r,i)=>{
+    mhtml+='<div style="background:var(--bg);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+      +'<div><div style="font-size:13.5px;font-weight:500">'+(r.subcontrata_nombre||'Sin proveedor')+' · '+(r.fecha||'Sin fecha')+'</div>'
+      +'<div style="font-size:12px;color:var(--mu)">'+(r.trabajos?r.trabajos.slice(0,60):(r._archivo||''))+'</div></div>'
+      +'<button class="btn btn-f btn-sm" onclick="aplicarDatosIA(window._iaResultados['+i+']);document.getElementById(\'modal-multi-ia\').remove()">Crear parte</button></div>';
+  });
+  mhtml+='<div class="brow"><button class="btn btn-o" onclick="document.getElementById(\'modal-multi-ia\').remove()">Cerrar</button></div></div>';
+  modal.innerHTML=mhtml;
+  document.body.appendChild(modal);
+}
 
 // Sync automático cuando el usuario vuelve a la app (desde otra app o pantalla bloqueada)
 document.addEventListener('visibilitychange', () => {
