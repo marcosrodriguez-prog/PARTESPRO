@@ -2195,6 +2195,33 @@ Usa "" para texto no encontrado y 0 para números. lineas puede ser [].`;
     if(!resp.ok){
       const err = await resp.json().catch(()=>({}));
       const msg = err?.error?.message||'';
+      if(resp.status===503 || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('overloaded')){
+        // Auto-retry after 10 seconds
+        showSM('ia-sm','ok','⏳ Gemini saturado. Reintentando en 10 segundos...');
+        if(btn) btn.textContent='⏳ Esperando...';
+        await new Promise(r=>setTimeout(r,10000));
+        showSM('ia-sm','ok','🔄 Reintentando...');
+        const resp2 = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[partData,{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1500}})});
+        if(resp2.ok){
+          const data2=await resp2.json();
+          const text2=data2.candidates?.[0]?.content?.parts?.[0]?.text||'';
+          if(text2){
+            let ex2; try{const c=text2.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();ex2=JSON.parse(c);}catch(e){const m=text2.match(/\{[\s\S]*\}/);if(m)ex2=JSON.parse(m[0]);else throw new Error('No se pudo interpretar.');}
+            const r2=[];
+            if(ex2.subcontrata_nombre)r2.push('🏭 '+ex2.subcontrata_nombre);
+            if(ex2.trabajador)r2.push('👤 '+ex2.trabajador);
+            if(ex2.fecha)r2.push('📅 '+ex2.fecha);
+            if(ex2.coste_total)r2.push('💶 '+ex2.coste_total+' €');
+            const re2=document.getElementById('ia-result');re2.style.display='block';
+            re2.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+r2.join('<br>');
+            showSM('ia-sm','ok','✅ Completado.');
+            setTimeout(()=>{aplicarDatosIA(ex2);cerrarModal('modal-ia');},1500);
+            if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+            return;
+          }
+        }
+        throw new Error('Gemini sigue saturado. Espera 1-2 minutos e inténtalo de nuevo.');
+      }
       if(resp.status===429) throw new Error('Límite de uso alcanzado. Espera 1 minuto e inténtalo de nuevo.');
       if(resp.status===403) throw new Error('API Key sin permisos. Habilita la API "Generative Language" en console.cloud.google.com.');
       if(resp.status===400) throw new Error('Formato no compatible. Prueba con una foto JPG/PNG del documento.');
