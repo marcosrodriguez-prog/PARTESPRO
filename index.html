@@ -2141,37 +2141,53 @@ Usa "" para texto no encontrado y 0 para números. lineas puede ser [].`;
       partData = { inline_data:{ mime_type:iaFileType, data:iaFileData } };
     }
 
-    showSM('ia-sm','ok','Analizando con Gemini AI...');
+    showSM('ia-sm','ok','Consultando modelos disponibles...');
 
-    // Modelos Gemini vigentes — abril 2026
-    const MODELS = [
-      'gemini-2.5-flash-preview-04-17',
-      'gemini-2.5-pro-preview-03-25',
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro'
-    ];
-    let resp = null;
-    for(const model of MODELS){
-      showSM('ia-sm','ok','Conectando con '+model+'...');
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-      resp = await fetch(url, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ contents:[{parts:[partData,{text:prompt}]}], generationConfig:{temperature:0.1,maxOutputTokens:1500} })
-      });
-      if(resp.ok) break;
-      if(resp.status===429 || resp.status===404){ await new Promise(r=>setTimeout(r,2000)); continue; }
-      break; // other error, stop trying
+    // Primero consultar qué modelos están disponibles en esta cuenta
+    let workingModel = null;
+    try {
+      const listResp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
+      );
+      if(listResp.ok){
+        const listData = await listResp.json();
+        const models = (listData.models||[]).filter(m =>
+          m.supportedGenerationMethods?.includes('generateContent')
+        );
+        // Preferir modelos más nuevos con visión
+        const prefs = ['gemini-2.5','gemini-2.0','gemini-1.5-flash','gemini-1.5'];
+        for(const p of prefs){
+          const m = models.find(x => x.name.includes(p));
+          if(m){ workingModel = m.name.replace('models/',''); break; }
+        }
+        if(!workingModel && models.length){
+          workingModel = models[0].name.replace('models/','');
+        }
+      }
+    } catch(e){}
+
+    if(!workingModel){
+      throw new Error('No se encontró ningún modelo disponible. Ve a console.cloud.google.com y habilita la API "Generative Language API" para el proyecto "Proyecto Gemini predeterminado".');
     }
 
-    if(!resp || !resp.ok){
-      const err = await resp?.json().catch(()=>({}));
+    showSM('ia-sm','ok','Analizando con '+workingModel+'...');
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${workingModel}:generateContent?key=${key}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{ parts:[partData, {text:prompt}] }],
+        generationConfig:{ temperature:0.1, maxOutputTokens:1500 }
+      })
+    });
+
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
       const msg = err?.error?.message||'';
-      if(resp?.status===429) throw new Error('Cuota diaria de Gemini agotada (límite gratuito). Vuelve a intentarlo mañana, o saca una foto del documento con el móvil y súbela como imagen JPG.');
-      if(resp?.status===403) throw new Error('API Key inválida. Ve a aistudio.google.com y crea una nueva key.');
-      if(resp?.status===400) throw new Error('Formato no compatible. Prueba con una foto JPG/PNG del documento.');
-      throw new Error(msg||'Error '+resp?.status+'. Prueba con una foto JPG/PNG.');
+      if(resp.status===429) throw new Error('Límite de uso alcanzado. Espera 1 minuto e inténtalo de nuevo.');
+      if(resp.status===403) throw new Error('API Key sin permisos. Habilita la API "Generative Language" en console.cloud.google.com.');
+      if(resp.status===400) throw new Error('Formato no compatible. Prueba con una foto JPG/PNG del documento.');
+      throw new Error(msg||'Error '+resp.status);
     }
 
     const data = await resp.json();
