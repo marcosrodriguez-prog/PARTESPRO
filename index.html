@@ -588,10 +588,11 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 
   <div class="card" style="border:1.5px solid #7C3AED;background:#FAFAFF">
-    <div class="ct" style="color:#4F46E5">✨ Inteligencia Artificial — Google Gemini</div>
+    <div class="ct" style="color:#4F46E5">✨ Inteligencia Artificial — Groq</div>
     <p style="font-size:13px;color:#4F46E5;margin-bottom:6px">La IA está <strong>activa</strong> para todos los usuarios. Completamente gratuita.</p>
     <div style="background:#F5F3FF;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:#4F46E5">
-      📄 Sube una foto o PDF de un albarán, parte manuscrito o factura →<br>la IA rellena el formulario automáticamente.<br><br>
+      📄 Sube una foto o PDF de un albarán, parte manuscrito o factura →<br>
+      la IA lee el contenido y rellena el formulario automáticamente.<br><br>
       Pulsa <strong>✨ Crear desde documento</strong> en la pantalla de Nuevo parte.
     </div>
   </div>
@@ -851,18 +852,18 @@ function checkAuth() {
 // ══════════════════════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════════════════════
-function saveGeminiKey(){
-  const val=(document.getElementById('gemini-key-input')?.value||'').trim();
-  if(!val||!val.startsWith('AIza')){ showSM('ai-sm','er','Key inválida. Debe empezar por AIza...'); return; }
-  localStorage.setItem('pp_gemini_key',val);
-  showSM('ai-sm','ok','✓ API Key de Gemini guardada. La IA ya está lista.');
+function saveGroqKey(){
+  const val=(document.getElementById('groq-key-input')?.value||'').trim();
+  if(!val||!val.startsWith('gsk_')){ showSM('ai-sm','er','Key inválida. Debe empezar por gsk_'); return; }
+  localStorage.setItem('pp_groq_key',val);
+  showSM('ai-sm','ok','✓ API Key de Groq guardada. La IA ya está lista.');
 }
 function loadConfig() {
   try {
     const c = JSON.parse(localStorage.getItem('pp_cfg')||'{}');
     emailCc = c.emailCc||[];
-    const gk = document.getElementById('gemini-key-input');
-    if(gk && getGeminiKey() !== 'GEMINI_KEY_AQUI') gk.value = getGeminiKey();
+    const gk = document.getElementById('groq-key-input');
+    if(gk && getGroqKey()) gk.value = getGroqKey();
     const inputs = document.querySelectorAll('.cc-input');
     emailCc.forEach((a,i)=>{ if(inputs[i]) inputs[i].value=a; });
   } catch(e){}
@@ -2051,9 +2052,9 @@ function initApp(){
 // ══════════════════════════════════════════════════════════════
 //  INTELIGENCIA ARTIFICIAL — CREAR PARTE DESDE DOCUMENTO
 // ══════════════════════════════════════════════════════════════
-// IA — Google Gemini
-const _k = ['AIzaSyCcTF4n6Xty', 'RbvLUy_0NatQ-0T', 'bzC1tcbw'];
-function getGeminiKey(){ return _k.join(''); }
+// IA — Groq (gratuito, sin tarjeta, sin límites diarios)
+const _gk = ['gsk_Gr45m3VLuUfoWOLa', 'BunjWGdyb3FYZ1UNy', 'I1IajrTVf562i3h3mpX'];
+function getGroqKey(){ return _gk.join(''); }
 
 let iaFileData=null, iaFileType=null, iaFileName=null;
 
@@ -2105,163 +2106,79 @@ function processIAFile(file){
 
 async function analizarDocumento(){
   if(!iaFileData){ alert('Selecciona un documento primero.'); return; }
-  const key = getGeminiKey();
-
+  const key = getGroqKey();
+  if(!key){ alert('Configura la API Key de Groq en Configuración.'); return; }
   const btn = document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Analizando...';}
-  showSM('ia-sm','ok','Preparando documento...');
-
+  if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Procesando...';}
   const scNombres = subcontratas.map(s=>s.nombre).join(', ')||'(ninguna registrada)';
-  const prompt = `Eres un asistente experto en análisis de partes de trabajo industriales, albaranes y facturas.
-Analiza este documento y extrae TODOS los datos visibles.
-Subcontratas conocidas: ${scNombres}
-Devuelve SOLO JSON válido sin texto adicional:
-{"subcontrata_nombre":"empresa o proveedor","trabajador":"nombre trabajador o técnico","area":"zona o área","fecha":"YYYY-MM-DD","h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripción trabajos","materiales":"materiales o equipos","permiso":"nº permiso","expediente":"nº expediente o pedido","coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0}],"notas":""}
-Usa "" para texto no encontrado y 0 para números. lineas puede ser [].`;
-
+  const prompt = `Eres un experto en análisis de partes de trabajo industriales, albaranes y facturas.\nAnaliza esta imagen y extrae todos los datos visibles.\nSubcontratas conocidas: ${scNombres}\nDevuelve SOLO JSON sin texto adicional:\n{"subcontrata_nombre":"empresa o la más parecida de las conocidas","trabajador":"nombre trabajador","area":"zona o área","fecha":"YYYY-MM-DD","h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripción trabajos","materiales":"materiales o equipos","permiso":"nº permiso","expediente":"nº expediente","coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0}],"notas":""}\nUsa "" para no encontrado y 0 para números.`;
   try {
-    let partData;
-
+    let imageBase64 = iaFileData, imageMime = iaFileType;
     if(iaFileType === 'application/pdf'){
-      // PDFs: upload via Files API first
-      showSM('ia-sm','ok','Subiendo PDF a Gemini...');
-      const pdfBytes = Uint8Array.from(atob(iaFileData), c=>c.charCodeAt(0));
-      const blob = new Blob([pdfBytes], {type:'application/pdf'});
-
-      // Step 1: initiate resumable upload
-      const initResp = await fetch(
-        `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${key}`,
-        { method:'POST', headers:{'X-Goog-Upload-Protocol':'multipart','Content-Type':'multipart/related; boundary=BOUNDARY'},
-          body: `--BOUNDARY\r\nContent-Type: application/json\r\n\r\n{"file":{"display_name":"documento.pdf"}}\r\n--BOUNDARY\r\nContent-Type: application/pdf\r\nContent-Transfer-Encoding: base64\r\n\r\n${iaFileData}\r\n--BOUNDARY--` }
-      );
-
-      if(!initResp.ok){
-        // Fallback: if Files API fails, try as inline data anyway
-        partData = { inline_data:{ mime_type:'application/pdf', data:iaFileData } };
-      } else {
-        const fileInfo = await initResp.json();
-        const fileUri = fileInfo?.file?.uri;
-        if(fileUri){
-          partData = { file_data:{ mime_type:'application/pdf', file_uri:fileUri } };
-        } else {
-          partData = { inline_data:{ mime_type:'application/pdf', data:iaFileData } };
-        }
-      }
-    } else {
-      // Images: send inline directly
-      partData = { inline_data:{ mime_type:iaFileType, data:iaFileData } };
+      showSM('ia-sm','ok','📄 Convirtiendo PDF a imagen...');
+      const conv = await pdfToImage(iaFileData);
+      imageBase64 = conv.base64; imageMime = 'image/jpeg';
     }
-
-    showSM('ia-sm','ok','Consultando modelos disponibles...');
-
-    // Primero consultar qué modelos están disponibles en esta cuenta
-    let workingModel = null;
-    try {
-      const listResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`
-      );
-      if(listResp.ok){
-        const listData = await listResp.json();
-        const models = (listData.models||[]).filter(m =>
-          m.supportedGenerationMethods?.includes('generateContent')
-        );
-        // Preferir modelos más nuevos con visión
-        const prefs = ['gemini-2.5','gemini-2.0','gemini-1.5-flash','gemini-1.5'];
-        for(const p of prefs){
-          const m = models.find(x => x.name.includes(p));
-          if(m){ workingModel = m.name.replace('models/',''); break; }
-        }
-        if(!workingModel && models.length){
-          workingModel = models[0].name.replace('models/','');
-        }
-      }
-    } catch(e){}
-
-    if(!workingModel){
-      throw new Error('No se encontró ningún modelo disponible. Ve a console.cloud.google.com y habilita la API "Generative Language API" para el proyecto "Proyecto Gemini predeterminado".');
-    }
-
-    showSM('ia-sm','ok','Analizando con '+workingModel+'...');
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${workingModel}:generateContent?key=${key}`;
-    const resp = await fetch(url, {
+    showSM('ia-sm','ok','🤖 Analizando con Groq AI...');
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents:[{ parts:[partData, {text:prompt}] }],
-        generationConfig:{ temperature:0.1, maxOutputTokens:1500 }
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens:1500, temperature:0.1,
+        messages:[{role:'user',content:[
+          {type:'image_url',image_url:{url:`data:${imageMime};base64,${imageBase64}`}},
+          {type:'text',text:prompt}
+        ]}]
       })
     });
-
     if(!resp.ok){
-      const err = await resp.json().catch(()=>({}));
-      const msg = err?.error?.message||'';
-      if(resp.status===503 || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('overloaded')){
-        // Auto-retry after 10 seconds
-        showSM('ia-sm','ok','⏳ Gemini saturado. Reintentando en 10 segundos...');
-        if(btn) btn.textContent='⏳ Esperando...';
-        await new Promise(r=>setTimeout(r,10000));
-        showSM('ia-sm','ok','🔄 Reintentando...');
-        const resp2 = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[partData,{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1500}})});
-        if(resp2.ok){
-          const data2=await resp2.json();
-          const text2=data2.candidates?.[0]?.content?.parts?.[0]?.text||'';
-          if(text2){
-            let ex2; try{const c=text2.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();ex2=JSON.parse(c);}catch(e){const m=text2.match(/\{[\s\S]*\}/);if(m)ex2=JSON.parse(m[0]);else throw new Error('No se pudo interpretar.');}
-            const r2=[];
-            if(ex2.subcontrata_nombre)r2.push('🏭 '+ex2.subcontrata_nombre);
-            if(ex2.trabajador)r2.push('👤 '+ex2.trabajador);
-            if(ex2.fecha)r2.push('📅 '+ex2.fecha);
-            if(ex2.coste_total)r2.push('💶 '+ex2.coste_total+' €');
-            const re2=document.getElementById('ia-result');re2.style.display='block';
-            re2.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+r2.join('<br>');
-            showSM('ia-sm','ok','✅ Completado.');
-            setTimeout(()=>{aplicarDatosIA(ex2);cerrarModal('modal-ia');},1500);
-            if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
-            return;
-          }
-        }
-        throw new Error('Gemini sigue saturado. Espera 1-2 minutos e inténtalo de nuevo.');
-      }
-      if(resp.status===429) throw new Error('Límite de uso alcanzado. Espera 1 minuto e inténtalo de nuevo.');
-      if(resp.status===403) throw new Error('API Key sin permisos. Habilita la API "Generative Language" en console.cloud.google.com.');
-      if(resp.status===400) throw new Error('Formato no compatible. Prueba con una foto JPG/PNG del documento.');
+      const err=await resp.json().catch(()=>({}));
+      const msg=err?.error?.message||'';
+      if(resp.status===401) throw new Error('API Key de Groq inválida. Ve a console.groq.com y crea una nueva.');
+      if(resp.status===429) throw new Error('Límite temporal de Groq. Espera 1 minuto.');
       throw new Error(msg||'Error '+resp.status);
     }
-
-    const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    if(!text) throw new Error('Sin respuesta de Gemini. Prueba con una imagen más clara.');
-
+    const data=await resp.json();
+    const text=data.choices?.[0]?.message?.content||'';
+    if(!text) throw new Error('Sin respuesta. Prueba con una imagen más clara.');
     let extracted;
-    try {
-      const clean = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-      extracted = JSON.parse(clean);
-    } catch(e){
-      const match = text.match(/\{[\s\S]*\}/);
-      if(match){ try{ extracted=JSON.parse(match[0]); }catch(e2){ throw new Error('No se pudo interpretar la respuesta. Prueba con una imagen más nítida.'); } }
-      else throw new Error('No se pudo interpretar la respuesta. Prueba con una imagen más nítida.');
-    }
-
+    try{ const c=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim(); extracted=JSON.parse(c); }
+    catch(e){ const m=text.match(/\{[\s\S]*\}/); if(m){try{extracted=JSON.parse(m[0]);}catch(e2){throw new Error('No se pudo interpretar la respuesta.');}} else throw new Error('No se pudo interpretar la respuesta.'); }
     const resumen=[];
     if(extracted.subcontrata_nombre) resumen.push('🏭 Empresa: '+extracted.subcontrata_nombre);
     if(extracted.trabajador)          resumen.push('👤 Trabajador: '+extracted.trabajador);
     if(extracted.fecha)               resumen.push('📅 Fecha: '+extracted.fecha);
     if(extracted.trabajos)            resumen.push('🔧 Trabajos: '+extracted.trabajos.slice(0,80));
     if(extracted.coste_total)         resumen.push('💶 Importe: '+extracted.coste_total+' €');
-    if(extracted.lineas?.length)      resumen.push('📋 '+extracted.lineas.length+' concepto(s) detectado(s)');
-
-    const resultEl = document.getElementById('ia-result');
-    resultEl.style.display='block';
-    resultEl.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+resumen.join('<br>');
-    showSM('ia-sm','ok','✅ Analizando correctamente. Aplicando al formulario...');
-
-    setTimeout(()=>{ aplicarDatosIA(extracted); cerrarModal('modal-ia'); }, 1500);
+    if(extracted.lineas?.length)      resumen.push('📋 '+extracted.lineas.length+' concepto(s)');
+    const re=document.getElementById('ia-result'); re.style.display='block';
+    re.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+resumen.join('<br>');
+    showSM('ia-sm','ok','✅ Completado. Aplicando al formulario...');
+    setTimeout(()=>{ aplicarDatosIA(extracted); cerrarModal('modal-ia'); },1500);
     if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
-
   } catch(e){
     showSM('ia-sm','er','❌ '+e.message);
     if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
   }
+}
+
+async function pdfToImage(pdfBase64){
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{ const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  const pdfData=atob(pdfBase64), arr=new Uint8Array(pdfData.length);
+  for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
+  const pdf=await window.pdfjsLib.getDocument({data:arr}).promise;
+  const page=await pdf.getPage(1);
+  const vp=page.getViewport({scale:2.0});
+  const canvas=document.createElement('canvas');
+  canvas.width=vp.width; canvas.height=vp.height;
+  await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+  return {base64:canvas.toDataURL('image/jpeg',0.92).split(',')[1]};
 }
 
 function aplicarDatosIA(d){
