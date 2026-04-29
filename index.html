@@ -1070,28 +1070,33 @@ async function sbDelete(tabla, id) {
 // ── Supabase Storage — guardar y cargar imágenes de albaranes ─
 async function supabaseUploadImage(parteId, base64DataUrl){
   try {
-    // Convert base64 to blob
-    const arr = base64DataUrl.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    const u8arr = new Uint8Array(bstr.length);
+    const arr=base64DataUrl.split(',');
+    const mime=arr[0].match(/:(.*?);/)[1];
+    const bstr=atob(arr[1]);
+    const u8arr=new Uint8Array(bstr.length);
     for(let i=0;i<bstr.length;i++) u8arr[i]=bstr.charCodeAt(i);
-    const blob = new Blob([u8arr], {type:mime});
-    const ext = mime.includes('pdf') ? 'pdf' : 'jpg';
-    const path = `albaranes/${parteId}.${ext}`;
-    // Upload to Supabase Storage bucket 'documentos'
-    const r = await fetch(`${sbBase()}/storage/v1/object/documentos/${path}`, {
-      method: 'POST',
-      headers: { ...sbHeaders(), 'Content-Type': mime, 'x-upsert': 'true' },
-      body: blob
+    const blob=new Blob([u8arr],{type:mime});
+    const ext=mime.includes('pdf')?'pdf':'jpg';
+    const path=`albaranes/${parteId}.${ext}`;
+    const r=await fetch(`${sbBase()}/storage/v1/object/documentos/${path}`,{
+      method:'POST',
+      headers:{...sbHeaders(),'Content-Type':mime,'x-upsert':'true'},
+      body:blob
     });
     if(r.ok){
-      const publicUrl = `${sbBase()}/storage/v1/object/public/documentos/${path}`;
-      // Also update the parte record with the URL
-      await sbUpsert('partes', {id:parteId, documento_url:publicUrl}).catch(()=>{});
+      const publicUrl=`${sbBase()}/storage/v1/object/public/documentos/${path}`;
+      // PATCH only the documento_url field (don't full upsert)
+      await fetch(`${sbBase()}/rest/v1/partes?id=eq.${encodeURIComponent(parteId)}`,{
+        method:'PATCH',
+        headers:{...sbHeaders(),'Prefer':'return=minimal'},
+        body:JSON.stringify({documento_url:publicUrl})
+      });
+      // Update local cache too
+      const p=partesCache.find(x=>x.id===parteId);
+      if(p) p.documento_url=publicUrl;
       return publicUrl;
     }
-  } catch(e){ console.warn('Upload error:', e.message); }
+  }catch(e){console.warn('Supabase Storage upload error:',e.message);}
   return null;
 }
 async function getAlbaranImageUrl(parteId){
@@ -1166,7 +1171,7 @@ async function syncAll(silent) {
         if (typeof p[k]==='string') { try{p[k]=JSON.parse(p[k]);}catch(e){p[k]=[];} }
         if (!p[k]) p[k]=[];
       });
-      ['h_normal','h_extra','h_noct','coste'].forEach(k => { p[k]=Number(p[k])||0; });
+      ['h_normal','h_extra','h_noct','coste'].forEach(k => { p[k]=parseFloat(String(p[k]||0).replace(',','.'))||0; });
     });
     // Everything comes from Supabase — PIN and firma included
     subcontratas = rSC;
@@ -2090,15 +2095,14 @@ function filtrar(){
     cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--fa)"><p style="font-size:24px">📋</p><p style="margin-top:7px">No hay albaranes con estos filtros.</p></div>';
     return;
   }
-  // Reset selection when filter changes
-  seleccionados.clear();
+  // Keep existing selection — do NOT clear here (background sync would wipe user's selection)
   cont.innerHTML=`
-    <div id="bulk-bar" style="display:none;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div id="bulk-bar" style="display:none;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:10px 14px;margin-bottom:10px;flex-wrap:wrap;align-items:center;gap:10px">
       <span id="bulk-count" style="font-size:13px;font-weight:500;color:var(--act)"></span>
-      <button class="btn btn-o btn-sm" onclick="bulkEditar()">✏️ Editar seleccionados</button>
-      <button class="btn btn-o btn-sm" onclick="bulkEmail()">✉ Enviar por correo</button>
-      <button class="btn btn-o btn-sm" style="color:var(--da);border-color:#F09595" onclick="bulkEliminar()">🗑️ Eliminar</button>
-      <button class="btn btn-o btn-sm" onclick="seleccionarTodos(arr)">☑ Todos</button>
+      <button class="btn btn-o btn-sm" onclick="bulkEditar()">✏️ Editar</button>
+      <button class="btn btn-o btn-sm" onclick="bulkEmail()">✉ Correo</button>
+      <button class="btn btn-f btn-sm" style="background:#dc3545;border-color:#dc3545" onclick="bulkEliminar()">🗑️ Eliminar seleccionados</button>
+      <button class="btn btn-o btn-sm" onclick="seleccionarTodosActual()">☑ Todos</button>
       <button class="btn btn-o btn-sm" onclick="deseleccionarTodos()">☐ Ninguno</button>
     </div>
     <div style="overflow-x:auto"><table class="ht"><thead><tr>
@@ -2134,6 +2138,15 @@ function filtrar(){
       </tr>`;
     }).join('')+'</tbody></table></div>';
   actualizarBulkBar();
+  // Restore checkboxes for previously selected items (survive background sync)
+  seleccionados.forEach(id=>{
+    const chk=document.querySelector(`.chk-row[data-id="${id}"]`);
+    const row=document.getElementById('row-'+id);
+    if(chk) chk.checked=true;
+    if(row) row.style.background='var(--acl)';
+  });
+  const chkAll=document.getElementById('chk-all');
+  if(chkAll) chkAll.checked=arr.length>0&&seleccionados.size>=arr.length;
 }
 
 function toggleSeleccion(id, checked, arr){
@@ -2158,6 +2171,15 @@ function toggleTodos(chk, arr){
 }
 function seleccionarTodos(arr){ toggleTodos({checked:true},arr); }
 function deseleccionarTodos(){ toggleTodos({checked:false},[...seleccionados].map(id=>({id}))); }
+function seleccionarTodosActual(){
+  // Select all visible rows in current historial
+  document.querySelectorAll('.chk-row').forEach(chk=>{
+    const id=chk.dataset.id;
+    if(id){ seleccionados.add(id); chk.checked=true; const row=document.getElementById('row-'+id); if(row)row.style.background='var(--acl)'; }
+  });
+  actualizarBulkBar();
+  const chkAll=document.getElementById('chk-all'); if(chkAll)chkAll.checked=true;
+}
 function actualizarBulkBar(){
   const bar=document.getElementById('bulk-bar');
   const cnt=document.getElementById('bulk-count');
@@ -2396,11 +2418,35 @@ function exportPartePDF(){
   const a=document.createElement('a');a.href=url;a.download='Parte_'+p.id+'.pdf';a.click();URL.revokeObjectURL(url);
 }
 function exportHistorialExcel(){
-  if(!partesCache.length){alert('Sin partes.');return;}
-  const hdrs=['Ref.','Fecha','Proveedor','Trabajador','Área','H.Norm','H.Extra','H.Noct','H.Total','Coste €','Estado','Responsable','C.Coste','Sección','Timestamp'];
-  const data=partesCache.map(p=>[p.id,p.fecha,p.proveedor_nombre||p.empresa,p.trabajador,p.area,p.h_normal,p.h_extra,p.h_noct,(p.h_normal||0)+(p.h_extra||0)+(p.h_noct||0),p.coste,p.estado||'Validado',p.responsable,p.centro_coste,p.seccion,p.timestamp]);
+  if(!partesCache.length){alert('Sin albaranes.');return;}
+  const hdrs=['Ref.','Fecha','Proveedor','Nº Albarán','Oferta','Concepto','Expediente','C.Coste','H.Norm','H.Extra','H.Noct','H.Total','Coste €','Estado','Responsable','Trabajador','Naturaleza','Recurso','Sección','Materiales','Permiso','Notas','Timestamp'];
+  const data=partesCache.map(p=>[
+    p.id,
+    p.fecha||'',
+    p.subcontrata_nombre||p.proveedor_nombre||p.empresa||'',
+    p.numero_albaran||'',
+    p.oferta||'',
+    p.concepto_alb||p.trabajos?.slice(0,60)||'',
+    p.expediente||'',
+    p.centro_coste||'',
+    Number(p.h_normal)||0,
+    Number(p.h_extra)||0,
+    Number(p.h_noct)||0,
+    (Number(p.h_normal)||0)+(Number(p.h_extra)||0)+(Number(p.h_noct)||0),
+    Number(p.coste)||0,
+    p.estado||'Pendiente',
+    p.responsable||'',
+    p.trabajador||'',
+    p.naturaleza||'',
+    p.recurso||'',
+    p.seccion||'',
+    p.materiales||'',
+    p.permiso||'',
+    p.notas||'',
+    p.timestamp||''
+  ]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
-  ws['!cols']=[10,12,24,20,16,8,8,8,8,10,14,18,14,14,18].map(w=>({wch:w}));
+  ws['!cols']=[10,12,28,14,12,30,20,10,8,8,8,8,10,12,18,18,10,14,12,16,12,16,18].map(w=>({wch:w}));
   const ws2h=['ID','Nombre','CIF','Email','Tarifas'];
   const ws2d=subcontratas.map(s=>[s.id,s.nombre,s.cif,s.email,(s.tarifas||[]).map(t=>t.concepto+': '+t.precio+' €/'+t.unidad).join('; ')]);
   const ws2=XLSX.utils.aoa_to_sheet([ws2h,...ws2d]);
@@ -2408,10 +2454,10 @@ function exportHistorialExcel(){
   const ws3d=responsables.map(r=>[r.id,r.nombre,r.puesto,r.email,r.telefono]);
   const ws3=XLSX.utils.aoa_to_sheet([ws3h,...ws3d]);
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Partes');
-  XLSX.utils.book_append_sheet(wb,ws2,'Proveedors');
+  XLSX.utils.book_append_sheet(wb,ws,'Albaranes');
+  XLSX.utils.book_append_sheet(wb,ws2,'Proveedores');
   XLSX.utils.book_append_sheet(wb,ws3,'Responsables');
-  XLSX.writeFile(wb,'PartePro_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  XLSX.writeFile(wb,'AlbaranesGlobalFeed_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 function exportHistorialPDF(){
   if(!partesCache.length){alert('Sin partes.');return;}
@@ -2641,8 +2687,22 @@ async function guardarTodosIAPartes(){
       // Build parte object from IA data
       const id='GF-'+Date.now().toString().slice(-7)+'-'+i;
       const sc=subcontratas.find(s=>s.nombre.toLowerCase().includes((d.proveedor_nombre||'').toLowerCase()));
-      const lineas=(d.lineas||[]).map(l=>({...l,subtotal:(Number(l.cantidad)||0)*(Number(l.precio)||0)*(1-(Number(l.descuento)||0)/100)}));
-      const total=lineas.reduce((s,l)=>s+(Number(l.subtotal)||0), Number(d.coste_total)||0);
+      // Parse coste_total safely (handle "1.234,56", "1234.56€", etc.)
+      function parseCoste(v){
+        if(!v && v!==0) return 0;
+        const s=String(v).replace(/[€$£\s]/g,'').replace(/\.(?=\d{3}[,])/g,'').replace(',','.');
+        return parseFloat(s)||0;
+      }
+      const lineas=(d.lineas||[]).map(l=>({...l,
+        cantidad:Number(l.cantidad)||0,
+        precio:parseCoste(l.precio),
+        descuento:Number(l.descuento)||0,
+        subtotal:(Number(l.cantidad)||0)*parseCoste(l.precio)*(1-(Number(l.descuento)||0)/100)
+      }));
+      const lineasTotal=lineas.reduce((s,l)=>s+(Number(l.subtotal)||0),0);
+      const docTotal=parseCoste(d.coste_total);
+      // Use lineas total if available, otherwise use document total
+      const total=lineasTotal>0 ? lineasTotal : docTotal;
       const parte={
         id, fecha:d.fecha||new Date().toISOString().split('T')[0],
         subcontrata_id:sc?.id||'', subcontrata_nombre:d.subcontrata_nombre||d.proveedor_nombre||'',
@@ -2813,22 +2873,26 @@ function aplicarDatosIA(d){
     renderJornadas();
   }
 
-  // Lineas de coste con descuento
+  // Lineas de coste con descuento — parse amounts safely
+  function _parseAmt(v){const s=String(v||0).replace(/[€$£\s]/g,'').replace(/\.(?=\d{3}[,])/g,'').replace(',','.');return parseFloat(s)||0;}
   if(d.lineas && d.lineas.length){
     lineasCoste=d.lineas.map((l,i)=>({
       id:'ia'+i,
       concepto:l.concepto||'Concepto '+(i+1),
       unidad:l.unidad||'u',
-      precio:Number(l.precio)||0,
+      precio:_parseAmt(l.precio),
       cantidad:Number(l.cantidad)||0,
       descuento:Number(l.descuento)||0,
-      subtotal:(Number(l.cantidad)||0)*(Number(l.precio)||0)*(1-(Number(l.descuento)||0)/100),
+      subtotal:(Number(l.cantidad)||0)*_parseAmt(l.precio)*(1-(Number(l.descuento)||0)/100),
       libre:true
     }));
     renderLineasCoste();
-  } else if(d.coste_total && !lineasCoste.length){
-    lineasCoste=[{id:'ia0',concepto:'Importe según documento',unidad:'u',precio:Number(d.coste_total),cantidad:1,descuento:0,subtotal:Number(d.coste_total),libre:true}];
-    renderLineasCoste();
+  } else if(d.coste_total){
+    const ct=_parseAmt(d.coste_total);
+    if(ct>0){
+      lineasCoste=[{id:'ia0',concepto:'Importe según documento',unidad:'u',precio:ct,cantidad:1,descuento:0,subtotal:ct,libre:true}];
+      renderLineasCoste();
+    }
   }
 
   // Go to step 1 with data filled
@@ -2993,31 +3057,35 @@ async function _analizarUno(){
   const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(ninguna)';
   // Build expediente list with codes for matching
   const expLista=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF.join(', '):'';
-  const provNombres = typeof PROVEEDORES_GF!=='undefined' ? PROVEEDORES_GF.slice(0,100).map(p=>p.nombre).join(', ') : scNombres;
+  const provLista = typeof PROVEEDORES_GF!=='undefined'
+    ? PROVEEDORES_GF.map(p=>p.nombre).join('\n')
+    : subcontratas.map(s=>s.nombre).join('\n');
   const prompt='Analiza este documento industrial (albaran, factura, parte de trabajo).\n'
-    +'BASE DE DATOS DE PROVEEDORES (busca similitud exacta con el nombre en el documento): '+provNombres+'\n'
-    +'Expedientes conocidos: '+expLista+'\n'
-    +'INSTRUCCIONES:\n'
-    +'1) PROVEEDOR: extrae el nombre de la empresa emisora del documento. Busca la coincidencia MAS PARECIDA en la base de datos de proveedores. Usa el nombre exacto de la BD si coincide.\n'
-    +'2) NUMERO DE ALBARAN: busca "Albaran", "Alb.", "Nº", "Num", "Ref" seguido de un numero. Tambien "Factura nº". Extrae el numero completo.\n'
-    +'3) OFERTA/PEDIDO: busca "Oferta", "Pedido", "PO", "Orden de compra" con su numero.\n'
-    +'4) CONCEPTO: resumen de una linea de lo que trata el documento (tipo de trabajo o material principal).\n'
-    +'5) NATURALEZA del gasto: sello que diga "Gasto" o "Inversion". Devuelve exactamente "Gasto" o "Inversion".\n'
-    +'6) TIPO DE RECURSO: sello con una de estas 3 opciones EXACTAS: "Repuesto" (R, REP, material), "Mano de obra" (M.O., MO), "Medios" (M.A., M.Aux, medios auxiliares).\n'
-    +'7) EXPEDIENTE: busca en sello manuscrito Y en cualquier parte del documento. Usa el codigo mas parecido de la lista de expedientes.\n'
-    +'8) CENTRO DE COSTE: busca "C.Coste", "CC", "Centro coste" en el sello.\n'
-    +'9) SECCION: busca "Seccion", "Sec" en el sello.\n'
-    +'10) COSTE: extrae el importe total del documento (IVA incluido si aparece, si no el subtotal).\n'
-    +'11) LINEAS: extrae cada linea de detalle con concepto, cantidad, precio unitario y % descuento.\n'
-    +'Devuelve SOLO JSON valido sin texto adicional ni markdown:\n'
-    +'{"subcontrata_nombre":"nombre EXACTO del proveedor de la BD o el del documento si no coincide","trabajador":"","area":"","fecha":"YYYY-MM-DD",'
-    +'"numero_albaran":"numero de albaran o factura del documento","oferta":"numero de oferta o pedido","concepto_alb":"concepto resumen",'
-    +'"h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripcion completa de los trabajos","materiales":"",'
-    +'"permiso":"","expediente":"codigo exacto de la lista o el que aparece","otros":"",'
-    +'"centro_coste":"del sello","seccion":"del sello",'
-    +'"naturaleza":"Gasto o Inversion del sello (vacio si no)","recurso":"Repuesto o Mano de obra o Medios del sello (vacio si no)","coste_total":0,'
-    +'"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}.'
-    +' REGLAS: descuento es porcentaje 0-100. Si descuento global aplica a todas las lineas. recurso: EXACTAMENTE Repuesto, Mano de obra o Medios.';
+    +'LISTA COMPLETA DE PROVEEDORES DE LA BASE DE DATOS (uno por línea):\n'+provLista+'\n\n'
+    +'Expedientes conocidos: '+expLista+'\n\n'
+    +'INSTRUCCIONES IMPORTANTES:\n'
+    +'1) PROVEEDOR: Lee TODOS los textos del documento. Busca el nombre de la empresa que emite el documento '
+    +'(puede aparecer en el logo, cabecera, membrete, pie de página, razón social, o cualquier parte). '
+    +'Compara ese nombre con CADA ENTRADA de la lista de proveedores. '
+    +'Usa distancia de similitud: ignora mayúsculas, acentos, SL/SA/SLU al final. '
+    +'Devuelve el nombre EXACTO de la lista si la similitud es >60%, si no el nombre del documento.\n'
+    +'2) NUMERO DE ALBARAN: busca "Albaran nº", "Nº Albaran", "Alb.", "Factura nº", "Ref.", "Documento nº" + numero.\n'
+    +'3) OFERTA/PEDIDO: busca "Oferta", "Pedido", "PO", "OC", "Orden" + numero.\n'
+    +'4) CONCEPTO: resumen de una línea del trabajo o material principal del documento.\n'
+    +'5) COSTE TOTAL: extrae el importe TOTAL final del documento (con IVA si aparece). '
+    +'Solo el numero, sin simbolos. Si hay varios totales usa el mayor (total con IVA).\n'
+    +'6) LINEAS DE DETALLE: cada linea con concepto, unidad, cantidad, precio unitario, % descuento (0 si no hay).\n'
+    +'7) SELLOS MANUSCRITOS: Gasto/Inversion, Expediente (busca en lista), C.Coste, Seccion, Repuesto/M.O./Medios.\n\n'
+    +'Devuelve SOLO JSON valido sin texto ni markdown:\n'
+    +'{"subcontrata_nombre":"nombre EXACTO del proveedor de la lista o del documento","trabajador":"","area":"",'
+    +'"fecha":"YYYY-MM-DD","numero_albaran":"","oferta":"","concepto_alb":"",'
+    +'"h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripcion de los trabajos","materiales":"",'
+    +'"permiso":"","expediente":"","otros":"","centro_coste":"","seccion":"",'
+    +'"naturaleza":"Gasto o Inversion (vacio si no)","recurso":"Repuesto o Mano de obra o Medios (vacio si no)",'
+    +'"coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}.\n'
+    +'REGLA coste_total: es un numero decimal, SIN simbolos de moneda ni separadores de miles con punto. '
+    +'Si el total es 1.234,56€ escribe 1234.56. '
+    +'REGLA recurso: EXACTAMENTE Repuesto, Mano de obra, o Medios.';
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
     headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
     body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:2000,temperature:0.1,
