@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#E05A00"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
-<title>Partes GlobalFeed</title>
+<title>Albaranes GlobalFeed</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -299,7 +299,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <img src="logo.png" alt="Global Feed" class="app-logo-img" onerror="this.style.display='none';document.getElementById('login-logo-txt').style.display='block'"/>
       <div id="login-logo-txt" style="display:none" class="login-logo">Global<em>Feed</em></div>
     </div>
-    <div class="login-sub">Gestión de subcontratas</div>
+    <div class="login-sub">Gestión de albaranes</div>
     <div class="login-field">
       <label>Usuario</label>
       <input type="text" id="login-user" placeholder="usuario" autocomplete="username" autocapitalize="none"/>
@@ -320,7 +320,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <!-- INSTALL BANNER -->
 <div class="ib" id="ib">
   <div style="width:42px;height:42px;border-radius:9px;background:var(--ac);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--serif);font-style:italic;font-size:20px;color:#fff">P</div>
-  <div style="flex:1"><strong style="display:block;font-size:13px">Instalar Partes GlobalFeed</strong><span style="font-size:11.5px;color:var(--mu)">Funciona sin internet, como app nativa</span></div>
+  <div style="flex:1"><strong style="display:block;font-size:13px">Instalar Albaranes GlobalFeed</strong><span style="font-size:11.5px;color:var(--mu)">Funciona sin internet, como app nativa</span></div>
   <div style="display:flex;gap:7px;flex-shrink:0">
     <button class="btn btn-o btn-sm" id="ib-no">Ahora no</button>
     <button class="btn btn-f btn-sm" id="ib-si">Instalar</button>
@@ -332,7 +332,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   <div class="logo">
     <img src="logo.png" alt="Global Feed" class="app-logo-img small" onerror="this.style.display='none';document.getElementById('sb-logo-txt').style.display='block'"/>
     <div id="sb-logo-txt" style="display:none" class="logo-fallback">Global<em>Feed</em></div>
-    <div class="logo-sub">gestión de subcontratas</div>
+    <div class="logo-sub">gestión de albaranes</div>
   </div>
   <!-- Manual refresh button always visible -->
   <div style="padding:8px 10px;border-bottom:1px solid var(--bor)">
@@ -341,7 +341,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     </button>
   </div>
   <nav class="nav">
-    <button class="ni on" onclick="showPage('nuevo')" id="nav-nuevo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>Nuevo parte</button>
+    <button class="ni on" onclick="showPage('nuevo')" id="nav-nuevo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/></svg>Nuevo albarán</button>
     <button class="ni" onclick="showPage('dashboard')" id="nav-dashboard"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Dashboard</button>
     <button class="ni" onclick="showPage('historial')" id="nav-historial"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>Historial</button>
     <button class="ni" onclick="showPage('subcontratas')" id="nav-subcontratas"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><circle cx="11" cy="5" r="2"/><path d="M1 13c0-2.2 2.2-4 5-4s5 1.8 5 4"/><path d="M13 13c0-1.5-1-2.8-2.5-3.3"/></svg>Proveedores</button>
@@ -356,7 +356,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <!-- ══ NUEVO PARTE ════════════════════════════════════════════ -->
 <div class="page active" id="page-nuevo">
   <div class="ph flex">
-    <div><div class="pt">Nuevo <em>parte</em></div><div class="ps">Rellena los datos, firma y valida.</div></div>
+    <div><div class="pt">Nuevo <em>albarán</em></div><div class="ps">Rellena los datos del albarán, firma y valida.</div></div>
     <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap">
       <button class="btn btn-o btn-sm" style="color:var(--da);border-color:#F09595" onclick="descartarParte()">✕ Descartar parte</button>
       <button class="btn btn-f btn-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none" onclick="abrirModalIA()">✨ Crear desde documento</button>
@@ -383,6 +383,11 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
           <input type="hidden" id="sc-sel-id"/>
           <div class="combo-list" id="combo-sc"></div>
         </div>
+      </div>
+      <div class="fg fg3">
+        <div class="field"><label>Nº albarán</label><input type="text" id="numero_albaran" placeholder="Ej. ALB-2024-001"/></div>
+        <div class="field"><label>Nº oferta / pedido</label><input type="text" id="oferta" placeholder="Opcional"/></div>
+        <div class="field"><label>Concepto</label><input type="text" id="concepto_alb" placeholder="Breve descripción"/></div>
       </div>
     </div>
     <div class="card">
@@ -469,7 +474,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <button class="btn btn-o btn-sm" onclick="addLineaLibre()" style="margin-top:8px">+ Añadir concepto libre</button>
     </div>
     <div class="card">
-      <div class="ct">Total del parte</div>
+      <div class="ct">Total del albarán</div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
         <span style="color:var(--mu);font-size:14px">Importe total</span>
         <span style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--act)" id="c-total">0.00 €</span>
@@ -490,7 +495,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 
   <!-- STEP 5: VALIDACIÓN -->
   <div class="fstep" id="fs5">
-    <div class="card"><div class="ct">Resumen del parte</div><div id="recap-wrap"></div></div>
+    <div class="card"><div class="ct">Resumen del albarán</div><div id="recap-wrap"></div></div>
     <div class="card">
       <div class="ct">Validación — responsable técnico</div>
       <div class="fg fg2">
@@ -503,7 +508,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <!-- ESTADO — OBLIGATORIO -->
       <div style="margin-top:16px">
         <div class="field">
-          <label>Estado del parte * <span style="font-size:11px;color:var(--fa)">(obligatorio)</span></label>
+          <label>Estado del albarán * <span style="font-size:11px;color:var(--fa)">(obligatorio)</span></label>
           <select id="parte-estado">
             <option value="">— seleccionar estado —</option>
             <option value="Validado">✓ Validado</option>
@@ -518,20 +523,20 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <div class="cw"><div class="ctb"><span class="clbl">Responsable técnico</span><button style="background:none;border:none;color:var(--mu);font-size:12px;padding:4px 8px;cursor:pointer;font-family:var(--mono)" onclick="clearSig('sig2')">✕ Borrar</button></div><canvas id="sig2" height="180"></canvas></div>
     </div>
     <div id="val-sm" class="sm"></div>
-    <div class="brow"><button class="btn btn-o" onclick="goStep(4)">← Atrás</button><button class="btn btn-f" id="btn-val" onclick="validar()">Validar y cerrar parte ✓</button></div>
+    <div class="brow"><button class="btn btn-o" onclick="goStep(4)">← Atrás</button><button class="btn btn-f" id="btn-val" onclick="validar()">Validar y cerrar albarán ✓</button></div>
   </div>
 
   <!-- STEP 6: LISTO -->
   <div class="fstep" id="fs6">
     <div class="card">
-      <div class="sw"><div class="si-ok">✓</div><div class="stl">Parte <em style="font-style:italic;color:var(--ac)">cerrado</em></div><div class="sref" id="p-ref">—</div></div>
+      <div class="sw"><div class="si-ok">✓</div><div class="stl">Albarán <em style="font-style:italic;color:var(--ac)">cerrado</em></div><div class="sref" id="p-ref">—</div></div>
       <div id="recap-final"></div>
       <div id="email-sm" class="sm" style="margin-top:13px"></div>
       <div class="brow" style="justify-content:center;margin-top:20px;flex-wrap:wrap;gap:8px">
         <button class="btn btn-o btn-sm" onclick="exportPartePDF()">⬇ PDF</button>
         <button class="btn btn-f btn-sm" onclick="abrirModalEmail()">✉ Enviar por correo</button>
         <button class="btn btn-o btn-sm" onclick="showPage('historial')">Ver historial</button>
-        <button class="btn btn-f" onclick="resetForm()">+ Nuevo parte</button>
+        <button class="btn btn-f" onclick="resetForm()">+ Nuevo albarán</button>
       </div>
     </div>
   </div>
@@ -549,7 +554,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <!-- ══ HISTORIAL ══════════════════════════════════════════════ -->
 <div class="page" id="page-historial">
   <div class="ph flex">
-    <div><div class="pt">Historial de <em>partes</em></div><div class="ps">Todos los partes. Datos compartidos entre dispositivos.</div></div>
+    <div><div class="pt">Historial de <em>albaranes</em></div><div class="ps">Todos los albaranes. Datos compartidos entre dispositivos.</div></div>
     <div style="display:flex;gap:8px;margin-top:5px">
       <button class="btn btn-o btn-sm" onclick="exportHistorialExcel()">⬇ Excel</button>
       <button class="btn btn-o btn-sm" onclick="exportHistorialPDF()">⬇ PDF</button>
@@ -558,7 +563,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
   <div id="hist-sync" class="sync-bar" style="display:none"><div class="sdot ld" id="hist-dot"></div><span id="hist-txt">Cargando partes...</span></div>
   <div class="fb">
-    <div class="field"><label>Subcontrata</label><select id="f-sc" onchange="filtrar()"><option value="">Todas</option></select></div>
+    <div class="field"><label>Proveedor</label><select id="f-sc" onchange="filtrar()"><option value="">Todas</option></select></div>
     <div class="field"><label>Estado</label>
       <select id="f-estado" onchange="filtrar()">
         <option value="">Todos</option>
@@ -582,7 +587,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <div class="page" id="page-subcontratas">
   <div class="ph flex">
     <div><div class="pt"><em>Proveedores</em></div><div class="ps">Gestiona los proveedores y sus tarifas.</div></div>
-    <button class="btn btn-f btn-sm" style="margin-top:5px" onclick="abrirModalSc()">+ Nueva subcontrata</button>
+    <button class="btn btn-f btn-sm" style="margin-top:5px" onclick="abrirModalSc()">+ Nueva proveedor</button>
   </div>
   <div id="sc-list"></div>
 </div>
@@ -633,17 +638,12 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <div style="background:#F5F3FF;border-radius:var(--rs);padding:11px 14px;font-size:13px;color:#4F46E5">
       📄 Sube una foto o PDF de un albarán, parte manuscrito o factura →<br>
       la IA lee el contenido y rellena el formulario automáticamente.<br><br>
-      Pulsa <strong>✨ Crear desde documento</strong> en la pantalla de Nuevo parte.
+      Pulsa <strong>✨ Crear desde documento</strong> en la pantalla de Nuevo albarán.
     </div>
   </div>
 
   <div class="card">
     <div class="ct">Google Apps Script — solo para envío de correo</div>
-    <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Script que envía los PDFs por correo. Los datos no dependen de este script.</p>
-    <div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--mu);word-break:break-all">
-      https://script.google.com/macros/s/AKfycbwoUiDWKiecxYNAA-XJgB3fCXdt9uuk_lFbSWcPZulGFmuA7DRp6LlGMCl4s-zIvG5GYA/exec
-    </div>
-  </div>
     <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Script que envía los PDFs por correo. Los datos no dependen de este script.</p>
     <div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;font-family:var(--mono);font-size:11px;color:var(--mu);word-break:break-all">
       https://script.google.com/macros/s/AKfycbwoUiDWKiecxYNAA-XJgB3fCXdt9uuk_lFbSWcPZulGFmuA7DRp6LlGMCl4s-zIvG5GYA/exec
@@ -665,7 +665,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 
 <!-- BOTTOM NAV -->
 <nav class="bnav">
-  <button class="bni on" id="bn-nuevo" onclick="showPage('nuevo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Nuevo</span></button>
+  <button class="bni on" id="bn-nuevo" onclick="showPage('nuevo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Nuevo albarán</span></button>
   <button class="bni" id="bn-dashboard" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></button>
   <button class="bni" id="bn-historial" onclick="showPage('historial')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h7"/></svg><span>Historial</span></button>
   <button class="bni" id="bn-subcontratas" onclick="showPage('subcontratas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="3.5"/><circle cx="17" cy="7" r="2.5"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><path d="M20 20c0-2-1.5-3.8-3.5-4.5"/></svg><span>Empresas</span></button>
@@ -675,16 +675,16 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <!-- MODAL SUBCONTRATA -->
 <div class="mbg" id="modal-sc">
   <div class="modal">
-    <div class="mtl" id="msc-tl">Nueva subcontrata</div>
+    <div class="mtl" id="msc-tl">Nueva proveedor</div>
     <input type="hidden" id="msc-id"/>
     <div class="fg fg2"><div class="field"><label>Nombre empresa *</label><input type="text" id="msc-nom" placeholder="Ej. Mantenimientos S.L."/></div><div class="field"><label>CIF</label><input type="text" id="msc-cif" placeholder="B12345678"/></div></div>
-    <div class="fg fg2"><div class="field"><label>Persona de contacto</label><input type="text" id="msc-cnt" placeholder="Nombre y apellidos"/></div><div class="field"><label>Email subcontrata</label><input type="email" id="msc-email" placeholder="contacto@empresa.com"/></div></div>
+    <div class="fg fg2"><div class="field"><label>Persona de contacto</label><input type="text" id="msc-cnt" placeholder="Nombre y apellidos"/></div><div class="field"><label>Email proveedor</label><input type="email" id="msc-email" placeholder="contacto@empresa.com"/></div></div>
     <div style="margin:16px 0 9px;font-size:12px;font-weight:500;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between">
       <span>Conceptos y tarifas</span><button class="btn btn-o btn-sm" onclick="addLineaSc()">+ Añadir concepto</button>
     </div>
     <table class="lineas-tbl"><thead><tr><th>Concepto</th><th style="width:70px">Unidad</th><th style="width:90px">€ / unidad</th><th style="width:34px"></th></tr></thead><tbody id="lineas-sc-body"></tbody></table>
     <div id="msc-sm" class="sm"></div>
-    <div class="brow"><button class="btn btn-o" onclick="cerrarModal('modal-sc')">Cancelar</button><button class="btn btn-f" onclick="guardarSc()">Guardar subcontrata</button></div>
+    <div class="brow"><button class="btn btn-o" onclick="cerrarModal('modal-sc')">Cancelar</button><button class="btn btn-f" onclick="guardarSc()">Guardar proveedor</button></div>
   </div>
 </div>
 
@@ -716,35 +716,114 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 </div>
 
-<!-- MODAL EDITAR PARTE -->
+<!-- MODAL EDITAR ALBARÁN -->
 <div class="mbg" id="modal-ep">
-  <div class="modal" style="max-width:680px">
-    <div class="mtl">Editar parte <span id="mep-id" style="font-family:var(--mono);font-size:14px;color:var(--mu)"></span></div>
-    <div class="fg fg2"><div class="field"><label>Subcontrata</label><select id="mep-sc"><option value="">— seleccionar —</option></select></div><div class="field"><label>Trabajador</label><input type="text" id="mep-trab"/></div></div>
-    <div class="fg fg2">
-      <div class="field"><label>Área / Zona</label><input type="text" id="mep-area"/></div>
-      <div class="field"><label>Estado</label>
-        <select id="mep-estado">
-          <option value="Validado">✓ Validado</option>
-          <option value="Pendiente">⏳ Pendiente de revisión</option>
-          <option value="En revisión">🔍 En revisión</option>
-          <option value="Rechazado">✕ Rechazado</option>
-        </select>
+  <div class="modal" style="max-width:700px;max-height:92vh;overflow-y:auto">
+    <div class="mtl">Editar albarán <span id="mep-id" style="font-family:var(--mono);font-size:14px;color:var(--mu)"></span></div>
+
+    <div class="card"><div class="ct">Proveedor</div>
+      <div class="field"><label>Empresa proveedora</label>
+        <div class="combo-wrap">
+          <input type="text" class="combo-input" id="mep-sc-inp" placeholder="Buscar proveedor..." autocomplete="off"
+            oninput="filtrarProveedoresEdit(this.value)" onfocus="filtrarProveedoresEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-sc'),200)"/>
+          <input type="hidden" id="mep-sc-hid"/>
+          <div class="combo-list" id="combo-mep-sc"></div>
+        </div>
+      </div>
+      <div class="fg fg3">
+        <div class="field"><label>Nº albarán</label><input type="text" id="mep-num-alb" placeholder="Ej. ALB-2024-001"/></div>
+        <div class="field"><label>Nº oferta / pedido</label><input type="text" id="mep-oferta" placeholder="Opcional"/></div>
+        <div class="field"><label>Concepto</label><input type="text" id="mep-concepto-alb" placeholder="Breve descripción"/></div>
       </div>
     </div>
-    <div style="margin:14px 0 9px;font-size:12px;font-weight:500;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between">
-      <span>Jornadas</span><button class="btn btn-o btn-sm" onclick="addJornadaEdit()">+ Fecha</button>
+
+    <div class="card"><div class="ct">Identificación</div>
+      <div class="fg fg2">
+        <div class="field"><label>Trabajador</label><input type="text" id="mep-trab" placeholder="Nombre y apellidos"/></div>
+        <div class="field"><label>Área / Zona</label><input type="text" id="mep-area" placeholder="Ej. Reactor B..."/></div>
+      </div>
     </div>
-    <div id="mep-jornadas"></div>
-    <div style="margin:14px 0 9px;font-size:12px;font-weight:500;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;justify-content:space-between">
-      <span>Conceptos y cantidades</span><button class="btn btn-o btn-sm" onclick="addLineaEditLibre()">+ Concepto</button>
+
+    <div class="card"><div class="ct">Jornadas</div>
+      <div id="mep-jornadas"></div>
+      <button class="btn btn-o btn-sm" onclick="addJornadaEdit()" style="margin-top:8px">+ Añadir fecha</button>
     </div>
-    <div id="mep-lineas"></div>
-    <div class="fg fg1" style="margin-top:12px"><div class="field"><label>Descripción de trabajos</label><textarea id="mep-trab2" rows="3"></textarea></div></div>
-    <div class="fg fg2"><div class="field"><label>Materiales</label><input type="text" id="mep-mat"/></div><div class="field"><label>Permiso</label><input type="text" id="mep-per"/></div></div>
-    <div class="fg fg2"><div class="field"><label>Centro de coste</label><input type="text" id="mep-cc"/></div><div class="field"><label>Sección</label><input type="text" id="mep-sec"/></div></div>
+
+    <div class="card"><div class="ct">Trabajos</div>
+      <div class="field"><label>Descripción</label><textarea id="mep-trab2" rows="3" placeholder="Describir las tareas..."></textarea></div>
+      <div class="fg fg2">
+        <div class="field"><label>Materiales / Equipos</label><input type="text" id="mep-mat" placeholder="Opcional"/></div>
+        <div class="field"><label>Nº permiso</label><input type="text" id="mep-per" placeholder="Opcional"/></div>
+      </div>
+    </div>
+
+    <div class="card"><div class="ct">Naturaleza del gasto</div>
+      <div class="pills" id="mep-pg-nat">
+        <div class="pill" onclick="pickEditPill('mep-pg-nat',this)">Gasto</div>
+        <div class="pill" onclick="pickEditPill('mep-pg-nat',this)">Inversión</div>
+      </div>
+    </div>
+    <div class="card"><div class="ct">Tipo de recurso</div>
+      <div class="pills" id="mep-pg-rec">
+        <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Repuesto</div>
+        <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Mano de obra</div>
+        <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Medios</div>
+      </div>
+    </div>
+
+    <div class="card"><div class="ct">Imputación contable</div>
+      <div class="fg fg2">
+        <div class="field"><label>Expediente</label>
+          <div class="combo-wrap">
+            <input type="text" class="combo-input" id="mep-exp" placeholder="Buscar expediente..." autocomplete="off"
+              oninput="filtrarExpedientesEdit(this.value)" onfocus="filtrarExpedientesEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-exp'),200)"/>
+            <div class="combo-list" id="combo-mep-exp"></div>
+          </div>
+        </div>
+        <div class="field"><label>Otros</label><input type="text" id="mep-otros" placeholder="Referencia adicional"/></div>
+      </div>
+      <div class="fg fg2">
+        <div class="field"><label>Centro de coste</label>
+          <div class="combo-wrap">
+            <input type="text" class="combo-input" id="mep-cc" placeholder="Buscar centro..." autocomplete="off"
+              oninput="filtrarCentrosEdit(this.value)" onfocus="filtrarCentrosEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-cc'),200)"/>
+            <div class="combo-list" id="combo-mep-cc"></div>
+          </div>
+        </div>
+        <div class="field"><label>Sección</label><input type="text" id="mep-sec" placeholder="Auto al elegir centro"/></div>
+      </div>
+    </div>
+
+    <div class="card"><div class="ct" style="display:flex;align-items:center;justify-content:space-between">Conceptos de coste <button class="btn btn-o btn-sm" onclick="addLineaEditLibre()">+ Concepto</button></div>
+      <div id="mep-lineas"></div>
+    </div>
+
+    <div class="card"><div class="ct">Estado y responsable</div>
+      <div class="fg fg2">
+        <div class="field"><label>Estado</label>
+          <select id="mep-estado">
+            <option value="Pendiente">⏳ Pendiente</option>
+            <option value="Validado">✓ Validado</option>
+            <option value="En revisión">🔍 En revisión</option>
+            <option value="Rechazado">✕ Rechazado</option>
+          </select>
+        </div>
+        <div class="field"><label>Responsable</label>
+          <select id="mep-resp"><option value="">— sin responsable —</option></select>
+        </div>
+      </div>
+      <div class="fg fg2">
+        <div class="field"><label>PIN del responsable <span style="font-size:11px;color:var(--fa)">(obligatorio si valida)</span></label>
+          <input type="password" id="mep-pin-val" placeholder="••••" maxlength="6" inputmode="numeric"/>
+        </div>
+      </div>
+    </div>
+
     <div id="mep-sm" class="sm"></div>
-    <div class="brow"><button class="btn btn-o" onclick="cerrarModal('modal-ep')">Cancelar</button><button class="btn btn-f" onclick="guardarEdicion()">Guardar cambios</button></div>
+    <div class="brow">
+      <button class="btn btn-o" onclick="cerrarModal('modal-ep')">Cancelar</button>
+      <button class="btn btn-f" onclick="guardarEdicion()">Guardar cambios</button>
+    </div>
   </div>
 </div>
 
@@ -752,7 +831,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <div class="mbg" id="modal-pin-edicion">
   <div class="modal" style="max-width:380px;text-align:center">
     <div class="mtl" style="text-align:left">Verificar identidad</div>
-    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px;text-align:left">Solo el responsable que validó este parte puede editarlo. Introduce tu PIN para continuar.</p>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px;text-align:left">Solo el responsable que validó este albarán puede editarlo. Introduce tu PIN para continuar.</p>
     <div id="pin-edicion-info" style="background:var(--inl);border:1px solid #B5D4F4;border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--int);text-align:left"></div>
     <div class="field" style="text-align:left">
       <label>Tu PIN</label>
@@ -771,7 +850,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   <div class="modal" style="max-width:500px">
     <div class="mtl">✉ Enviar parte por correo</div>
     <div id="modal-email-parte-info" style="background:var(--bg);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--mu);margin-bottom:16px;font-family:var(--mono)"></div>
-    <p style="font-size:13px;color:var(--mu);margin-bottom:14px">El parte se enviará con el <strong>PDF adjunto</strong> a todas las direcciones que indiques.</p>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:14px">El albarán se enviará con el <strong>PDF adjunto</strong> a todas las direcciones que indiques.</p>
     <div id="modal-email-to-list">
       <div class="field" style="margin-bottom:8px">
         <label>Destinatario 1 *</label>
@@ -794,8 +873,8 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <!-- MODAL IA — CREAR PARTE DESDE DOCUMENTO -->
 <div class="mbg" id="modal-ia">
   <div class="modal" style="max-width:540px">
-    <div class="mtl" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">✨ Crear parte desde documento</div>
-    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF de un parte manuscrito, albarán o cualquier documento. La IA leerá el contenido y rellenará el formulario automáticamente.</p>
+    <div class="mtl" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">✨ Crear albarán desde documento</div>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF de un albarán manuscrito, albarán o cualquier documento. La IA leerá el contenido y rellenará el formulario automáticamente.</p>
     <div id="ia-upload-area" onclick="document.getElementById('ia-file-input').click()"
       style="border:2px dashed var(--bors);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)"
       ondragover="event.preventDefault();this.style.borderColor='#7C3AED'"
@@ -803,7 +882,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       ondrop="event.preventDefault();this.style.borderColor='';handleIADrop(event)">
       <div style="font-size:36px;margin-bottom:8px">📄</div>
       <div style="font-size:14px;font-weight:500;color:var(--tx);margin-bottom:4px">Toca para seleccionar o arrastra aquí</div>
-      <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — varios archivos a la vez → crea un parte por cada uno</div>
+      <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — varios archivos a la vez → crea un albarán por cada uno</div>
     </div>
     <input type="file" id="ia-file-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleIAFiles(this)"/>
     <div id="ia-preview" style="display:none;margin-top:12px">
@@ -918,7 +997,7 @@ async function testSupabase() {
   showSM('sb-sm','ok','Probando conexión...');
   try {
     const r = await sbGet('subcontratas');
-    showSM('sb-sm','ok','✅ Conexión OK · '+r.length+' subcontrata(s) en la base de datos');
+    showSM('sb-sm','ok','✅ Conexión OK · '+r.length+' proveedor(s) en la base de datos');
   } catch(e) {
     showSM('sb-sm','er','❌ '+e.message);
   }
@@ -988,7 +1067,50 @@ async function sbDelete(tabla, id) {
   return true;
 }
 
-// Email sigue usando GAS (solo para envío de PDFs por correo)
+// ── Supabase Storage — guardar y cargar imágenes de albaranes ─
+async function supabaseUploadImage(parteId, base64DataUrl){
+  try {
+    // Convert base64 to blob
+    const arr = base64DataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    const u8arr = new Uint8Array(bstr.length);
+    for(let i=0;i<bstr.length;i++) u8arr[i]=bstr.charCodeAt(i);
+    const blob = new Blob([u8arr], {type:mime});
+    const ext = mime.includes('pdf') ? 'pdf' : 'jpg';
+    const path = `albaranes/${parteId}.${ext}`;
+    // Upload to Supabase Storage bucket 'documentos'
+    const r = await fetch(`${sbBase()}/storage/v1/object/documentos/${path}`, {
+      method: 'POST',
+      headers: { ...sbHeaders(), 'Content-Type': mime, 'x-upsert': 'true' },
+      body: blob
+    });
+    if(r.ok){
+      const publicUrl = `${sbBase()}/storage/v1/object/public/documentos/${path}`;
+      // Also update the parte record with the URL
+      await sbUpsert('partes', {id:parteId, documento_url:publicUrl}).catch(()=>{});
+      return publicUrl;
+    }
+  } catch(e){ console.warn('Upload error:', e.message); }
+  return null;
+}
+async function getAlbaranImageUrl(parteId){
+  // Check Supabase first, then localStorage fallback
+  const p = partesCache.find(x=>x.id===parteId);
+  if(p?.documento_url) return p.documento_url;
+  return localStorage.getItem('albaran_img_'+parteId)||null;
+}
+async function guardarImagenAlbaran(parteId, imgDataUrl){
+  if(!imgDataUrl) return;
+  // Try Supabase Storage first, fallback to localStorage
+  const url = await supabaseUploadImage(parteId, imgDataUrl);
+  if(!url){
+    // Fallback: localStorage (only visible on this device)
+    localStorage.setItem('albaran_img_'+parteId, imgDataUrl);
+  // Also upload to Supabase Storage for cross-device access
+  supabaseUploadImage(parteId, imgDataUrl).catch(()=>{});
+  }
+}
 async function gasEnviarEmail(emailCfg, parte) {
   const r = await fetch(GAS_EMAIL(), {
     method: 'POST',
@@ -1074,7 +1196,7 @@ function refreshCurrentPage() {
   else if (id==='responsables') renderRtList();
 }
 
-async function loadSubcontratas() { await syncAll(true); }
+async function loadProveedors() { await syncAll(true); }
 async function loadResponsables() { await syncAll(true); }
 async function loadAllPartes()    { await syncAll(true); }
 
@@ -1111,7 +1233,7 @@ function syncMsg(barId,dotId,txtId,loading,msg){
 let scLineas=[];
 function abrirModalSc(id){
   const sc=id?subcontratas.find(s=>s.id===id):null;
-  document.getElementById('msc-tl').textContent=sc?'Editar subcontrata':'Nueva subcontrata';
+  document.getElementById('msc-tl').textContent=sc?'Editar proveedor':'Nueva proveedor';
   document.getElementById('msc-id').value=sc?.id||'';
   document.getElementById('msc-nom').value=sc?.nombre||'';
   document.getElementById('msc-cif').value=sc?.cif||'';
@@ -1158,15 +1280,15 @@ async function guardarSc(){
   } catch(e) { showSM('msc-sm','er','Error: '+e.message); }
 }
 async function eliminarSc(id){
-  if(!confirm('¿Eliminar esta subcontrata?')) return;
+  if(!confirm('¿Eliminar esta proveedor?')) return;
   try { await sbDelete('subcontratas', id); syncAll(false); }
   catch(e) { alert('Error: '+e.message); }
 }
 function renderScList(){
   const el=document.getElementById('sc-list'); if(!el) return;
-  if(!subcontratas.length){el.innerHTML='<div style="text-align:center;padding:44px;color:var(--fa)"><p style="font-size:26px">🏭</p><p style="margin-top:7px">No hay subcontratas. Añade la primera.</p></div>';return;}
+  if(!subcontratas.length){el.innerHTML='<div style="text-align:center;padding:44px;color:var(--fa)"><p style="font-size:26px">🏭</p><p style="margin-top:7px">No hay subcontratas. Añade el primero.</p></div>';return;}
   const pBySc={};
-  partesCache.forEach(p=>{const k=p.subcontrata_id||'';if(!pBySc[k])pBySc[k]={n:0,c:0};pBySc[k].n++;pBySc[k].c+=Number(p.coste)||0;});
+  partesCache.forEach(p=>{const k=p.proveedor_id||'';if(!pBySc[k])pBySc[k]={n:0,c:0};pBySc[k].n++;pBySc[k].c+=Number(p.coste)||0;});
   const allC=Object.values(pBySc).map(v=>v.c);
   const maxC=allC.length?Math.max(1,...allC):1;
   el.innerHTML=subcontratas.map(sc=>{
@@ -1174,9 +1296,9 @@ function renderScList(){
     const chips=(sc.tarifas||[]).map(t=>`<span class="tarifa-chip">${t.concepto}: ${Number(t.precio).toFixed(2)} €/${t.unidad||'u'}</span>`).join(' ');
     return `<div class="scc"><div class="scn">${sc.nombre}</div><div class="scf">${sc.cif||'Sin CIF'}${sc.contacto?' · '+sc.contacto:''}</div>
       <div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:5px">${chips||'<span style="font-size:12px;color:var(--fa)">Sin tarifas configuradas</span>'}</div>
-      <div class="sc-stats"><div class="sc-stat"><strong>${st.n}</strong>partes</div><div class="sc-stat"><strong>${st.c.toFixed(0)} €</strong>total</div>${sc.email?`<div class="sc-stat"><strong style="font-size:11px">${sc.email}</strong>email</div>`:''}</div>
+      <div class="sc-stats"><div class="sc-stat"><strong>${st.n}</strong>albaranes</div><div class="sc-stat"><strong>${st.c.toFixed(0)} €</strong>total</div>${sc.email?`<div class="sc-stat"><strong style="font-size:11px">${sc.email}</strong>email</div>`:''}</div>
       <div class="scbar"><div class="scbar-f" style="width:${Math.round(st.c/maxC*100)}%"></div></div>
-      <div class="sc-acts"><button class="btn btn-o btn-sm" onclick="abrirModalSc('${sc.id}')">Editar</button><button class="btn-d" onclick="eliminarSc('${sc.id}')">Eliminar</button><button class="btn btn-o btn-sm" onclick="filtrarPorSc('${sc.id}')">Ver partes →</button></div>
+      <div class="sc-acts"><button class="btn btn-o btn-sm" onclick="abrirModalSc('${sc.id}')">Editar</button><button class="btn-d" onclick="eliminarSc('${sc.id}')">Eliminar</button><button class="btn btn-o btn-sm" onclick="filtrarPorSc('${sc.id}')">Ver albaráns →</button></div>
     </div>`;
   }).join('');
 }
@@ -1185,7 +1307,7 @@ function populateScDDs(){
   // Reset proveedor combobox
   const scInp=document.getElementById('sc-sel'); if(scInp)scInp.value='';
   const scHid=document.getElementById('sc-sel-id'); if(scHid)scHid.value='';
-  ['f-sc','mep-sc'].forEach(id=>{
+  ['f-sc'].forEach(id=>{
     const s=document.getElementById(id); if(!s) return;
     const cur=s.value;
     s.innerHTML=id==='f-sc'?'<option value="">Todas</option>':'<option value="">— seleccionar —</option>';
@@ -1481,7 +1603,7 @@ async function validar(){
   // Validaciones
   if(!resp){showSM('val-sm','er','Selecciona un responsable técnico.');return;}
   if(!pin){showSM('val-sm','er','Introduce el PIN de validación.');return;}
-  if(!estado){showSM('val-sm','er','⚠ Debes seleccionar el estado del parte.');document.getElementById('parte-estado').focus();return;}
+  if(!estado){showSM('val-sm','er','⚠ Debes seleccionar el estado del albarán.');document.getElementById('parte-estado').focus();return;}
   // Verificar PIN del responsable
   const rt=responsables.find(r=>r.id===selectedRtId);
   if(!rt?.pin){showSM('val-sm','er','Este responsable no tiene PIN. Ve a Responsables → Editar para asignárselo.');return;}
@@ -1495,6 +1617,9 @@ async function validar(){
   const parte={
     id,fecha:fechaLabel,fechas,estado,
     subcontrata_id:selectedScId||'',subcontrata_nombre:sc?.nombre||'',
+    numero_albaran:document.getElementById('numero_albaran')?.value||'',
+    oferta:document.getElementById('oferta')?.value||'',
+    concepto_alb:document.getElementById('concepto_alb')?.value||'',
     jornadas:JSON.parse(JSON.stringify(jornadas)),
     h_normal:tot.normal,h_extra:tot.extra,h_noct:tot.noct,
     lineas_coste:JSON.parse(JSON.stringify(lineasCoste.filter(l=>Number(l.cantidad)>0))),
@@ -1522,14 +1647,21 @@ async function validar(){
   };
   try {
     await sbUpsert('partes', parteSB);
-    if(btn){btn.disabled=false;btn.textContent='Validar y cerrar parte ✓';}
+    // Save document image locally for viewing
+    if(window._pendingIAImage){
+      const imgSrc = window._pendingIAImage.dataUrl ||
+        ('data:'+(window._pendingIAImage.type||'image/jpeg')+';base64,'+window._pendingIAImage.data);
+      guardarImagenAlbaran(id, imgSrc);
+      window._pendingIAImage = null;
+    }
+    if(btn){btn.disabled=false;btn.textContent='Validar y cerrar albarán ✓';}
     partesCache.unshift(parte);
     savePartesLocal(partesCache);
     buildRecap('recap-final');
     document.getElementById('p-ref').textContent = id+' · '+new Date().toLocaleString('es-ES')+' · ✅ Guardado y compartido';
     goStep(6);
   } catch(e) {
-    if(btn){btn.disabled=false;btn.textContent='Validar y cerrar parte ✓';}
+    if(btn){btn.disabled=false;btn.textContent='Validar y cerrar albarán ✓';}
     showSM('val-sm','er','❌ Error: '+e.message+'. Verifica la configuración de Supabase.');
   }
 }
@@ -1540,11 +1672,20 @@ async function validar(){
 let pendingEditId = null;
 function solicitarPinEdicion(id){
   const p=partesCache.find(x=>x.id===id); if(!p) return;
-  pendingEditId=id;
+
+  // Si el albarán está en estado Pendiente y no tiene responsable asignado
+  // → permitir edición directa sin PIN (fue creado por IA sin validar)
   const rt=responsables.find(r=>r.id===p.responsable_id||r.nombre===p.responsable);
+  if(!rt || !p.responsable_id && !p.responsable){
+    abrirEditarParte(id);
+    return;
+  }
+
+  // Tiene responsable → pedir PIN
+  pendingEditId=id;
   const info=document.getElementById('pin-edicion-info');
-  if(info) info.innerHTML=`<strong>Parte:</strong> ${p.id}<br><strong>Responsable:</strong> ${p.responsable||'—'}${rt?'':'<br><span style="color:var(--wa)">⚠ Responsable no encontrado en este dispositivo</span>'}`;
-  const inp=document.getElementById('pin-edicion-input'); if(inp){inp.value='';inp.placeholder=rt?'••••':'PIN no disponible';}
+  if(info) info.innerHTML=`<strong>Parte:</strong> ${p.id}<br><strong>Responsable:</strong> ${p.responsable||'—'}`;
+  const inp=document.getElementById('pin-edicion-input'); if(inp){inp.value='';inp.placeholder='PIN del responsable';}
   const sm=document.getElementById('pin-edicion-sm'); if(sm) sm.style.display='none';
   document.getElementById('modal-pin-edicion').classList.add('open');
   setTimeout(()=>{ const i=document.getElementById('pin-edicion-input'); if(i) i.focus(); },200);
@@ -1555,7 +1696,7 @@ function confirmarPinEdicion(){
   const pinIntroducido=(document.getElementById('pin-edicion-input')?.value||'').trim();
   if(!pinIntroducido){showSM('pin-edicion-sm','er','Introduce tu PIN.');return;}
   const rt=responsables.find(r=>r.id===p.responsable_id||r.nombre===p.responsable);
-  if(!rt){showSM('pin-edicion-sm','er','Responsable no encontrado en este dispositivo. Sincroniza los datos primero.');return;}
+  if(!rt){showSM('pin-edicion-sm','er','Responsable no encontrado. Sincroniza los datos primero.');return;}
   if(!rt.pin){showSM('pin-edicion-sm','er','Este responsable no tiene PIN configurado.');return;}
   if(rt.pin!==pinIntroducido){
     showSM('pin-edicion-sm','er','❌ PIN incorrecto.');
@@ -1591,11 +1732,11 @@ function _abrirEmailModal(){
 
   // Show parte info
   const info = document.getElementById('modal-email-parte-info');
-  if(info) info.textContent = p.id + ' · ' + (p.subcontrata_nombre||p.empresa||'') + ' · ' + (p.fecha||'');
+  if(info) info.textContent = p.id + ' · ' + (p.proveedor_nombre||p.empresa||'') + ' · ' + (p.fecha||'');
 
-  // Pre-fill with responsable and subcontrata emails if available
+  // Pre-fill with responsable and proveedor emails if available
   const rt = responsables.find(r => r.id === p.responsable_id || r.nombre === p.responsable);
-  const sc = subcontratas.find(s => s.id === p.subcontrata_id);
+  const sc = subcontratas.find(s => s.id === p.proveedor_id);
   const inputs = document.querySelectorAll('.email-to-input');
   inputs.forEach((inp, i) => {
     inp.value = i === 0 ? (rt?.email || '') : i === 1 ? (sc?.email || '') : '';
@@ -1636,7 +1777,7 @@ async function enviarCorreoManual(){
 
   const btn = document.getElementById('btn-send-email-modal');
   if(btn){ btn.disabled = true; btn.textContent = '⏳ Generando PDF...'; }
-  showSM('modal-email-sm','ok','Generando PDF del parte...');
+  showSM('modal-email-sm','ok','Generando PDF del albarán...');
 
   try {
     // Generate PDF
@@ -1649,7 +1790,7 @@ async function enviarCorreoManual(){
     const cfg = {
       to: destinatarios,          // todos en "Para"
       cc: [],
-      subject: 'Partes GlobalFeed — ' + (p.id||'') + ' · ' + (p.subcontrata_nombre||p.empresa||'') + ' · ' + (p.fecha||''),
+      subject: 'Albaranes GlobalFeed — ' + (p.id||'') + ' · ' + (p.proveedor_nombre||p.empresa||'') + ' · ' + (p.fecha||''),
       filename: 'Parte_' + (p.id||'SGFEED') + '.pdf',
       pdf: pdf
     };
@@ -1677,32 +1818,66 @@ function abrirEditarParte(id){
   const p=partesCache.find(x=>x.id===id);if(!p)return;
   editParteId=id;
   document.getElementById('mep-id').textContent=id;
-  populateScDDs();
-  const mepSc=document.getElementById('mep-sc');if(mepSc)mepSc.value=p.subcontrata_id||'';
-  document.getElementById('mep-trab').value=p.trabajador||'';
-  document.getElementById('mep-area').value=p.area||'';
+
+  // Proveedor — fill combobox
+  const scNombre=p.subcontrata_nombre||p.proveedor_nombre||p.empresa||'';
+  const mepScInp=document.getElementById('mep-sc-inp'); if(mepScInp) mepScInp.value=scNombre;
+  const mepScHid=document.getElementById('mep-sc-hid'); if(mepScHid) mepScHid.value=p.subcontrata_id||p.proveedor_id||'';
+
+  // Basic fields
+  ['mep-trab','mep-area','mep-trab2','mep-mat','mep-per','mep-exp','mep-otros','mep-cc','mep-sec','mep-num-alb','mep-oferta','mep-concepto-alb'].forEach(fid=>{
+    const fMap={
+      'mep-trab':'trabajador','mep-area':'area','mep-trab2':'trabajos','mep-mat':'materiales',
+      'mep-per':'permiso','mep-exp':'expediente','mep-otros':'otros',
+      'mep-cc':'centro_coste','mep-sec':'seccion',
+      'mep-num-alb':'numero_albaran','mep-oferta':'oferta','mep-concepto-alb':'concepto_alb'
+    };
+    const el=document.getElementById(fid); if(el) el.value=p[fMap[fid]]||'';
+  });
+
+  // Estado
   const mepEst=document.getElementById('mep-estado');if(mepEst)mepEst.value=p.estado||'Validado';
-  document.getElementById('mep-trab2').value=p.trabajos||'';
-  document.getElementById('mep-mat').value=p.materiales||'';
-  document.getElementById('mep-per').value=p.permiso||'';
-  document.getElementById('mep-cc').value=p.centro_coste||'';
-  document.getElementById('mep-sec').value=p.seccion||'';
-  editJornadas=JSON.parse(JSON.stringify(p.jornadas||[{fecha:p.fecha,h_entrada:'',h_salida:'',h_normal:p.h_normal||0,h_extra:p.h_extra||0,h_noct:p.h_noct||0}]));
+
+  // Naturaleza pills
+  const mepNat=p.naturaleza||'';
+  document.querySelectorAll('#mep-pg-nat .pill').forEach(pl=>{
+    if(pl.textContent.trim()===mepNat)pl.classList.add('on');else pl.classList.remove('on');
+  });
+
+  // Recurso pills
+  const mepRec=p.recurso||'';
+  document.querySelectorAll('#mep-pg-rec .pill').forEach(pl=>{
+    if(pl.textContent.trim()===mepRec)pl.classList.add('on');else pl.classList.remove('on');
+  });
+
+  // Responsable
+  const mepResp=document.getElementById('mep-resp');if(mepResp)mepResp.value=p.responsable_id||p.responsable||'';
+
+  // Jornadas
+  editJornadas=JSON.parse(JSON.stringify(Array.isArray(p.jornadas)&&p.jornadas.length?p.jornadas:[{fecha:p.fecha,h_entrada:'',h_salida:'',h_normal:Number(p.h_normal)||0,h_extra:Number(p.h_extra)||0,h_noct:Number(p.h_noct)||0}]));
   renderJornadasEdit();
-  editLineas=JSON.parse(JSON.stringify(p.lineas_coste||[]));
-  if(!editLineas.length&&p.coste>0)editLineas=[{id:'l0',concepto:'Importe',unidad:'u',precio:p.coste,cantidad:1,subtotal:p.coste}];
+
+  // Lineas de coste con descuento
+  editLineas=JSON.parse(JSON.stringify(Array.isArray(p.lineas_coste)&&p.lineas_coste.length?p.lineas_coste:p.coste>0?[{id:'l0',concepto:'Importe',unidad:'u',precio:Number(p.coste),cantidad:1,descuento:0,subtotal:Number(p.coste)}]:[]));
   renderLineasEdit();
+
   const s=document.getElementById('mep-sm');if(s)s.style.display='none';
+  populateRespEditDD();
+  const mepRespSel=document.getElementById('mep-resp');
+  if(mepRespSel) mepRespSel.value=p.responsable_id||'';
+  const mepPin=document.getElementById('mep-pin-val');if(mepPin)mepPin.value='';
   document.getElementById('modal-ep').classList.add('open');
 }
+
 function addJornadaEdit(){editJornadas.push({fecha:new Date().toISOString().split('T')[0],h_entrada:'',h_salida:'',h_normal:0,h_extra:0,h_noct:0});renderJornadasEdit();}
-function addLineaEditLibre(){editLineas.push({id:'le'+Date.now(),concepto:'',unidad:'u',precio:0,cantidad:0,subtotal:0});renderLineasEdit();}
+function addLineaEditLibre(){editLineas.push({id:'le'+Date.now(),concepto:'',unidad:'u',precio:0,cantidad:0,descuento:0,subtotal:0});renderLineasEdit();}
+
 function renderJornadasEdit(){
   const el=document.getElementById('mep-jornadas');if(!el)return;
   el.innerHTML=editJornadas.map((j,i)=>`<div class="jr" style="margin-bottom:8px">
     <div class="jrh"><span class="jrn">Jornada ${i+1}</span><button style="background:none;border:none;color:var(--mu);font-size:12px;cursor:pointer" onclick="editJornadas.splice(${i},1);renderJornadasEdit()">✕</button></div>
     <div class="jg">
-      <div class="field"><label>Fecha</label><input type="date" value="${j.fecha}" onchange="editJornadas[${i}].fecha=this.value"/></div>
+      <div class="field"><label>Fecha</label><input type="date" value="${j.fecha||''}" onchange="editJornadas[${i}].fecha=this.value"/></div>
       <div class="field"><label>Entrada</label><input type="time" value="${j.h_entrada||''}" onchange="editJornadas[${i}].h_entrada=this.value"/></div>
       <div class="field"><label>Salida</label><input type="time" value="${j.h_salida||''}" onchange="editJornadas[${i}].h_salida=this.value"/></div>
       <div class="field"><label>H. norm.</label><input type="number" value="${j.h_normal||''}" min="0" step="0.5" onchange="editJornadas[${i}].h_normal=parseFloat(this.value)||0"/></div>
@@ -1710,65 +1885,120 @@ function renderJornadasEdit(){
       <div class="field"><label>H. noct.</label><input type="number" value="${j.h_noct||''}" min="0" step="0.5" onchange="editJornadas[${i}].h_noct=parseFloat(this.value)||0"/></div>
     </div></div>`).join('');
 }
+
 function renderLineasEdit(){
   const el=document.getElementById('mep-lineas');if(!el)return;
-  if(!editLineas.length){el.innerHTML='<p style="font-size:13px;color:var(--fa);padding:8px 0">Sin conceptos.</p>';return;}
+  if(!editLineas.length){el.innerHTML='<p style="font-size:13px;color:var(--fa);padding:8px 0">Sin conceptos. Añade uno.</p>';return;}
   const inS='padding:4px 7px;border:1px solid var(--bor);border-radius:var(--rs);font-size:13px;background:var(--bg);outline:none;width:100%';
-  el.innerHTML=`<table class="coste-tbl" style="margin-bottom:8px"><thead><tr><th>Concepto</th><th>Unidad</th><th style="text-align:right">€/u</th><th style="text-align:right">Cantidad</th><th style="text-align:right">Subtotal</th><th></th></tr></thead><tbody>`+
-    editLineas.map((l,i)=>`<tr>
-      <td><input type="text" value="${l.concepto}" onchange="editLineas[${i}].concepto=this.value" style="${inS};font-family:var(--sans)"/></td>
-      <td><input type="text" value="${l.unidad}" onchange="editLineas[${i}].unidad=this.value" style="${inS};width:55px;font-family:var(--mono)"/></td>
-      <td><input type="number" value="${l.precio}" min="0" step="0.01" onchange="editLineas[${i}].precio=parseFloat(this.value)||0;editLineas[${i}].subtotal=editLineas[${i}].precio*editLineas[${i}].cantidad;renderLineasEdit()" style="${inS};width:80px;font-family:var(--mono);text-align:right"/></td>
-      <td><input type="number" value="${l.cantidad}" min="0" step="0.5" onchange="editLineas[${i}].cantidad=parseFloat(this.value)||0;editLineas[${i}].subtotal=editLineas[${i}].precio*editLineas[${i}].cantidad;renderLineasEdit()" style="${inS};width:75px;font-family:var(--mono);text-align:right"/></td>
-      <td style="text-align:right;font-family:var(--mono);font-size:13px;font-weight:500">${l.subtotal>0?l.subtotal.toFixed(2)+' €':'—'}</td>
-      <td><button class="btn-xs btn-d" onclick="editLineas.splice(${i},1);renderLineasEdit()">✕</button></td>
-    </tr>`).join('')+'</tbody></table>';
+  el.innerHTML=`<table class="coste-tbl" style="margin-bottom:8px"><thead><tr>
+    <th>Concepto</th><th>Unidad</th><th style="text-align:right">€/u</th>
+    <th style="text-align:right">Cant.</th><th style="text-align:right;width:60px">Dto.%</th>
+    <th style="text-align:right">Subtotal</th><th></th>
+  </tr></thead><tbody>`+
+    editLineas.map((l,i)=>{
+      const dto=Number(l.descuento)||0;
+      const sub=(Number(l.cantidad)||0)*(Number(l.precio)||0)*(1-dto/100);
+      return`<tr>
+        <td><input type="text" value="${l.concepto||''}" onchange="editLineas[${i}].concepto=this.value" style="${inS};font-family:var(--sans)"/></td>
+        <td><input type="text" value="${l.unidad||'u'}" onchange="editLineas[${i}].unidad=this.value" style="${inS};width:50px;font-family:var(--mono)"/></td>
+        <td><input type="number" value="${l.precio||''}" min="0" step="0.01" placeholder="0" onchange="editLineas[${i}].precio=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:75px;font-family:var(--mono);text-align:right"/></td>
+        <td><input type="number" value="${l.cantidad||''}" min="0" step="0.5" placeholder="0" onchange="editLineas[${i}].cantidad=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:70px;font-family:var(--mono);text-align:right"/></td>
+        <td><input type="number" value="${dto||''}" min="0" max="100" step="0.5" placeholder="0" onchange="editLineas[${i}].descuento=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:55px;font-family:var(--mono);text-align:right"/></td>
+        <td style="text-align:right;font-family:var(--mono);font-size:13px;font-weight:500" id="mep-sub-${i}">${sub>0?sub.toFixed(2)+' €':'—'}</td>
+        <td><button class="btn-xs btn-d" onclick="editLineas.splice(${i},1);renderLineasEdit()">✕</button></td>
+      </tr>`;
+    }).join('')+'</tbody></table>';
 }
+
+function updateEditLinea(i){
+  const l=editLineas[i];
+  const dto=Number(l.descuento)||0;
+  l.subtotal=(Number(l.cantidad)||0)*(Number(l.precio)||0)*(1-dto/100);
+  const s=document.getElementById('mep-sub-'+i);
+  if(s) s.textContent=l.subtotal>0?l.subtotal.toFixed(2)+' €':'—';
+}
+
 async function guardarEdicion(){
   const p=partesCache.find(x=>x.id===editParteId);if(!p)return;
-  const scId=document.getElementById('mep-sc')?.value||'';
+
+  // Proveedor
+  const scNombre=(document.getElementById('mep-sc-inp')?.value||'').trim();
+  const scId=document.getElementById('mep-sc-hid')?.value||'';
   const sc=subcontratas.find(s=>s.id===scId);
+
+  // Responsable con PIN
+  const respSel=document.getElementById('mep-resp')?.value||'';
+  const rt=responsables.find(r=>r.id===respSel||r.nombre===respSel);
+  const pinVal=(document.getElementById('mep-pin-val')?.value||'').trim();
+
+  // If estado is Validado and responsable given, verify PIN
+  const nuevoEstado=document.getElementById('mep-estado')?.value||p.estado||'Pendiente';
+  if(nuevoEstado==='Validado' && rt && rt.pin && pinVal!==rt.pin){
+    showSM('mep-sm','er','❌ PIN del responsable incorrecto.');
+    return;
+  }
+
+  // Naturaleza & recurso from pills
+  const nat=document.querySelector('#mep-pg-nat .pill.on')?.textContent.trim()||p.naturaleza||'';
+  const rec=document.querySelector('#mep-pg-rec .pill.on')?.textContent.trim()||p.recurso||'';
+
   const total=editLineas.reduce((s,l)=>s+(parseFloat(l.subtotal)||0),0);
   const fechas=editJornadas.map(j=>j.fecha).filter(Boolean).sort();
+  const hn=editJornadas.reduce((s,j)=>s+(Number(j.h_normal)||0),0);
+  const he=editJornadas.reduce((s,j)=>s+(Number(j.h_extra)||0),0);
+  const hf=editJornadas.reduce((s,j)=>s+(Number(j.h_noct)||0),0);
+
   Object.assign(p,{
-    subcontrata_id:scId,subcontrata_nombre:sc?.nombre||p.subcontrata_nombre,
+    subcontrata_id:scId, subcontrata_nombre:sc?.nombre||scNombre,
+    numero_albaran:document.getElementById('mep-num-alb')?.value||'',
+    oferta:document.getElementById('mep-oferta')?.value||'',
+    concepto_alb:document.getElementById('mep-concepto-alb')?.value||'',
     trabajador:document.getElementById('mep-trab')?.value||'',
     area:document.getElementById('mep-area')?.value||'',
-    estado:document.getElementById('mep-estado')?.value||p.estado,
+    estado:nuevoEstado,
     trabajos:document.getElementById('mep-trab2')?.value||'',
     materiales:document.getElementById('mep-mat')?.value||'',
     permiso:document.getElementById('mep-per')?.value||'',
+    expediente:document.getElementById('mep-exp')?.value||'',
+    otros:document.getElementById('mep-otros')?.value||'',
     centro_coste:document.getElementById('mep-cc')?.value||'',
     seccion:document.getElementById('mep-sec')?.value||'',
+    naturaleza:nat, recurso:rec,
+    responsable:rt?.nombre||respSel,
+    responsable_id:rt?.id||'',
+    responsable_puesto:rt?.puesto||'',
+    responsable_email:rt?.email||'',
     jornadas:JSON.parse(JSON.stringify(editJornadas)),
     lineas_coste:JSON.parse(JSON.stringify(editLineas)),
+    h_normal:hn, h_extra:he, h_noct:hf,
     fecha:fechas.length>1?fechas[0]+' / '+fechas[fechas.length-1]:(fechas[0]||p.fecha),
     fechas, coste:total
   });
-  showSM('mep-sm','ok','Guardando...');
-  const pSB = {...p,
-    jornadas: JSON.stringify(p.jornadas||[]),
-    lineas_coste: JSON.stringify(p.lineas_coste||[]),
-    fechas: JSON.stringify(p.fechas||[])
+
+  showSM('mep-sm','ok','Guardando en Supabase...');
+  const pSB={...p,
+    jornadas:JSON.stringify(p.jornadas||[]),
+    lineas_coste:JSON.stringify(p.lineas_coste||[]),
+    fechas:JSON.stringify(p.fechas||[])
   };
-  try {
-    await sbUpsert('partes', pSB);
+  try{
+    await sbUpsert('partes',pSB);
     cerrarModal('modal-ep');
     syncAll(false);
-  } catch(e) { showSM('mep-sm','er','Error: '+e.message); }
+  }catch(e){ showSM('mep-sm','er','Error: '+e.message); }
 }
 async function eliminarParte(id){
   const p = partesCache.find(x=>x.id===id);
   const rt = p ? responsables.find(r=>r.id===p.responsable_id||r.nombre===p.responsable) : null;
   if(rt?.pin){
-    const pinIntroducido = prompt('Solo el responsable que validó este parte puede eliminarlo.\nIntroduce el PIN de '+rt.nombre+':');
+    const pinIntroducido = prompt('Solo el responsable que validó este albarán puede eliminarlo.\nIntroduce el PIN de '+rt.nombre+':');
     if(pinIntroducido === null) return;
     if(pinIntroducido.trim() !== String(rt.pin).trim()){
-      alert('❌ PIN incorrecto. No puedes eliminar este parte.');
+      alert('❌ PIN incorrecto. No puedes eliminar este albarán.');
       return;
     }
   }
-  if(!confirm('¿Eliminar el parte '+(p?.id||id)+'? Esta acción no se puede deshacer.')) return;
+  if(!confirm('¿Eliminar el albarán '+(p?.id||id)+'? Esta acción no se puede deshacer.')) return;
   try { await sbDelete('partes', id); syncAll(false); }
   catch(e) { alert('Error: '+e.message); }
 }
@@ -1791,17 +2021,17 @@ function renderDashboard(){
     <div class="sc-card"><div class="slbl">Coste total</div><div class="sval" style="font-size:20px;font-family:var(--mono)">${tc.toFixed(0)} €</div></div>
     <div class="sc-card"><div class="slbl">Horas</div><div class="sval">${th.toFixed(0)}<span style="font-size:13px;color:var(--mu)"> h</span></div></div>
     <div class="sc-card"><div class="slbl">Proveedores</div><div class="sval">${subcontratas.length}</div></div>`;
-  const allC=subcontratas.map(sc=>p.filter(x=>x.subcontrata_id===sc.id).reduce((s,x)=>s+(Number(x.coste)||0),0));
+  const allC=subcontratas.map(sc=>p.filter(x=>x.proveedor_id===sc.id).reduce((s,x)=>s+(Number(x.coste)||0),0));
   const maxC=allC.length?Math.max(1,...allC):1;
   const dc=document.getElementById('dash-cards');
   if(dc)dc.innerHTML=subcontratas.map((sc,i)=>{
-    const sp=p.filter(x=>x.subcontrata_id===sc.id);
+    const sp=p.filter(x=>x.proveedor_id===sc.id);
     const c=sp.reduce((s,x)=>s+(Number(x.coste)||0),0);
     const h=sp.reduce((s,x)=>s+(Number(x.h_normal)||0)+(Number(x.h_extra)||0)+(Number(x.h_noct)||0),0);
     return `<div class="scc"><div class="scn">${sc.nombre}</div><div class="scf">${sc.cif||''}</div>
-      <div class="sc-stats"><div class="sc-stat"><strong>${sp.length}</strong>partes</div><div class="sc-stat"><strong>${c.toFixed(0)} €</strong>coste</div><div class="sc-stat"><strong>${h.toFixed(1)} h</strong>horas</div></div>
+      <div class="sc-stats"><div class="sc-stat"><strong>${sp.length}</strong>albaranes</div><div class="sc-stat"><strong>${c.toFixed(0)} €</strong>coste</div><div class="sc-stat"><strong>${h.toFixed(1)} h</strong>horas</div></div>
       <div class="scbar"><div class="scbar-f" style="width:${Math.round(c/maxC*100)}%"></div></div>
-      <button class="btn btn-o btn-sm" onclick="filtrarPorSc('${sc.id}')">Ver partes →</button>
+      <button class="btn btn-o btn-sm" onclick="filtrarPorSc('${sc.id}')">Ver albaráns →</button>
     </div>`;
   }).join('');
   const dr=document.getElementById('dash-recent');
@@ -1809,7 +2039,7 @@ function renderDashboard(){
     const r=p.slice(0,8);
     if(!r.length){dr.innerHTML='<div style="text-align:center;padding:28px;color:var(--fa)">Sin partes registrados aún.</div>';return;}
     dr.innerHTML=`<table class="ht"><thead><tr><th>Ref.</th><th>Fecha</th><th>Proveedor</th><th>Trabajador</th><th>Coste</th><th>Estado</th><th>Responsable</th></tr></thead><tbody>`+
-      r.map(x=>`<tr><td style="font-family:var(--mono);font-size:11px;color:var(--mu)">${x.id}</td><td>${x.fecha||'—'}</td><td>${x.subcontrata_nombre||x.empresa||'—'}</td><td>${x.trabajador||'—'}</td><td style="font-family:var(--mono);font-weight:500">${Number(x.coste)>0?Number(x.coste).toFixed(2)+' €':'—'}</td><td>${estadoBadge(x)}</td><td>${x.responsable||'—'}</td></tr>`).join('')+'</tbody></table>';
+      r.map(x=>`<tr><td style="font-family:var(--mono);font-size:11px;color:var(--mu)">${x.id}</td><td>${x.fecha||'—'}</td><td>${x.proveedor_nombre||x.empresa||'—'}</td><td>${x.trabajador||'—'}</td><td style="font-family:var(--mono);font-weight:500">${Number(x.coste)>0?Number(x.coste).toFixed(2)+' €':'—'}</td><td>${estadoBadge(x)}</td><td>${x.responsable||'—'}</td></tr>`).join('')+'</tbody></table>';
   }
 }
 
@@ -1830,6 +2060,8 @@ function estadoBadge(p){
   return`<span class="badge bw">${est}</span>`;
 }
 function limpiarFiltros(){['f-sc','f-estado','f-desde','f-hasta','f-resp','f-q'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});filtrar();}
+let seleccionados = new Set(); // IDs seleccionados en historial
+
 function filtrar(){
   const fSc=(document.getElementById('f-sc')?.value||'');
   const fEst=(document.getElementById('f-estado')?.value||'');
@@ -1838,43 +2070,173 @@ function filtrar(){
   const fR=(document.getElementById('f-resp')?.value||'').toLowerCase();
   const fQ=(document.getElementById('f-q')?.value||'').toLowerCase();
   let arr=[...partesCache];
-  if(fSc)arr=arr.filter(p=>p.subcontrata_id===fSc);
+  if(fSc)arr=arr.filter(p=>p.subcontrata_id===fSc||p.proveedor_id===fSc);
   if(fEst)arr=arr.filter(p=>(p.estado||'Validado')===fEst);
   if(fD)arr=arr.filter(p=>(p.fecha||'')>=fD);
   if(fH)arr=arr.filter(p=>(p.fecha||'')<=fH);
   if(fR)arr=arr.filter(p=>(p.responsable||'').toLowerCase().includes(fR));
-  if(fQ)arr=arr.filter(p=>['trabajador','area','trabajos','subcontrata_nombre','empresa'].some(k=>(p[k]||'').toLowerCase().includes(fQ)));
+  if(fQ)arr=arr.filter(p=>['trabajador','area','trabajos','subcontrata_nombre','proveedor_nombre','empresa'].some(k=>(p[k]||'').toLowerCase().includes(fQ)));
   const tc=arr.reduce((s,p)=>s+(Number(p.coste)||0),0);
   const th=arr.reduce((s,p)=>s+(Number(p.h_normal)||0)+(Number(p.h_extra)||0)+(Number(p.h_noct)||0),0);
   const hs=document.getElementById('hist-stats');
-  if(hs)hs.innerHTML=`<div class="sc-card"><div class="slbl">Partes</div><div class="sval">${arr.length}</div></div>
+  if(hs)hs.innerHTML=`
+    <div class="sc-card"><div class="slbl">Albaranes</div><div class="sval">${arr.length}</div></div>
     <div class="sc-card"><div class="slbl">Coste</div><div class="sval" style="font-size:19px;font-family:var(--mono)">${tc.toFixed(2)} €</div></div>
     <div class="sc-card"><div class="slbl">Horas</div><div class="sval">${th.toFixed(1)}<span style="font-size:12px;color:var(--mu)"> h</span></div></div>
-    <div class="sc-card"><div class="slbl">Empresas</div><div class="sval">${new Set(arr.map(p=>p.subcontrata_id||p.empresa)).size}</div></div>`;
+    <div class="sc-card"><div class="slbl">Empresas</div><div class="sval">${new Set(arr.map(p=>p.subcontrata_id||p.proveedor_id||p.empresa)).size}</div></div>`;
   const cont=document.getElementById('hist-content');
-  if(!arr.length){cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--fa)"><p style="font-size:24px">📋</p><p style="margin-top:7px">No hay partes con estos filtros.</p></div>';return;}
-  cont.innerHTML=`<table class="ht"><thead><tr><th>Ref.</th><th>Fecha</th><th>Proveedor</th><th>Trabajador</th><th>Área</th><th>Horas</th><th>Coste</th><th>Estado</th><th>Responsable</th><th>Acciones</th></tr></thead><tbody>`+
+  if(!arr.length){
+    seleccionados.clear(); actualizarBulkBar();
+    cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--fa)"><p style="font-size:24px">📋</p><p style="margin-top:7px">No hay albaranes con estos filtros.</p></div>';
+    return;
+  }
+  // Reset selection when filter changes
+  seleccionados.clear();
+  cont.innerHTML=`
+    <div id="bulk-bar" style="display:none;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span id="bulk-count" style="font-size:13px;font-weight:500;color:var(--act)"></span>
+      <button class="btn btn-o btn-sm" onclick="bulkEditar()">✏️ Editar seleccionados</button>
+      <button class="btn btn-o btn-sm" onclick="bulkEmail()">✉ Enviar por correo</button>
+      <button class="btn btn-o btn-sm" style="color:var(--da);border-color:#F09595" onclick="bulkEliminar()">🗑️ Eliminar</button>
+      <button class="btn btn-o btn-sm" onclick="seleccionarTodos(arr)">☑ Todos</button>
+      <button class="btn btn-o btn-sm" onclick="deseleccionarTodos()">☐ Ninguno</button>
+    </div>
+    <div style="overflow-x:auto"><table class="ht"><thead><tr>
+      <th style="width:30px"><input type="checkbox" id="chk-all" onchange="toggleTodos(this,arr)" title="Seleccionar todos"/></th>
+      <th>Ref.</th><th>Fecha</th><th>Proveedor</th><th>Nº Albarán</th><th>Oferta</th><th>Concepto</th>
+      <th>Expediente</th><th>C.Coste</th><th>Horas</th><th>Coste</th><th>Estado</th><th>Responsable</th><th>Acciones</th>
+    </tr></thead><tbody>`+
     arr.map(p=>{
       const h=((Number(p.h_normal)||0)+(Number(p.h_extra)||0)+(Number(p.h_noct)||0)).toFixed(1);
-      const fd=p.fechas&&p.fechas.length>1?p.fechas[0]+' – '+p.fechas[p.fechas.length-1]:p.fecha||'—';
-      return`<tr>
+      const fd=p.fechas&&Array.isArray(p.fechas)&&p.fechas.length>1?p.fechas[0]+' – '+p.fechas[p.fechas.length-1]:p.fecha||'—';
+      const nombre=p.subcontrata_nombre||p.proveedor_nombre||p.empresa||'—';
+      const exp=(p.expediente||'').slice(0,20)||(p.expediente||'—');
+      return`<tr id="row-${p.id}">
+        <td><input type="checkbox" class="chk-row" data-id="${p.id}" onchange="toggleSeleccion('${p.id}',this.checked,arr)"/></td>
         <td style="font-family:var(--mono);font-size:11px;color:var(--mu)">${p.id}</td>
-        <td style="font-size:12.5px">${fd}</td>
-        <td>${p.subcontrata_nombre||p.empresa||'—'}</td>
-        <td>${p.trabajador||'—'}</td>
-        <td style="font-size:12px;color:var(--mu)">${p.area||'—'}</td>
+        <td style="font-size:12.5px;white-space:nowrap">${fd}</td>
+        <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${nombre}">${nombre}</td>
+        <td style="font-family:var(--mono);font-size:12px">${p.numero_albaran||'—'}</td>
+        <td style="font-size:12px;color:var(--mu)">${p.oferta||'—'}</td>
+        <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${p.concepto_alb||p.trabajos||''}">${p.concepto_alb||p.trabajos?.slice(0,30)||'—'}</td>
+        <td style="font-size:11px;color:var(--mu);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.expediente||''}">${exp||'—'}</td>
+        <td style="font-size:11px;color:var(--mu)">${p.centro_coste||'—'}</td>
         <td style="font-family:var(--mono)">${h} h</td>
-        <td style="font-family:var(--mono);font-weight:500">${Number(p.coste)>0?Number(p.coste).toFixed(2)+' €':'—'}</td>
+        <td style="font-family:var(--mono);font-weight:500;white-space:nowrap">${Number(p.coste)>0?Number(p.coste).toFixed(2)+' €':'—'}</td>
         <td>${estadoBadge(p)}</td>
-        <td>${p.responsable||'—'}</td>
+        <td style="font-size:12px">${p.responsable||'—'}</td>
         <td style="white-space:nowrap">
-          <button class="btn-xs" style="margin-right:4px" onclick="solicitarPinEdicion('${p.id}')">✏️</button>
-          <button class="btn-xs" style="margin-right:4px" onclick="abrirModalEmailParte('${p.id}')">✉</button>
-          <button class="btn-xs btn-d" onclick="eliminarParte('${p.id}')">🗑️</button>
+          <button class="btn-xs" title="Ver albarán" style="margin-right:3px" onclick="verAlbaran('${p.id}')">👁</button>
+          <button class="btn-xs" title="Editar" style="margin-right:3px" onclick="solicitarPinEdicion('${p.id}')">✏️</button>
+          <button class="btn-xs" title="Enviar correo" style="margin-right:3px" onclick="abrirModalEmailParte('${p.id}')">✉</button>
+          <button class="btn-xs btn-d" title="Eliminar" onclick="eliminarParte('${p.id}')">🗑️</button>
         </td>
       </tr>`;
-    }).join('')+'</tbody></table>';
+    }).join('')+'</tbody></table></div>';
+  actualizarBulkBar();
 }
+
+function toggleSeleccion(id, checked, arr){
+  if(checked) seleccionados.add(id); else seleccionados.delete(id);
+  // update row highlight
+  const row=document.getElementById('row-'+id);
+  if(row) row.style.background = checked ? 'var(--acl)' : '';
+  actualizarBulkBar();
+  // update select-all checkbox
+  const chkAll=document.getElementById('chk-all');
+  if(chkAll) chkAll.checked = arr && seleccionados.size===arr.length;
+}
+function toggleTodos(chk, arr){
+  arr.forEach(p=>{
+    if(chk.checked) seleccionados.add(p.id); else seleccionados.delete(p.id);
+    const row=document.getElementById('row-'+p.id);
+    if(row) row.style.background = chk.checked ? 'var(--acl)' : '';
+    const c=document.querySelector(`.chk-row[data-id="${p.id}"]`);
+    if(c) c.checked=chk.checked;
+  });
+  actualizarBulkBar();
+}
+function seleccionarTodos(arr){ toggleTodos({checked:true},arr); }
+function deseleccionarTodos(){ toggleTodos({checked:false},[...seleccionados].map(id=>({id}))); }
+function actualizarBulkBar(){
+  const bar=document.getElementById('bulk-bar');
+  const cnt=document.getElementById('bulk-count');
+  if(!bar) return;
+  if(seleccionados.size>0){
+    bar.style.display='flex';
+    if(cnt) cnt.textContent=seleccionados.size+' albarán(es) seleccionado(s)';
+  } else {
+    bar.style.display='none';
+  }
+}
+async function bulkEliminar(){
+  if(!seleccionados.size) return;
+  const ids=[...seleccionados]; // snapshot before any async ops
+  if(!confirm('¿Eliminar '+ids.length+' albarán(es) seleccionado(s)? Esta acción no se puede deshacer.')) return;
+  seleccionados.clear(); // clear immediately so UI doesn't react mid-loop
+  let ok=0;
+  for(const id of ids){
+    try{
+      await sbDelete('partes',id);
+      localStorage.removeItem('albaran_img_'+id);
+      ok++;
+    }catch(e){ console.warn('Error eliminando',id,':',e.message); }
+  }
+  await syncAll(false);
+  if(ok<ids.length) alert((ids.length-ok)+' albarán(es) no se pudieron eliminar.');
+}
+async function bulkEmail(){
+  if(!seleccionados.size){ alert('Selecciona al menos un albarán.'); return; }
+  // Open email modal for first selected, note the rest
+  const ids=[...seleccionados];
+  emailParteId=ids[0];
+  _abrirEmailModal();
+  if(ids.length>1) showSM('modal-email-sm','ok','Nota: el correo se enviará para cada albarán por separado. Este es el primero ('+ids[0]+').');
+}
+function bulkEditar(){
+  if(!seleccionados.size){ alert('Selecciona al menos un albarán.'); return; }
+  if(seleccionados.size>1){ alert('Para editar, selecciona solo un albarán a la vez.'); return; }
+  solicitarPinEdicion([...seleccionados][0]);
+}
+
+// ── Ver albarán (documento adjunto o PDF generado) ──────────
+async function verAlbaran(id){
+  const p=partesCache.find(x=>x.id===id); if(!p) return;
+  const imgUrl=await getAlbaranImageUrl(id);
+  if(!imgUrl){ exportAlbaranPDF(id); return; }
+  const modal=document.createElement('div');
+  modal.className='mbg open'; modal.id='modal-ver-albaran';
+  const inner=document.createElement('div');
+  inner.className='modal';
+  inner.style.cssText='max-width:700px;max-height:90vh;overflow-y:auto';
+  const title=document.createElement('div');
+  title.className='mtl';
+  title.textContent='Documento — '+p.id+(p.numero_albaran?' · '+p.numero_albaran:'');
+  const img=document.createElement('img');
+  img.src=imgUrl; img.alt='Documento adjunto';
+  img.style.cssText='width:100%;border-radius:var(--rs);margin-bottom:14px';
+  img.onerror=function(){this.style.display='none';};
+  const brow=document.createElement('div'); brow.className='brow';
+  const btnC=document.createElement('button'); btnC.className='btn btn-o';
+  btnC.textContent='Cerrar';
+  btnC.onclick=()=>modal.remove();
+  const btnP=document.createElement('button'); btnP.className='btn btn-f';
+  btnP.textContent='⬇ PDF resumen';
+  btnP.onclick=()=>exportAlbaranPDF(id);
+  brow.appendChild(btnC); brow.appendChild(btnP);
+  inner.appendChild(title); inner.appendChild(img); inner.appendChild(brow);
+  modal.appendChild(inner); document.body.appendChild(modal);
+}
+function exportAlbaranPDF(id){
+  const p=partesCache.find(x=>x.id===id)||partesCache[0];
+  if(!p) return;
+  const pdf=generarPDFBase64(p);
+  if(!pdf) return;
+  const blob=new Blob([Uint8Array.from(atob(pdf),c=>c.charCodeAt(0))],{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+}
+
 
 // ══════════════════════════════════════════════════════════════
 //  RESET FORM
@@ -1884,14 +2246,14 @@ function descartarParte(){
                      (document.getElementById('trabajos')?.value||'').trim() ||
                      selectedScId || jornadas.some(j=>j.h_normal||j.h_extra||j.h_noct);
   if(tieneDatos){
-    if(!confirm('¿Descartar el parte en curso? Se borrarán todos los datos introducidos.')) return;
+    if(!confirm('¿Descartar el albarán en curso? Se borrarán todos los datos introducidos.')) return;
   }
   resetForm();
 }
 
 function resetForm(){
   ['trabajador','area','trabajos','materiales','permiso','responsable','pin',
-   'expediente','otros','centro_coste','seccion'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+   'expediente','otros','centro_coste','seccion','numero_albaran','oferta','concepto_alb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const scs=document.getElementById('sc-sel');if(scs)scs.value='';
   const rsp=document.getElementById('resp-sel');if(rsp)rsp.value='';
   const est=document.getElementById('parte-estado');if(est)est.value='';
@@ -1968,7 +2330,7 @@ function generarPDFBase64(p){
   y=24;
   // Identificación
   doc.setTextColor(30,66,32);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('IDENTIFICACIÓN',M,y);y+=5;
-  y=pdfRows(doc,[['Subcontrata',p.subcontrata_nombre||p.empresa||'—'],['Trabajador',p.trabajador||'—'],['Área',p.area||'—'],
+  y=pdfRows(doc,[['Proveedor',p.proveedor_nombre||p.empresa||'—'],['Trabajador',p.trabajador||'—'],['Área',p.area||'—'],
     ['Trabajos',p.trabajos||'—'],['Materiales',p.materiales||'—'],['Permiso',p.permiso||'—']],M,W,y);
   y+=4;
   // Jornadas
@@ -2035,8 +2397,8 @@ function exportPartePDF(){
 }
 function exportHistorialExcel(){
   if(!partesCache.length){alert('Sin partes.');return;}
-  const hdrs=['Ref.','Fecha','Subcontrata','Trabajador','Área','H.Norm','H.Extra','H.Noct','H.Total','Coste €','Estado','Responsable','C.Coste','Sección','Timestamp'];
-  const data=partesCache.map(p=>[p.id,p.fecha,p.subcontrata_nombre||p.empresa,p.trabajador,p.area,p.h_normal,p.h_extra,p.h_noct,(p.h_normal||0)+(p.h_extra||0)+(p.h_noct||0),p.coste,p.estado||'Validado',p.responsable,p.centro_coste,p.seccion,p.timestamp]);
+  const hdrs=['Ref.','Fecha','Proveedor','Trabajador','Área','H.Norm','H.Extra','H.Noct','H.Total','Coste €','Estado','Responsable','C.Coste','Sección','Timestamp'];
+  const data=partesCache.map(p=>[p.id,p.fecha,p.proveedor_nombre||p.empresa,p.trabajador,p.area,p.h_normal,p.h_extra,p.h_noct,(p.h_normal||0)+(p.h_extra||0)+(p.h_noct||0),p.coste,p.estado||'Validado',p.responsable,p.centro_coste,p.seccion,p.timestamp]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   ws['!cols']=[10,12,24,20,16,8,8,8,8,10,14,18,14,14,18].map(w=>({wch:w}));
   const ws2h=['ID','Nombre','CIF','Email','Tarifas'];
@@ -2047,7 +2409,7 @@ function exportHistorialExcel(){
   const ws3=XLSX.utils.aoa_to_sheet([ws3h,...ws3d]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Partes');
-  XLSX.utils.book_append_sheet(wb,ws2,'Subcontratas');
+  XLSX.utils.book_append_sheet(wb,ws2,'Proveedors');
   XLSX.utils.book_append_sheet(wb,ws3,'Responsables');
   XLSX.writeFile(wb,'PartePro_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
@@ -2059,7 +2421,7 @@ function exportHistorialPDF(){
   doc.setTextColor(255,255,255);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('HISTORIAL DE PARTES',M,8.5);
   doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text('Exportado: '+new Date().toLocaleString('es-ES'),W-M,8.5,{align:'right'});
   y=22;
-  const cols=['Ref.','Fecha','Subcontrata','Trabajador','H.N','H.E','H.F','Coste €','Estado','Responsable'],cw=[22,18,42,34,12,12,12,20,22,26];
+  const cols=['Ref.','Fecha','Proveedor','Trabajador','H.N','H.E','H.F','Coste €','Estado','Responsable'],cw=[22,18,42,34,12,12,12,20,22,26];
   let x=M;doc.setFillColor(234,240,234);doc.rect(M,y-5,W-M*2,8,'F');
   doc.setTextColor(30,66,32);doc.setFontSize(7);doc.setFont('helvetica','bold');
   cols.forEach((c,i)=>{doc.text(c,x+1,y);x+=cw[i];});y+=5;
@@ -2067,7 +2429,7 @@ function exportHistorialPDF(){
     if(y>190){doc.addPage();y=18;}
     if(ri%2===0){doc.setFillColor(245,243,238);doc.rect(M,y-4,W-M*2,7,'F');}
     x=M;doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(26,24,20);
-    [p.id,p.fecha||'',p.subcontrata_nombre||p.empresa||'',p.trabajador||'',String(p.h_normal||0),String(p.h_extra||0),String(p.h_noct||0),(p.coste||0).toFixed(2),p.estado||'Validado',p.responsable||'']
+    [p.id,p.fecha||'',p.proveedor_nombre||p.empresa||'',p.trabajador||'',String(p.h_normal||0),String(p.h_extra||0),String(p.h_noct||0),(p.coste||0).toFixed(2),p.estado||'Validado',p.responsable||'']
     .forEach((v,i)=>{doc.text(doc.splitTextToSize(v,cw[i]-2)[0],x+1,y);x+=cw[i];});y+=7;
   });
   const tc=partesCache.reduce((s,p)=>s+(Number(p.coste)||0),0);
@@ -2156,66 +2518,164 @@ function processIAFile(file){
   reader.readAsDataURL(file);
 }
 
+
 async function analizarDocumento(){
-  if(!iaFileData){ alert('Selecciona un documento primero.'); return; }
-  const key = getGroqKey();
-  if(!key){ alert('Configura la API Key de Groq en Configuración.'); return; }
-  const btn = document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Procesando...';}
-  const scNombres = subcontratas.map(s=>s.nombre).join(', ')||'(ninguna registrada)';
-  const prompt = `Eres un experto en análisis de partes de trabajo industriales, albaranes y facturas.\nAnaliza esta imagen y extrae todos los datos visibles.\nSubcontratas conocidas: ${scNombres}\nDevuelve SOLO JSON sin texto adicional:\n{"subcontrata_nombre":"empresa o la más parecida de las conocidas","trabajador":"nombre trabajador","area":"zona o área","fecha":"YYYY-MM-DD","h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripción trabajos","materiales":"materiales o equipos","permiso":"nº permiso","expediente":"nº expediente","coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0}],"notas":""}\nUsa "" para no encontrado y 0 para números.`;
-  try {
-    let imageBase64 = iaFileData, imageMime = iaFileType;
-    if(iaFileType === 'application/pdf'){
-      showSM('ia-sm','ok','📄 Convirtiendo PDF a imagen...');
-      const conv = await pdfToImage(iaFileData);
-      imageBase64 = conv.base64; imageMime = 'image/jpeg';
-    }
-    showSM('ia-sm','ok','🤖 Analizando con Groq AI...');
-    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens:1500, temperature:0.1,
-        messages:[{role:'user',content:[
-          {type:'image_url',image_url:{url:`data:${imageMime};base64,${imageBase64}`}},
-          {type:'text',text:prompt}
-        ]}]
-      })
-    });
-    if(!resp.ok){
-      const err=await resp.json().catch(()=>({}));
-      const msg=err?.error?.message||'';
-      if(resp.status===401) throw new Error('API Key de Groq inválida. Ve a console.groq.com y crea una nueva.');
-      if(resp.status===429) throw new Error('Límite temporal de Groq. Espera 1 minuto.');
-      throw new Error(msg||'Error '+resp.status);
-    }
-    const data=await resp.json();
-    const text=data.choices?.[0]?.message?.content||'';
-    if(!text) throw new Error('Sin respuesta. Prueba con una imagen más clara.');
-    let extracted;
-    try{ const c=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim(); extracted=JSON.parse(c); }
-    catch(e){ const m=text.match(/\{[\s\S]*\}/); if(m){try{extracted=JSON.parse(m[0]);}catch(e2){throw new Error('No se pudo interpretar la respuesta.');}} else throw new Error('No se pudo interpretar la respuesta.'); }
-    const resumen=[];
-    if(extracted.subcontrata_nombre) resumen.push('🏭 Empresa: '+extracted.subcontrata_nombre);
-    if(extracted.trabajador)          resumen.push('👤 Trabajador: '+extracted.trabajador);
-    if(extracted.fecha)               resumen.push('📅 Fecha: '+extracted.fecha);
-    if(extracted.trabajos)            resumen.push('🔧 Trabajos: '+extracted.trabajos.slice(0,80));
-    if(extracted.coste_total)         resumen.push('💶 Importe: '+extracted.coste_total+' €');
-    if(extracted.lineas?.length)      resumen.push('📋 '+extracted.lineas.length+' concepto(s)');
-    const re=document.getElementById('ia-result'); re.style.display='block';
-    re.innerHTML='<strong style="color:var(--act)">✓ Datos extraídos:</strong><br>'+resumen.join('<br>');
-    showSM('ia-sm','ok','✅ Completado. Aplicando al formulario...');
-    setTimeout(()=>{ aplicarDatosIA(extracted); cerrarModal('modal-ia'); },1500);
-    if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
-  } catch(e){
-    showSM('ia-sm','er','❌ '+e.message);
-    if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+  if(!iaFiles || !iaFiles.length){
+    alert('Selecciona al menos un documento primero.');
+    return;
   }
+  const btn=document.getElementById('ia-btn-analizar');
+  if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Procesando...';}
+
+  const todosResultados=[];
+
+  for(let fi=0;fi<iaFiles.length;fi++){
+    const archivo=iaFiles[fi];
+    iaFileData=archivo.data; iaFileType=archivo.type; iaFileName=archivo.name;
+
+    if(archivo.type==='application/pdf'){
+      // Check how many pages
+      showSM('ia-sm','ok','Detectando páginas de '+archivo.name+'...');
+      try{
+        const nPag=await pdfNumPages(archivo.data);
+        if(nPag>1){
+          showSM('ia-sm','ok',archivo.name+': '+nPag+' páginas — analizando cada una...');
+          for(let p=1;p<=nPag;p++){
+            showSM('ia-sm','ok','Analizando página '+p+'/'+nPag+' de '+archivo.name+'...');
+            try{
+              const conv=await pdfToImage(archivo.data, p);
+              const tmpData=conv.base64; const tmpType='image/jpeg';
+              const orig={data:iaFileData,type:iaFileType};
+              iaFileData=tmpData; iaFileType=tmpType;
+              const res=await _analizarUno();
+              iaFileData=orig.data; iaFileType=orig.type;
+              // Store the rendered page image so we can show it when viewing this albarán
+              if(res) todosResultados.push({
+                ...res,
+                _archivo:archivo.name+' (pág.'+p+')',
+                _imgBase64:'data:image/jpeg;base64,'+tmpData  // page image stored with result
+              });
+            }catch(e){ console.warn('Error pág',p,':',e.message); }
+            if(p<nPag) await new Promise(r=>setTimeout(r,1500));
+          }
+        } else {
+          // Single page PDF — convert and store image
+          try{
+            const conv=await pdfToImage(archivo.data, 1);
+            iaFileData=conv.base64; iaFileType='image/jpeg';
+            const res=await _analizarUno();
+            iaFileData=archivo.data; iaFileType=archivo.type;
+            if(res) todosResultados.push({
+              ...res,
+              _archivo:archivo.name,
+              _imgBase64:'data:image/jpeg;base64,'+conv.base64
+            });
+          }catch(e){
+            const res=await _analizarUno();
+            if(res) todosResultados.push({...res,_archivo:archivo.name});
+          }
+        }
+      }catch(e){
+        showSM('ia-sm','er','Error con '+archivo.name+': '+e.message);
+      }
+    } else {
+      // Image file — analyze directly
+      showSM('ia-sm','ok','Analizando '+(fi+1)+'/'+iaFiles.length+': '+archivo.name+'...');
+      try{
+        const res=await _analizarUno();
+        if(res) todosResultados.push({...res,_archivo:archivo.name});
+      }catch(e){ console.warn('Error en',archivo.name,':',e.message); }
+    }
+
+    if(fi<iaFiles.length-1) await new Promise(r=>setTimeout(r,1500));
+  }
+
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+
+  if(!todosResultados.length){ showSM('ia-sm','er','No se pudo extraer datos de ningún documento.'); return; }
+
+  if(todosResultados.length===1){
+    cerrarModal('modal-ia');
+    // Store document image for viewing later (page image from IA analysis)
+    if(todosResultados[0]._imgBase64){
+      window._pendingIAImage = { dataUrl: todosResultados[0]._imgBase64 };
+    } else if(iaFiles.length===1 && iaFileData){
+      window._pendingIAImage = { data: iaFileData, type: iaFileType };
+    }
+    aplicarDatosIA(todosResultados[0]);
+    return;
+  }
+
+  // Multiple results — show selection modal with option to save all
+  window._iaResultados=todosResultados;
+  cerrarModal('modal-ia');
+  const modal=document.createElement('div');modal.className='mbg open';modal.id='modal-multi-ia';
+  let mhtml='<div class="modal" style="max-width:620px">'
+    +'<div class="mtl">✨ '+todosResultados.length+' albaranes detectados</div>'
+    +'<p style="font-size:13px;color:var(--mu);margin-bottom:6px">Se han detectado <strong>'+todosResultados.length+' albaranes</strong>. Puedes guardarlos todos de golpe en Supabase o revisar cada uno antes de guardarlo.</p>'
+    +'<div style="background:var(--acl);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px">'
+    +'<button class="btn btn-f" style="width:100%" onclick="guardarTodosIAPartes()">💾 Guardar todos los albaranes automáticamente</button></div>';
+  todosResultados.forEach((r,i)=>{
+    mhtml+='<div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">'+(r.proveedor_nombre||'Sin proveedor')+' · '+(r.fecha||'Sin fecha')+'</div>'
+      +'<div style="font-size:12px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r._archivo||'')+(r.trabajos?' · '+r.trabajos.slice(0,40):'')+'</div></div>'
+      +'<button class="btn btn-o btn-sm" style="white-space:nowrap" onclick="window._pendingIAImage={dataUrl:window._iaResultados['+i+']._imgBase64||\'\'};aplicarDatosIA(window._iaResultados['+i+']);document.getElementById(\'modal-multi-ia\').remove()">✏ Revisar</button></div>';
+  });
+  mhtml+='<div class="brow" style="margin-top:8px"><button class="btn btn-o" onclick="document.getElementById(\'modal-multi-ia\').remove()">Cerrar</button></div></div>';
+  modal.innerHTML=mhtml;
+  document.body.appendChild(modal);
 }
 
-async function pdfToImage(pdfBase64){
+async function guardarTodosIAPartes(){
+  const resultados=window._iaResultados||[];
+  if(!resultados.length) return;
+  const modalEl=document.getElementById('modal-multi-ia');
+  const btn=modalEl?.querySelector('button.btn-f');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Guardando...';}
+
+  let guardados=0, errores=0;
+  for(let i=0;i<resultados.length;i++){
+    const d=resultados[i];
+    if(btn) btn.textContent='⏳ Guardando '+(i+1)+'/'+resultados.length+'...';
+    try{
+      // Build parte object from IA data
+      const id='GF-'+Date.now().toString().slice(-7)+'-'+i;
+      const sc=subcontratas.find(s=>s.nombre.toLowerCase().includes((d.proveedor_nombre||'').toLowerCase()));
+      const lineas=(d.lineas||[]).map(l=>({...l,subtotal:(Number(l.cantidad)||0)*(Number(l.precio)||0)*(1-(Number(l.descuento)||0)/100)}));
+      const total=lineas.reduce((s,l)=>s+(Number(l.subtotal)||0), Number(d.coste_total)||0);
+      const parte={
+        id, fecha:d.fecha||new Date().toISOString().split('T')[0],
+        subcontrata_id:sc?.id||'', subcontrata_nombre:d.subcontrata_nombre||d.proveedor_nombre||'',
+        numero_albaran:d.numero_albaran||'', oferta:d.oferta||'', concepto_alb:d.concepto_alb||'',
+        trabajador:d.trabajador||'', area:d.area||'',
+        jornadas:JSON.stringify([{fecha:d.fecha||'',h_normal:Number(d.h_normal)||0,h_extra:Number(d.h_extra)||0,h_noct:Number(d.h_noct)||0}]),
+        h_normal:Number(d.h_normal)||0, h_extra:Number(d.h_extra)||0, h_noct:Number(d.h_noct)||0,
+        lineas_coste:JSON.stringify(lineas),
+        trabajos:d.trabajos||'', materiales:d.materiales||'', permiso:d.permiso||'',
+        naturaleza:d.naturaleza||'', recurso:d.recurso||'',
+        expediente:d.expediente||'', otros:d.otros||'',
+        centro_coste:d.centro_coste||'', seccion:d.seccion||'',
+        responsable:'', responsable_id:'', responsable_puesto:'', responsable_email:'',
+        coste:total, estado:'Pendiente', timestamp:new Date().toISOString(),
+        fechas:JSON.stringify([d.fecha||''])
+      };
+      await sbUpsert('partes', parte);
+      // Store document image locally (each page linked to its parte)
+      const imgToStore = resultados[i]._imgBase64 || (iaFiles[i] ? 'data:'+iaFiles[i].type+';base64,'+iaFiles[i].data : null);
+      if(imgToStore) guardarImagenAlbaran(parte.id, imgToStore);
+      guardados++;
+    }catch(e){ errores++; console.error('Error guardando albarán '+i+':',e.message); }
+    if(i<resultados.length-1) await new Promise(r=>setTimeout(r,500));
+  }
+
+  if(modalEl) modalEl.remove();
+  syncAll(false); // refresh all devices
+  const msg=guardados+' albarán(es) guardado(s) en Supabase'+(errores?' · '+errores+' error(es)':'')+'.\nEstado: Pendiente (sin firma de responsable).';
+  alert('✅ '+msg);
+  showPage('historial');
+}
+
+async function pdfToImage(pdfBase64, pageNum){
   if(!window.pdfjsLib){
     await new Promise((res,rej)=>{ const s=document.createElement('script');
       s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
@@ -2225,12 +2685,25 @@ async function pdfToImage(pdfBase64){
   const pdfData=atob(pdfBase64), arr=new Uint8Array(pdfData.length);
   for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
   const pdf=await window.pdfjsLib.getDocument({data:arr}).promise;
-  const page=await pdf.getPage(1);
+  const page=await pdf.getPage(pageNum||1);
   const vp=page.getViewport({scale:2.0});
   const canvas=document.createElement('canvas');
   canvas.width=vp.width; canvas.height=vp.height;
   await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-  return {base64:canvas.toDataURL('image/jpeg',0.92).split(',')[1]};
+  return {base64:canvas.toDataURL('image/jpeg',0.92).split(',')[1], numPages: pdf.numPages};
+}
+
+async function pdfNumPages(pdfBase64){
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{ const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  const pdfData=atob(pdfBase64), arr=new Uint8Array(pdfData.length);
+  for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
+  const pdf=await window.pdfjsLib.getDocument({data:arr}).promise;
+  return pdf.numPages;
 }
 
 function aplicarDatosIA(d){
@@ -2238,8 +2711,8 @@ function aplicarDatosIA(d){
   resetForm();
 
   // Match proveedor by name against PROVEEDORES_GF + existing subcontratas
-  if(d.subcontrata_nombre){
-    const term=d.subcontrata_nombre.toLowerCase();
+  if(d.subcontrata_nombre||d.proveedor_nombre){
+    const term=(d.subcontrata_nombre||d.proveedor_nombre||'').toLowerCase();
     // First try subcontratas (have tarifas)
     const sc=subcontratas.find(s=>s.nombre.toLowerCase().includes(term)||term.includes(s.nombre.toLowerCase()));
     if(sc){
@@ -2253,7 +2726,7 @@ function aplicarDatosIA(d){
         const hid=document.getElementById('sc-sel-id'); if(hid)hid.value=prov.cuenta;
         selectedScId=prov.cuenta; lineasCoste=[]; renderLineasCoste();
       } else {
-        const inp=document.getElementById('sc-sel'); if(inp)inp.value=d.subcontrata_nombre;
+        const inp=document.getElementById('sc-sel'); if(inp)inp.value=d.subcontrata_nombre||d.proveedor_nombre||'';
       }
     }
   }
@@ -2266,14 +2739,33 @@ function aplicarDatosIA(d){
   set('materiales', d.materiales);
   set('permiso', d.permiso);
   set('otros', d.otros);
+  set('numero_albaran', d.numero_albaran);
+  set('oferta', d.oferta);
+  set('concepto_alb', d.concepto_alb);
 
-  // Expediente — set input + show dropdown match
-  if(d.expediente){ const e=document.getElementById('expediente'); if(e)e.value=d.expediente; }
+  // Expediente — match with FULL name from database
+  if(d.expediente){
+    let expFull = d.expediente.trim();
+    if(typeof EXPEDIENTES_GF !== 'undefined' && EXPEDIENTES_GF.length){
+      // Try to find matching expediente by code (first word) or partial match
+      const term = expFull.toLowerCase();
+      const match = EXPEDIENTES_GF.find(e => {
+        const eLower = e.toLowerCase();
+        const eCode = eLower.split(/[\s\-_]+/)[0]; // first token = code
+        return eLower === term ||                    // exact match
+               eLower.startsWith(term) ||           // starts with what Groq found
+               term.startsWith(eCode) ||            // Groq found code prefix
+               eLower.includes(term) ||             // DB contains what Groq found
+               term.includes(eCode);                // Groq contains DB code
+      });
+      if(match) expFull = match; // use FULL description from database
+    }
+    const e=document.getElementById('expediente'); if(e) e.value=expFull;
+  }
 
   // Centro de coste + sección (from sello manuscrito)
   if(d.centro_coste){
     const cc=document.getElementById('centro_coste'); if(cc)cc.value=d.centro_coste;
-    // Try to find matching sección from data
     const match = typeof CENTROS_COSTE_GF!=='undefined' ? CENTROS_COSTE_GF.find(c=>c.codigo.toLowerCase().includes(d.centro_coste.toLowerCase())) : null;
     const sec=document.getElementById('seccion');
     if(sec){ sec.value=match?.seccion||d.seccion||''; sec.removeAttribute('readonly'); sec.style.opacity='1'; }
@@ -2282,21 +2774,29 @@ function aplicarDatosIA(d){
   }
 
   // Naturaleza (Gasto/Inversión from sello)
-  if(d.naturaleza&&(d.naturaleza==='Gasto'||d.naturaleza==='Inversión')){
-    picks.naturaleza=d.naturaleza;
+  if(d.naturaleza&&(d.naturaleza==='Gasto'||d.naturaleza==='Inversión'||d.naturaleza==='Inversion')){
+    const nat=d.naturaleza==='Inversion'?'Inversión':d.naturaleza;
+    picks.naturaleza=nat;
     document.querySelectorAll('#pg-nat .pill').forEach(p=>{
-      if(p.textContent.trim()===d.naturaleza){p.classList.add('active');}else{p.classList.remove('active');}
+      if(p.textContent.trim()===nat){p.classList.add('on');}else{p.classList.remove('on');}
     });
   }
 
-  // Recurso (Repuesto/M.O./Medios from sello)
+  // Recurso — mapa ampliado para todas las variantes del sello
   if(d.recurso){
-    const rec=d.recurso.toLowerCase();
-    const recMap={'repuesto':'Repuesto','mano de obra':'Mano de obra','m.o':'Mano de obra','medios':'Medios'};
-    const found=Object.entries(recMap).find(([k])=>rec.includes(k));
-    if(found){ picks.recurso=found[1];
+    const rec=d.recurso.toLowerCase().trim();
+    let found='';
+    if(/repuesto|rep\b|r\b|pieza|material|recambio/.test(rec)) found='Repuesto';
+    else if(/mano|m\.o|mo\b|obra|trabajo|mano de obra/.test(rec)) found='Mano de obra';
+    else if(/medio|m\.a|m\.aux|auxiliar|maquinaria|equipo/.test(rec)) found='Medios';
+    // Also accept exact match from Groq
+    if(!found && rec==='mano de obra') found='Mano de obra';
+    if(!found && rec==='medios') found='Medios';
+    if(!found && rec==='repuesto') found='Repuesto';
+    if(found){
+      picks.recurso=found;
       document.querySelectorAll('#pg-rec .pill').forEach(p=>{
-        if(p.textContent.trim()===found[1]){p.classList.add('active');}else{p.classList.remove('active');}
+        if(p.textContent.trim()===found){p.classList.add('on');}else{p.classList.remove('on');}
       });
     }
   }
@@ -2313,19 +2813,21 @@ function aplicarDatosIA(d){
     renderJornadas();
   }
 
-  // Lineas de coste — si hay conceptos del documento, crear líneas libres
-  if(d.lineas&&d.lineas.length){
+  // Lineas de coste con descuento
+  if(d.lineas && d.lineas.length){
     lineasCoste=d.lineas.map((l,i)=>({
-      id:'ia'+i, concepto:l.concepto||'Concepto '+(i+1),
-      unidad:l.unidad||'u', precio:Number(l.precio)||0,
+      id:'ia'+i,
+      concepto:l.concepto||'Concepto '+(i+1),
+      unidad:l.unidad||'u',
+      precio:Number(l.precio)||0,
       cantidad:Number(l.cantidad)||0,
-      subtotal:(Number(l.precio)||0)*(Number(l.cantidad)||0),
+      descuento:Number(l.descuento)||0,
+      subtotal:(Number(l.cantidad)||0)*(Number(l.precio)||0)*(1-(Number(l.descuento)||0)/100),
       libre:true
     }));
-    // If no lineas from SC tariffs, use the IA ones
     renderLineasCoste();
-  } else if(d.coste_total&&!lineasCoste.length){
-    lineasCoste=[{id:'ia0',concepto:'Importe según documento',unidad:'u',precio:Number(d.coste_total),cantidad:1,subtotal:Number(d.coste_total),libre:true}];
+  } else if(d.coste_total && !lineasCoste.length){
+    lineasCoste=[{id:'ia0',concepto:'Importe según documento',unidad:'u',precio:Number(d.coste_total),cantidad:1,descuento:0,subtotal:Number(d.coste_total),libre:true}];
     renderLineasCoste();
   }
 
@@ -2347,6 +2849,53 @@ function aplicarDatosIA(d){
 // ══════════════════════════════════════════════════════════════
 function cerrarCombo(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); }
 
+function filtrarProveedoresEdit(q){
+  const list=document.getElementById('combo-mep-sc');if(!list)return;
+  const term=(q||'').toLowerCase().trim();
+  const fuente=(typeof PROVEEDORES_GF!=='undefined'&&PROVEEDORES_GF.length)?PROVEEDORES_GF:subcontratas.map(s=>({nombre:s.nombre,cuenta:s.id,nif:s.cif||''}));
+  const res=term.length<2?fuente.slice(0,30):fuente.filter(p=>p.nombre.toLowerCase().includes(term)||p.cuenta.toLowerCase().includes(term)||(p.nif||'').toLowerCase().includes(term)).slice(0,40);
+  if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados</div>';list.classList.add('open');return;}
+  list.innerHTML=res.map(p=>`<div class="combo-item" onmousedown="seleccionarProveedorEdit('${p.cuenta}','${p.nombre.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">${p.nombre}<small>${p.cuenta}${p.nif?' · '+p.nif:''}</small></div>`).join('');
+  list.classList.add('open');
+}
+function seleccionarProveedorEdit(cuenta,nombre){
+  const inp=document.getElementById('mep-sc-inp');if(inp)inp.value=nombre;
+  const hid=document.getElementById('mep-sc-hid');if(hid)hid.value=cuenta;
+  cerrarCombo('combo-mep-sc');
+}
+function filtrarExpedientesEdit(q){
+  const list=document.getElementById('combo-mep-exp');if(!list)return;
+  const fuente=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF:[];
+  const term=(q||'').toLowerCase();
+  const res=!term?fuente:fuente.filter(e=>e.toLowerCase().includes(term));
+  if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados</div>';list.classList.add('open');return;}
+  list.innerHTML=res.map(e=>`<div class="combo-item" onmousedown="document.getElementById('mep-exp').value=this.textContent.trim();cerrarCombo('combo-mep-exp')">${e}</div>`).join('');
+  list.classList.add('open');
+}
+function filtrarCentrosEdit(q){
+  const list=document.getElementById('combo-mep-cc');if(!list)return;
+  const fuente=typeof CENTROS_COSTE_GF!=='undefined'?CENTROS_COSTE_GF:[];
+  const term=(q||'').toLowerCase();
+  const res=!term?fuente:fuente.filter(c=>c.codigo.toLowerCase().includes(term)||c.nombre.toLowerCase().includes(term)||c.seccion.toLowerCase().includes(term));
+  if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados</div>';list.classList.add('open');return;}
+  list.innerHTML=res.slice(0,30).map(c=>`<div class="combo-item" onmousedown="seleccionarCentroEdit('${c.codigo.replace(/'/g,"\\'")}','${c.seccion.replace(/'/g,"\\'")}')"> ${c.codigo}<small>${c.nombre} · ${c.seccion}</small></div>`).join('');
+  list.classList.add('open');
+}
+function seleccionarCentroEdit(codigo,seccion){
+  const cc=document.getElementById('mep-cc');if(cc)cc.value=codigo;
+  const sec=document.getElementById('mep-sec');if(sec)sec.value=seccion;
+  cerrarCombo('combo-mep-cc');
+}
+function pickEditPill(groupId,el){
+  document.querySelectorAll('#'+groupId+' .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function populateRespEditDD(){
+  const sel=document.getElementById('mep-resp');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— sin responsable —</option>'+responsables.map(r=>`<option value="${r.id}">${r.nombre}${r.puesto?' — '+r.puesto:''}</option>`).join('');
+  if(cur)sel.value=cur;
+}
 function filtrarProveedores(q){
   const list=document.getElementById('combo-sc'); if(!list)return;
   const term=(q||'').toLowerCase().trim();
@@ -2371,8 +2920,12 @@ function filtrarExpedientes(q){
   const term=(q||'').toLowerCase();
   const res=!term?fuente:fuente.filter(e=>e.toLowerCase().includes(term));
   if(!res.length){list.innerHTML='<div class="combo-empty">Sin resultados — escribe uno nuevo</div>';list.classList.add('open');return;}
-  list.innerHTML=res.map(e=>`<div class="combo-item" onmousedown="document.getElementById('expediente').value=this.textContent.trim();cerrarCombo('combo-exp')">${e}</div>`).join('');
+  list.innerHTML=res.map(e=>`<div class="combo-item" onmousedown="seleccionarExpediente('${e.replace(/'/g,"\\'")}')">${e}</div>`).join('');
   list.classList.add('open');
+}
+function seleccionarExpediente(val){
+  const e=document.getElementById('expediente'); if(e) e.value=val;
+  cerrarCombo('combo-exp');
 }
 
 function filtrarCentros(q){
@@ -2420,7 +2973,7 @@ function mostrarPreviewMulti(){
     <div style="font-size:11px;color:var(--fa)">${(f.size/1024).toFixed(0)} KB</div></div>
     <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
   </div>`).join('')+`<div style="font-size:12px;color:var(--act);background:var(--acl);padding:8px 12px;border-radius:var(--rs);margin-top:4px">
-    ${iaFiles.length===1?'1 documento seleccionado':iaFiles.length+' documentos — se creará un parte por cada uno'}</div>`;
+    ${iaFiles.length===1?'1 documento seleccionado':iaFiles.length+' documentos — se creará un albarán por cada uno'}</div>`;
   const btn=document.getElementById('ia-btn-analizar');
   if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent=iaFiles.length===1?'✨ Analizar y rellenar parte':'✨ Analizar '+iaFiles.length+' documentos';}
 }
@@ -2435,51 +2988,45 @@ function resetIAModal(){
   const fi=document.getElementById('ia-file-input');if(fi)fi.value='';
 }
 async function _analizarUno(){
-  const key=getGroqKey();
   let imageBase64=iaFileData,imageMime=iaFileType;
   if(iaFileType==='application/pdf'){const c=await pdfToImage(iaFileData);imageBase64=c.base64;imageMime='image/jpeg';}
   const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(ninguna)';
+  // Build expediente list with codes for matching
   const expLista=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF.join(', '):'';
-  const prompt='Analiza este documento industrial (albarán, factura, parte de trabajo).\nProveedores conocidos: '+scNombres+'\nExpedientes conocidos: '+expLista+'\nLee con ATENCIÓN los SELLOS MANUSCRITOS que indican: Gasto/Inversión, Expediente, C.Coste, Sección, Repuesto/M.O./Medios.\nDevuelve SOLO JSON:\n{"subcontrata_nombre":"proveedor","trabajador":"","area":"","fecha":"YYYY-MM-DD","h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"","materiales":"","permiso":"","expediente":"del sello si aparece","otros":"","centro_coste":"del sello","seccion":"del sello","naturaleza":"Gasto o Inversión del sello","recurso":"Repuesto/Mano de obra/Medios del sello","coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}';
+  const provNombres = typeof PROVEEDORES_GF!=='undefined' ? PROVEEDORES_GF.slice(0,100).map(p=>p.nombre).join(', ') : scNombres;
+  const prompt='Analiza este documento industrial (albaran, factura, parte de trabajo).\n'
+    +'BASE DE DATOS DE PROVEEDORES (busca similitud exacta con el nombre en el documento): '+provNombres+'\n'
+    +'Expedientes conocidos: '+expLista+'\n'
+    +'INSTRUCCIONES:\n'
+    +'1) PROVEEDOR: extrae el nombre de la empresa emisora del documento. Busca la coincidencia MAS PARECIDA en la base de datos de proveedores. Usa el nombre exacto de la BD si coincide.\n'
+    +'2) NUMERO DE ALBARAN: busca "Albaran", "Alb.", "Nº", "Num", "Ref" seguido de un numero. Tambien "Factura nº". Extrae el numero completo.\n'
+    +'3) OFERTA/PEDIDO: busca "Oferta", "Pedido", "PO", "Orden de compra" con su numero.\n'
+    +'4) CONCEPTO: resumen de una linea de lo que trata el documento (tipo de trabajo o material principal).\n'
+    +'5) NATURALEZA del gasto: sello que diga "Gasto" o "Inversion". Devuelve exactamente "Gasto" o "Inversion".\n'
+    +'6) TIPO DE RECURSO: sello con una de estas 3 opciones EXACTAS: "Repuesto" (R, REP, material), "Mano de obra" (M.O., MO), "Medios" (M.A., M.Aux, medios auxiliares).\n'
+    +'7) EXPEDIENTE: busca en sello manuscrito Y en cualquier parte del documento. Usa el codigo mas parecido de la lista de expedientes.\n'
+    +'8) CENTRO DE COSTE: busca "C.Coste", "CC", "Centro coste" en el sello.\n'
+    +'9) SECCION: busca "Seccion", "Sec" en el sello.\n'
+    +'10) COSTE: extrae el importe total del documento (IVA incluido si aparece, si no el subtotal).\n'
+    +'11) LINEAS: extrae cada linea de detalle con concepto, cantidad, precio unitario y % descuento.\n'
+    +'Devuelve SOLO JSON valido sin texto adicional ni markdown:\n'
+    +'{"subcontrata_nombre":"nombre EXACTO del proveedor de la BD o el del documento si no coincide","trabajador":"","area":"","fecha":"YYYY-MM-DD",'
+    +'"numero_albaran":"numero de albaran o factura del documento","oferta":"numero de oferta o pedido","concepto_alb":"concepto resumen",'
+    +'"h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripcion completa de los trabajos","materiales":"",'
+    +'"permiso":"","expediente":"codigo exacto de la lista o el que aparece","otros":"",'
+    +'"centro_coste":"del sello","seccion":"del sello",'
+    +'"naturaleza":"Gasto o Inversion del sello (vacio si no)","recurso":"Repuesto o Mano de obra o Medios del sello (vacio si no)","coste_total":0,'
+    +'"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}.'
+    +' REGLAS: descuento es porcentaje 0-100. Si descuento global aplica a todas las lineas. recurso: EXACTAMENTE Repuesto, Mano de obra o Medios.';
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
-    headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-    body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:1500,temperature:0.1,
+    headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
+    body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:2000,temperature:0.1,
       messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},{type:'text',text:prompt}]}]})});
-  if(!resp.ok)throw new Error('Error '+resp.status);
+  if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||'Error '+resp.status+' de Groq');}
   const data=await resp.json();
   const text=data.choices?.[0]?.message?.content||'';
   const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
   try{return JSON.parse(clean);}catch(e){const m=text.match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null;}
-}
-const _origAnalizarDocumento=analizarDocumento;
-async function analizarDocumento(){
-  if(!iaFiles.length){alert('Selecciona al menos un documento.');return;}
-  if(iaFiles.length===1){iaFileData=iaFiles[0].data;iaFileType=iaFiles[0].type;iaFileName=iaFiles[0].name;return _origAnalizarDocumento();}
-  const btn=document.getElementById('ia-btn-analizar');if(btn){btn.disabled=true;btn.style.opacity='.6';}
-  const resultados=[];
-  for(let i=0;i<iaFiles.length;i++){
-    showSM('ia-sm','ok','Analizando documento '+(i+1)+' de '+iaFiles.length+': '+iaFiles[i].name+'...');
-    iaFileData=iaFiles[i].data;iaFileType=iaFiles[i].type;iaFileName=iaFiles[i].name;
-    try{const res=await _analizarUno();if(res)resultados.push({...res,_archivo:iaFiles[i].name});}catch(e){console.warn(e);}
-    if(i<iaFiles.length-1)await new Promise(r=>setTimeout(r,1500));
-  }
-  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
-  if(!resultados.length){showSM('ia-sm','er','No se pudo analizar ningún documento.');return;}
-  if(resultados.length===1){cerrarModal('modal-ia');aplicarDatosIA(resultados[0]);return;}
-  window._iaResultados=resultados;
-  cerrarModal('modal-ia');
-  const modal=document.createElement('div');modal.className='mbg open';modal.id='modal-multi-ia';
-  let mhtml='<div class="modal" style="max-width:600px"><div class="mtl">✨ '+resultados.length+' partes detectados</div>'
-    +'<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Haz clic en cada uno para rellenar el formulario.</p>';
-  resultados.forEach((r,i)=>{
-    mhtml+='<div style="background:var(--bg);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-      +'<div><div style="font-size:13.5px;font-weight:500">'+(r.subcontrata_nombre||'Sin proveedor')+' · '+(r.fecha||'Sin fecha')+'</div>'
-      +'<div style="font-size:12px;color:var(--mu)">'+(r.trabajos?r.trabajos.slice(0,60):(r._archivo||''))+'</div></div>'
-      +'<button class="btn btn-f btn-sm" onclick="aplicarDatosIA(window._iaResultados['+i+']);document.getElementById(\'modal-multi-ia\').remove()">Crear parte</button></div>';
-  });
-  mhtml+='<div class="brow"><button class="btn btn-o" onclick="document.getElementById(\'modal-multi-ia\').remove()">Cerrar</button></div></div>';
-  modal.innerHTML=mhtml;
-  document.body.appendChild(modal);
 }
 
 // Sync automático cuando el usuario vuelve a la app (desde otra app o pantalla bloqueada)
