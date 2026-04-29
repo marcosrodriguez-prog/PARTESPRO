@@ -1,8 +1,6 @@
 // Service Worker — Partes GlobalFeed
-// Estrategia: Network-first para HTML, caché solo para assets estáticos (iconos, fuentes)
-// Los datos de Supabase NUNCA se cachean
-
-const CACHE = 'partespro-gf-v8';
+// Estrategia: Network-first para HTML y APIs, caché solo para assets estáticos
+const CACHE = 'partespro-gf-v9';
 const STATIC = ['./icon-192.png','./icon-512.png','./apple-touch-icon.png','./logo.png','./manifest.json'];
 
 self.addEventListener('install', e => {
@@ -23,32 +21,39 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = e.request.url;
+  const method = e.request.method;
 
-  // NUNCA cachear: Supabase, Google Apps Script, APIs externas, HTML principal
+  // NUNCA cachear peticiones POST/PATCH/DELETE ni APIs externas ni HTML
   if (
+    method !== 'GET' ||
     url.includes('supabase.co') ||
     url.includes('script.google.com') ||
-    url.includes('fonts.googleapis') ||
+    url.includes('groq.com') ||
+    url.includes('googleapis.com') ||
     url.includes('fonts.gstatic') ||
     url.includes('cdnjs.cloudflare.com') ||
     e.request.destination === 'document'
   ) {
-    // Siempre red — nunca caché
-    e.respondWith(fetch(e.request).catch(() => caches.match('./index.html')));
+    e.respondWith(
+      fetch(e.request).catch(() => {
+        if (e.request.destination === 'document') return caches.match('./index.html');
+        return new Response('', {status: 408});
+      })
+    );
     return;
   }
 
-  // Para imágenes/iconos: caché primero, red como fallback
+  // Solo GET de assets estáticos: caché primero, red como fallback
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(r => {
-        if (r && r.status === 200) {
+        if (r && r.status === 200 && r.type !== 'opaque') {
           const clone = r.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          caches.open(CACHE).then(c => c.put(e.request, clone).catch(() => {}));
         }
         return r;
-      });
+      }).catch(() => new Response('', {status: 408}));
     })
   );
 });

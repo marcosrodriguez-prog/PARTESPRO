@@ -1078,23 +1078,34 @@ async function supabaseUploadImage(parteId, base64DataUrl){
     const blob=new Blob([u8arr],{type:mime});
     const ext=mime.includes('pdf')?'pdf':'jpg';
     const path=`albaranes/${parteId}.${ext}`;
+    const key=SB_KEY();
+    // Storage upload — set Content-Type explicitly (not from sbHeaders to avoid override)
     const r=await fetch(`${sbBase()}/storage/v1/object/documentos/${path}`,{
       method:'POST',
-      headers:{...sbHeaders(),'Content-Type':mime,'x-upsert':'true'},
+      headers:{
+        'apikey': key,
+        'Authorization': 'Bearer '+key,
+        'Content-Type': mime,
+        'x-upsert': 'true'
+      },
       body:blob
     });
     if(r.ok){
       const publicUrl=`${sbBase()}/storage/v1/object/public/documentos/${path}`;
-      // PATCH only the documento_url field (don't full upsert)
+      // PATCH only the documento_url field
       await fetch(`${sbBase()}/rest/v1/partes?id=eq.${encodeURIComponent(parteId)}`,{
         method:'PATCH',
-        headers:{...sbHeaders(),'Prefer':'return=minimal'},
+        headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({documento_url:publicUrl})
       });
-      // Update local cache too
       const p=partesCache.find(x=>x.id===parteId);
       if(p) p.documento_url=publicUrl;
+      console.log('✓ Imagen subida a Supabase Storage:', publicUrl);
       return publicUrl;
+    } else {
+      const errText=await r.text();
+      console.error('Supabase Storage upload failed:', r.status, errText);
+      // If 400/403 it's likely RLS — fall back to localStorage
     }
   }catch(e){console.warn('Supabase Storage upload error:',e.message);}
   return null;
