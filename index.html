@@ -1111,21 +1111,19 @@ async function supabaseUploadImage(parteId, base64DataUrl){
   return null;
 }
 async function getAlbaranImageUrl(parteId){
-  // Check Supabase first, then localStorage fallback
+  // localStorage is always set immediately — fast, works on same device
+  const local = localStorage.getItem('albaran_img_'+parteId);
+  if(local) return local;
+  // For other devices: check documento_url from Supabase (loaded via syncAll)
   const p = partesCache.find(x=>x.id===parteId);
-  if(p?.documento_url) return p.documento_url;
-  return localStorage.getItem('albaran_img_'+parteId)||null;
+  return p?.documento_url || null;
 }
 async function guardarImagenAlbaran(parteId, imgDataUrl){
   if(!imgDataUrl) return;
-  // Try Supabase Storage first, fallback to localStorage
-  const url = await supabaseUploadImage(parteId, imgDataUrl);
-  if(!url){
-    // Fallback: localStorage (only visible on this device)
-    localStorage.setItem('albaran_img_'+parteId, imgDataUrl);
-  // Also upload to Supabase Storage for cross-device access
-  supabaseUploadImage(parteId, imgDataUrl).catch(()=>{});
-  }
+  // Always save to localStorage immediately (instant, works offline)
+  localStorage.setItem('albaran_img_'+parteId, imgDataUrl);
+  // Also upload to Supabase Storage (cross-device access)
+  supabaseUploadImage(parteId, imgDataUrl).catch(e=>console.warn('Storage upload:',e.message));
 }
 async function gasEnviarEmail(emailCfg, parte) {
   const r = await fetch(GAS_EMAIL(), {
@@ -2601,16 +2599,13 @@ async function analizarDocumento(){
             showSM('ia-sm','ok','Analizando página '+p+'/'+nPag+' de '+archivo.name+'...');
             try{
               const conv=await pdfToImage(archivo.data, p);
-              const tmpData=conv.base64; const tmpType='image/jpeg';
-              const orig={data:iaFileData,type:iaFileType};
-              iaFileData=tmpData; iaFileType=tmpType;
-              const res=await _analizarUno();
-              iaFileData=orig.data; iaFileType=orig.type;
-              // Store the rendered page image so we can show it when viewing this albarán
+              const pageBase64=conv.base64;
+              // Pass image data directly — no global mutation
+              const res=await _analizarUno(pageBase64, 'image/jpeg');
               if(res) todosResultados.push({
                 ...res,
                 _archivo:archivo.name+' (pág.'+p+')',
-                _imgBase64:'data:image/jpeg;base64,'+tmpData  // page image stored with result
+                _imgBase64:'data:image/jpeg;base64,'+pageBase64
               });
             }catch(e){ console.warn('Error pág',p,':',e.message); }
             if(p<nPag) await new Promise(r=>setTimeout(r,1500));
@@ -2619,18 +2614,13 @@ async function analizarDocumento(){
           // Single page PDF — convert and store image
           try{
             const conv=await pdfToImage(archivo.data, 1);
-            iaFileData=conv.base64; iaFileType='image/jpeg';
-            const res=await _analizarUno();
-            iaFileData=archivo.data; iaFileType=archivo.type;
+            const res=await _analizarUno(conv.base64, 'image/jpeg');
             if(res) todosResultados.push({
               ...res,
               _archivo:archivo.name,
               _imgBase64:'data:image/jpeg;base64,'+conv.base64
             });
-          }catch(e){
-            const res=await _analizarUno();
-            if(res) todosResultados.push({...res,_archivo:archivo.name});
-          }
+          }catch(e){ console.warn('Error PDF 1 pág:',e.message); }
         }
       }catch(e){
         showSM('ia-sm','er','Error con '+archivo.name+': '+e.message);
@@ -2639,8 +2629,12 @@ async function analizarDocumento(){
       // Image file — analyze directly
       showSM('ia-sm','ok','Analizando '+(fi+1)+'/'+iaFiles.length+': '+archivo.name+'...');
       try{
-        const res=await _analizarUno();
-        if(res) todosResultados.push({...res,_archivo:archivo.name});
+        const res=await _analizarUno(archivo.data, archivo.type);
+        if(res) todosResultados.push({
+          ...res,
+          _archivo:archivo.name,
+          _imgBase64:'data:'+archivo.type+';base64,'+archivo.data
+        });
       }catch(e){ console.warn('Error en',archivo.name,':',e.message); }
     }
 
@@ -3062,9 +3056,14 @@ function resetIAModal(){
   if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='✨ Analizar y rellenar parte';}
   const fi=document.getElementById('ia-file-input');if(fi)fi.value='';
 }
-async function _analizarUno(){
-  let imageBase64=iaFileData,imageMime=iaFileType;
-  if(iaFileType==='application/pdf'){const c=await pdfToImage(iaFileData);imageBase64=c.base64;imageMime='image/jpeg';}
+async function _analizarUno(overrideData, overrideMime){
+  let imageBase64 = overrideData || iaFileData;
+  let imageMime   = overrideMime || iaFileType;
+  // If still PDF (no override), convert to image
+  if(imageMime==='application/pdf'){
+    const c=await pdfToImage(imageBase64, 1);
+    imageBase64=c.base64; imageMime='image/jpeg';
+  }
   const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(ninguna)';
   // Build expediente list with codes for matching
   const expLista=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF.join(', '):'';
