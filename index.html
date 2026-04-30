@@ -1068,62 +1068,51 @@ async function sbDelete(tabla, id) {
 }
 
 // ── Supabase Storage — guardar y cargar imágenes de albaranes ─
-async function supabaseUploadImage(parteId, base64DataUrl){
-  try {
-    const arr=base64DataUrl.split(',');
-    const mime=arr[0].match(/:(.*?);/)[1];
-    const bstr=atob(arr[1]);
-    const u8arr=new Uint8Array(bstr.length);
-    for(let i=0;i<bstr.length;i++) u8arr[i]=bstr.charCodeAt(i);
-    const blob=new Blob([u8arr],{type:mime});
-    const ext=mime.includes('pdf')?'pdf':'jpg';
-    const path=`albaranes/${parteId}.${ext}`;
-    const key=SB_KEY();
-    // Storage upload — set Content-Type explicitly (not from sbHeaders to avoid override)
-    const r=await fetch(`${sbBase()}/storage/v1/object/documentos/${path}`,{
-      method:'POST',
-      headers:{
-        'apikey': key,
-        'Authorization': 'Bearer '+key,
-        'Content-Type': mime,
-        'x-upsert': 'true'
-      },
-      body:blob
-    });
-    if(r.ok){
-      const publicUrl=`${sbBase()}/storage/v1/object/public/documentos/${path}`;
-      // PATCH only the documento_url field
-      await fetch(`${sbBase()}/rest/v1/partes?id=eq.${encodeURIComponent(parteId)}`,{
-        method:'PATCH',
-        headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({documento_url:publicUrl})
-      });
-      const p=partesCache.find(x=>x.id===parteId);
-      if(p) p.documento_url=publicUrl;
-      console.log('✓ Imagen subida a Supabase Storage:', publicUrl);
-      return publicUrl;
-    } else {
-      const errText=await r.text();
-      console.error('Supabase Storage upload failed:', r.status, errText);
-      // If 400/403 it's likely RLS — fall back to localStorage
-    }
-  }catch(e){console.warn('Supabase Storage upload error:',e.message);}
-  return null;
-}
-async function getAlbaranImageUrl(parteId){
-  // localStorage is always set immediately — fast, works on same device
-  const local = localStorage.getItem('albaran_img_'+parteId);
-  if(local) return local;
-  // For other devices: check documento_url from Supabase (loaded via syncAll)
-  const p = partesCache.find(x=>x.id===parteId);
-  return p?.documento_url || null;
-}
+// ── Guardar y cargar imagen del documento directamente en Supabase ─
 async function guardarImagenAlbaran(parteId, imgDataUrl){
   if(!imgDataUrl) return;
-  // Always save to localStorage immediately (instant, works offline)
+  // 1. Save locally immediately
   localStorage.setItem('albaran_img_'+parteId, imgDataUrl);
-  // Also upload to Supabase Storage (cross-device access)
-  supabaseUploadImage(parteId, imgDataUrl).catch(e=>console.warn('Storage upload:',e.message));
+  // 2. Save to Supabase partes.documento_img (base64) so any device can see it
+  try{
+    const key=SB_KEY();
+    await fetch(`${sbBase()}/rest/v1/partes?id=eq.${encodeURIComponent(parteId)}`,{
+      method:'PATCH',
+      headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({documento_img:imgDataUrl})
+    });
+    // Update local cache
+    const p=partesCache.find(x=>x.id===parteId);
+    if(p) p.documento_img=imgDataUrl;
+    console.log('✓ Imagen guardada en Supabase para parte', parteId);
+  }catch(e){console.warn('Error guardando imagen en Supabase:',e.message);}
+}
+
+async function getAlbaranImageUrl(parteId){
+  // Check localStorage first (fast, same device)
+  const local=localStorage.getItem('albaran_img_'+parteId);
+  if(local) return local;
+  // Check Supabase cache (loaded via syncAll — works on any device)
+  const p=partesCache.find(x=>x.id===parteId);
+  if(p?.documento_img) return p.documento_img;
+  // Last resort: fetch from Supabase directly
+  try{
+    const key=SB_KEY();
+    const r=await fetch(`${sbBase()}/rest/v1/partes?id=eq.${encodeURIComponent(parteId)}&select=documento_img`,{
+      headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json'}
+    });
+    if(r.ok){
+      const data=await r.json();
+      const img=data[0]?.documento_img;
+      if(img){
+        localStorage.setItem('albaran_img_'+parteId, img); // cache locally
+        const p2=partesCache.find(x=>x.id===parteId);
+        if(p2) p2.documento_img=img;
+        return img;
+      }
+    }
+  }catch(e){}
+  return null;
 }
 async function gasEnviarEmail(emailCfg, parte) {
   const r = await fetch(GAS_EMAIL(), {
@@ -2589,10 +2578,11 @@ async function analizarDocumento(){
     iaFileData=archivo.data; iaFileType=archivo.type; iaFileName=archivo.name;
 
     if(archivo.type==='application/pdf'){
-      // Check how many pages
-      showSM('ia-sm','ok','Detectando páginas de '+archivo.name+'...');
+      showSM('ia-sm','ok','📄 Detectando páginas...');
       try{
         const nPag=await pdfNumPages(archivo.data);
+        showSM('ia-sm','ok','📄 '+archivo.name+': detectadas '+nPag+' página(s)');
+        await new Promise(r=>setTimeout(r,800)); // pause so user sees it
         if(nPag>1){
           showSM('ia-sm','ok',archivo.name+': '+nPag+' páginas — analizando cada una...');
           for(let p=1;p<=nPag;p++){
@@ -2740,35 +2730,38 @@ async function guardarTodosIAPartes(){
   showPage('historial');
 }
 
-async function pdfToImage(pdfBase64, pageNum){
-  if(!window.pdfjsLib){
-    await new Promise((res,rej)=>{ const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-      s.onload=res; s.onerror=rej; document.head.appendChild(s); });
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-  const pdfData=atob(pdfBase64), arr=new Uint8Array(pdfData.length);
-  for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
-  const pdf=await window.pdfjsLib.getDocument({data:arr}).promise;
-  const page=await pdf.getPage(pageNum||1);
-  const vp=page.getViewport({scale:2.0});
-  const canvas=document.createElement('canvas');
-  canvas.width=vp.width; canvas.height=vp.height;
-  await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-  return {base64:canvas.toDataURL('image/jpeg',0.92).split(',')[1], numPages: pdf.numPages};
+async function _loadPDFJS(){
+  if(window.pdfjsLib) return;
+  await new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=res; s.onerror=rej; document.head.appendChild(s);
+  });
+  // Disable worker to avoid CORS/CSP issues on GitHub Pages
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='';
 }
 
 async function pdfNumPages(pdfBase64){
-  if(!window.pdfjsLib){
-    await new Promise((res,rej)=>{ const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-      s.onload=res; s.onerror=rej; document.head.appendChild(s); });
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  }
-  const pdfData=atob(pdfBase64), arr=new Uint8Array(pdfData.length);
+  await _loadPDFJS();
+  const pdfData=atob(pdfBase64);
+  const arr=new Uint8Array(pdfData.length);
   for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
-  const pdf=await window.pdfjsLib.getDocument({data:arr}).promise;
+  const pdf=await window.pdfjsLib.getDocument({data:arr, disableWorker:true}).promise;
   return pdf.numPages;
+}
+
+async function pdfToImage(pdfBase64, pageNum){
+  await _loadPDFJS();
+  const pdfData=atob(pdfBase64);
+  const arr=new Uint8Array(pdfData.length);
+  for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
+  const pdf=await window.pdfjsLib.getDocument({data:arr, disableWorker:true}).promise;
+  const page=await pdf.getPage(pageNum||1);
+  const vp=page.getViewport({scale:1.8});
+  const canvas=document.createElement('canvas');
+  canvas.width=vp.width; canvas.height=vp.height;
+  await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+  return {base64:canvas.toDataURL('image/jpeg',0.85).split(',')[1], numPages:pdf.numPages};
 }
 
 function aplicarDatosIA(d){
