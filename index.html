@@ -874,19 +874,34 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <div class="mbg" id="modal-ia">
   <div class="modal" style="max-width:540px">
     <div class="mtl" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">✨ Crear albarán desde documento</div>
-    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF. Si el PDF tiene varias páginas, la IA crea un albarán por cada una automáticamente.</p>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube un PDF o foto. La IA extrae todos los datos y los relaciona con tu base de datos.</p>
     <div id="ia-upload-area" onclick="document.getElementById('ia-file-input').click()"
-      style="border:2px dashed var(--bors);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)"
+      style="border:2px dashed var(--bors);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;background:var(--bg)"
       ondragover="event.preventDefault();this.style.borderColor='#7C3AED'"
       ondragleave="this.style.borderColor=''"
       ondrop="event.preventDefault();this.style.borderColor='';handleIADrop(event)">
-      <div style="font-size:36px;margin-bottom:8px">📄</div>
-      <div style="font-size:14px;font-weight:500;color:var(--tx);margin-bottom:4px">Toca para seleccionar o arrastra aquí</div>
-      <div style="font-size:12px;color:var(--fa)">PDF (todas las páginas), JPG, PNG</div>
+      <div style="font-size:32px;margin-bottom:6px">📄</div>
+      <div style="font-size:14px;font-weight:500;color:var(--tx)">Toca para seleccionar o arrastra aquí</div>
+      <div style="font-size:12px;color:var(--fa);margin-top:4px">PDF (multi-página), JPG, PNG</div>
     </div>
     <input type="file" id="ia-file-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleIAFiles(this)"/>
-    <div id="ia-preview" style="display:none;margin-top:12px"></div>
-    <div id="ia-result" style="display:none;margin-top:12px;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--act);max-height:180px;overflow-y:auto"></div>
+
+    <!-- File preview + page counter -->
+    <div id="ia-preview" style="display:none;margin-top:10px"></div>
+    <div id="ia-paginas-panel" style="display:none;margin-top:10px;background:#F5F3FF;border:1px solid #C4B5FD;border-radius:var(--rs);padding:14px 16px">
+      <div style="font-size:13px;font-weight:600;color:#4F46E5;margin-bottom:10px">📄 ¿Cuántas páginas / albaranes contiene el PDF?</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="ajustarPaginas(-1)" style="width:36px;height:36px;border-radius:50%;border:2px solid #7C3AED;background:#fff;font-size:20px;cursor:pointer;color:#7C3AED;line-height:1">−</button>
+        <div style="text-align:center">
+          <div id="ia-paginas-num" style="font-size:32px;font-weight:700;color:#4F46E5;font-family:var(--mono)">1</div>
+          <div style="font-size:11px;color:var(--mu)">página(s)</div>
+        </div>
+        <button onclick="ajustarPaginas(1)" style="width:36px;height:36px;border-radius:50%;border:2px solid #7C3AED;background:#7C3AED;font-size:20px;cursor:pointer;color:#fff;line-height:1">+</button>
+        <div id="ia-paginas-auto" style="font-size:12px;color:var(--mu);flex:1">Ajusta si la detección automática es incorrecta</div>
+      </div>
+    </div>
+
+    <div id="ia-result" style="display:none;margin-top:12px;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--act);max-height:160px;overflow-y:auto"></div>
     <div id="ia-sm" class="sm" style="margin-top:10px"></div>
     <div class="brow" style="margin-top:16px">
       <button class="btn btn-o" onclick="cerrarModal('modal-ia')">Cancelar</button>
@@ -2515,16 +2530,6 @@ function abrirModalIA(){
   document.getElementById('modal-ia').classList.add('open');
 }
 
-function resetIAModal(){
-  iaFileData=null; iaFileType=null; iaFileName=null;
-  document.getElementById('ia-upload-area').style.display='block';
-  document.getElementById('ia-preview').style.display='none';
-  document.getElementById('ia-result').style.display='none';
-  const sm=document.getElementById('ia-sm'); if(sm) sm.style.display='none';
-  const btn=document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='✨ Analizar y rellenar parte';}
-  document.getElementById('ia-file-input').value='';
-}
 
 function handleIADrop(e){
   const file=e.dataTransfer?.files?.[0];
@@ -2571,17 +2576,23 @@ async function analizarDocumento(){
     const archivo=iaFiles[fi];
 
     if(archivo.type==='application/pdf'){
-      showSM('ia-sm','ok','📄 Cargando PDF y extrayendo páginas...');
+      showSM('ia-sm','ok','📄 Cargando PDF...');
       try{
-        const paginas=await pdfAllPagesToImages(archivo.data);
-        showSM('ia-sm','ok','📄 '+paginas.length+' página(s) detectadas — analizando...');
-        for(let p=0;p<paginas.length;p++){
-          showSM('ia-sm','ok','🤖 Analizando albarán '+(p+1)+' de '+paginas.length+'...');
+        const nPagUI=parseInt(document.getElementById('ia-paginas-num')?.textContent||'1')||1;
+        const paginas=await pdfAllPagesToImages(archivo.data, nPagUI);
+        const nPag=paginas.length;
+        showSM('ia-sm','ok','📄 '+nPag+' página(s) → analizando con IA...');
+        for(let p=0;p<nPag;p++){
+          showSM('ia-sm','ok','🤖 Albarán '+(p+1)+'/'+nPag+'...');
           try{
             const res=await _analizarUno(paginas[p],'image/jpeg');
-            if(res) todosResultados.push({...res,_archivo:archivo.name+(paginas.length>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]});
-          }catch(e){console.warn('Error pág '+(p+1),e.message);}
-          if(p<paginas.length-1) await new Promise(r=>setTimeout(r,2000));
+            if(res) todosResultados.push({...res,_archivo:archivo.name+(nPag>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]});
+            else console.warn('No data from page '+(p+1));
+          }catch(e){
+            console.error('Error pág '+(p+1),e.message);
+            showSM('ia-sm','ok','⚠️ Pág '+(p+1)+' error: '+e.message.slice(0,50)+'. Continuando...');
+          }
+          if(p<nPag-1) await new Promise(r=>setTimeout(r,2500));
         }
       }catch(e){ showSM('ia-sm','er','❌ Error en PDF: '+e.message); }
     } else {
@@ -2989,6 +3000,11 @@ function processIAFiles(files){
     r.readAsDataURL(file);
   });
 }
+function ajustarPaginas(delta){
+  const el=document.getElementById('ia-paginas-num');if(!el)return;
+  const n=Math.max(1,Math.min(20,parseInt(el.textContent||'1')+delta));
+  el.textContent=n;
+}
 function mostrarPreviewMulti(){
   const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='none';
   const prev=document.getElementById('ia-preview');if(!prev)return;prev.style.display='block';
@@ -2997,36 +3013,35 @@ function mostrarPreviewMulti(){
     <span style="font-size:20px">${ic(f)}</span>
     <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
     <div style="font-size:11px;color:var(--fa)">${(f.size/1024).toFixed(0)} KB</div></div>
-    <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
-  </div>`).join('')+`<div style="font-size:12px;color:var(--act);background:var(--acl);padding:8px 12px;border-radius:var(--rs);margin-top:4px">
-    ${iaFiles.length===1?'1 documento seleccionado':iaFiles.length+' documentos — un albarán por archivo'}</div>`;
-  // Show page count panel if single PDF
-  const pdfPanel=document.getElementById('ia-pdf-pages');
-  if(pdfPanel){
-    if(iaFiles.length===1 && iaFiles[0].type==='application/pdf'){
-      pdfPanel.style.display='block';
-      // Try auto-detect
-      pdfNumPages(iaFiles[0].data).then(n=>{
-        if(n>1){const inp=document.getElementById('ia-num-paginas');if(inp){inp.value=n;inp.style.borderColor='var(--ac)';}}
-      }).catch(()=>{});
-    } else {
-      pdfPanel.style.display='none';
-    }
-  }
+    <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:16px">\u2715</button>
+  </div>`).join('');
+  const panel=document.getElementById('ia-paginas-panel');
+  const numEl=document.getElementById('ia-paginas-num');
+  const autoEl=document.getElementById('ia-paginas-auto');
+  if(panel&&iaFiles.length===1&&iaFiles[0].type==='application/pdf'){
+    panel.style.display='block';
+    if(numEl)numEl.textContent='1';
+    if(autoEl)autoEl.textContent='\u23f3 Detectando p\u00e1ginas...';
+    pdfNumPages(iaFiles[0].data).then(n=>{
+      if(numEl){numEl.textContent=n;numEl.style.color=n>1?'#16a34a':'#4F46E5';}
+      if(autoEl)autoEl.textContent=n>1?('\u2705 '+n+' p\u00e1ginas detectadas. Ajusta si hay m\u00e1s.'):'\u2705 1 p\u00e1gina. Ajusta si contiene m\u00e1s albaranes.';
+    }).catch(()=>{if(autoEl)autoEl.textContent='\u26a0\ufe0f No detectado. Ajusta manualmente.';});
+  } else if(panel){panel.style.display='none';}
   const btn=document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent=iaFiles.length===1?'✨ Analizar y rellenar albarán':'✨ Analizar '+iaFiles.length+' documentos';}
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='\u2728 Analizar y crear albaranes';}
 }
 function resetIAModal(){
   iaFiles=[];
   const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='block';
   const prev=document.getElementById('ia-preview');if(prev){prev.style.display='none';prev.innerHTML='';}
-  const pdfPanel=document.getElementById('ia-pdf-pages');if(pdfPanel)pdfPanel.style.display='none';
-  const inp=document.getElementById('ia-num-paginas');if(inp)inp.value='1';
+  const panel=document.getElementById('ia-paginas-panel');if(panel)panel.style.display='none';
+  const numEl=document.getElementById('ia-paginas-num');if(numEl)numEl.textContent='1';
   const res=document.getElementById('ia-result');if(res)res.style.display='none';
   const sm=document.getElementById('ia-sm');if(sm)sm.style.display='none';
   const btn=document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='✨ Analizar y rellenar parte';}
+  if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='\u2728 Analizar y crear albaranes';}
   const fi=document.getElementById('ia-file-input');if(fi)fi.value='';
+  window._pendingIAImage=null;
 }
 async function _analizarUno(overrideData, overrideMime){
   let imageBase64 = overrideData || iaFileData;
