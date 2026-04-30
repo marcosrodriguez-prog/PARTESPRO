@@ -2706,37 +2706,49 @@ async function _loadPDFJS(){
     s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     s.onload=res; s.onerror=rej; document.head.appendChild(s);
   });
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc='';
+  // Use the main pdf.js file as FakeWorker — runs in main thread, avoids CORS issues
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 }
 
-// Load PDF once, render ALL pages to base64 images — avoids Uint8Array reuse issues
+// Load PDF once, render all pages — maxPages overrides pdf.numPages if user set it manually
 async function pdfAllPagesToImages(pdfBase64, maxPages){
   await _loadPDFJS();
   const pdfBytes = Uint8Array.from(atob(pdfBase64), c=>c.charCodeAt(0));
-  const pdf = await window.pdfjsLib.getDocument({data:pdfBytes, disableWorker:true}).promise;
-  const total = Math.min(pdf.numPages, maxPages||pdf.numPages);
+  const pdf = await window.pdfjsLib.getDocument({data:pdfBytes}).promise;
+  // Use maxPages if user explicitly set it (override), else use detected numPages
+  const total = maxPages>1 ? maxPages : pdf.numPages;
+  console.log('[PDF] numPages detectado:', pdf.numPages, '| total a procesar:', total);
   const results = [];
   for(let i=1; i<=total; i++){
-    const page = await pdf.getPage(i);
-    const vp = page.getViewport({scale:1.8});
-    const canvas = document.createElement('canvas');
-    canvas.width=vp.width; canvas.height=vp.height;
-    await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
-    results.push(canvas.toDataURL('image/jpeg',0.85).split(',')[1]);
+    try{
+      const page = await pdf.getPage(i);
+      const vp = page.getViewport({scale:1.8});
+      const canvas = document.createElement('canvas');
+      canvas.width=vp.width; canvas.height=vp.height;
+      await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
+      results.push(canvas.toDataURL('image/jpeg',0.85).split(',')[1]);
+      console.log('[PDF] Página '+i+' renderizada OK ('+vp.width+'x'+vp.height+')');
+    }catch(e){
+      console.warn('[PDF] Error en página '+i+':', e.message);
+      // If we can't get this page, stop (PDF doesn't have that many pages)
+      break;
+    }
   }
+  console.log('[PDF] Total páginas extraídas:', results.length);
   return results;
 }
 
 async function pdfNumPages(pdfBase64){
   await _loadPDFJS();
   const pdfBytes = Uint8Array.from(atob(pdfBase64), c=>c.charCodeAt(0));
-  const pdf = await window.pdfjsLib.getDocument({data:pdfBytes, disableWorker:true}).promise;
+  const pdf = await window.pdfjsLib.getDocument({data:pdfBytes}).promise;
   return pdf.numPages;
 }
 
 async function pdfToImage(pdfBase64, pageNum){
   const pages = await pdfAllPagesToImages(pdfBase64, pageNum||1);
-  return {base64: pages[pages.length-1], numPages: pages.length};
+  return {base64: pages[pages.length-1]||pages[0], numPages: pages.length};
 }
 
 function aplicarDatosIA(d){
