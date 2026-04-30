@@ -113,3 +113,39 @@ ON CONFLICT (id) DO NOTHING;
 -- Política de acceso para el bucket
 CREATE POLICY "acceso_publico_documentos" ON storage.objects
   FOR ALL TO anon USING (bucket_id = 'documentos') WITH CHECK (bucket_id = 'documentos');
+
+-- ── POLÍTICA DE ACCESO PARA SUPABASE STORAGE ─────────────────
+-- Si las imágenes no se suben al bucket, ejecuta este SQL:
+-- (puede dar error si la policy ya existe, es normal)
+
+-- Permitir subida al bucket 'documentos' para usuarios anónimos
+CREATE POLICY IF NOT EXISTS "upload_documentos" ON storage.objects
+  FOR INSERT TO anon
+  WITH CHECK (bucket_id = 'documentos');
+
+CREATE POLICY IF NOT EXISTS "read_documentos" ON storage.objects
+  FOR SELECT TO anon
+  USING (bucket_id = 'documentos');
+
+CREATE POLICY IF NOT EXISTS "update_documentos" ON storage.objects
+  FOR UPDATE TO anon
+  USING (bucket_id = 'documentos');
+
+-- Alternativa más simple: si lo anterior falla, ve a
+-- Supabase → Storage → documentos → Policies
+-- y añade una policy "Give anon users full access"
+
+-- ── Columna para imagen del documento (base64, visualización cross-device) ──
+ALTER TABLE partes ADD COLUMN IF NOT EXISTS documento_img TEXT DEFAULT '';
+
+-- ── Plantillas de extracción por proveedor (aprendizaje automático) ──
+CREATE TABLE IF NOT EXISTS plantillas_proveedor (
+  id TEXT PRIMARY KEY,          -- normalizado del nombre del proveedor
+  nombre TEXT NOT NULL,          -- nombre real del proveedor
+  ultimo_ejemplo JSONB,          -- último albarán extraído correctamente
+  prompt_extra TEXT DEFAULT '',  -- instrucciones específicas aprendidas
+  veces_usado INTEGER DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE plantillas_proveedor ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_full_plantillas" ON plantillas_proveedor FOR ALL TO anon USING (true) WITH CHECK (true);

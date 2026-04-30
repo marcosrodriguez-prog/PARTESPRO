@@ -1710,6 +1710,11 @@ async function validar(){
   };
   try {
     await sbUpsert('partes', parteSB);
+    // APRENDIZAJE: guardar plantilla para este proveedor
+    if(sc?.nombre && window._lastIAExtraction){
+      guardarPlantilla(sc.nombre, window._lastIAExtraction);
+      window._lastIAExtraction=null;
+    }
     // Save document image locally for viewing
     if(window._pendingIAImage){
       const imgSrc = window._pendingIAImage.dataUrl ||
@@ -2786,6 +2791,8 @@ async function guardarResultadosIA(resultados){
         fechas:JSON.stringify([d.fecha||''])
       };
       await sbUpsert('partes',parte);
+      // APRENDIZAJE: guardar plantilla para este proveedor
+      if(scNombre) guardarPlantilla(scNombre, d);
       if(d._imgBase64) guardarImagenAlbaran(parte.id,d._imgBase64);
       guardados++;
     }catch(e){console.error('Error guardando albarán '+i+':',e.message);}
@@ -2878,6 +2885,8 @@ function verDocumentoActual(){
 }
 
 function aplicarDatosIA(d){
+  // Store for learning when user saves the albarán
+  window._lastIAExtraction = d;
   // Reset form first
   resetForm();
 
@@ -3021,8 +3030,90 @@ function aplicarDatosIA(d){
 
 
 // ══════════════════════════════════════════════════════════════
-//  COMBOBOXES — PROVEEDORES, EXPEDIENTES, CENTROS DE COSTE
+//  SISTEMA DE APRENDIZAJE — PLANTILLAS POR PROVEEDOR
+//  Funciona internamente como DocuWare: aprende de cada albarán guardado
 // ══════════════════════════════════════════════════════════════
+const _plantillasCache = {}; // in-memory cache
+
+function _normalizarNombre(nombre){
+  return (nombre||'').toLowerCase()
+    .replace(/[^a-z0-9]/g,' ')
+    .replace(/\s+/g,' ').trim()
+    .split(' ').slice(0,3).join('_');
+}
+
+async function cargarPlantilla(nombreProveedor){
+  const id = _normalizarNombre(nombreProveedor);
+  if(!id) return null;
+  if(_plantillasCache[id]) return _plantillasCache[id];
+  try{
+    const key=SB_KEY();
+    const r=await fetch(`${sbBase()}/rest/v1/plantillas_proveedor?id=eq.${encodeURIComponent(id)}&select=*`,{
+      headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json'}
+    });
+    if(r.ok){
+      const data=await r.json();
+      if(data[0]){ _plantillasCache[id]=data[0]; return data[0]; }
+    }
+  }catch(e){console.warn('cargarPlantilla error:',e.message);}
+  return null;
+}
+
+async function guardarPlantilla(nombreProveedor, datosExtraidos){
+  if(!nombreProveedor||!datosExtraidos) return;
+  const id=_normalizarNombre(nombreProveedor);
+  if(!id) return;
+  try{
+    // Build the example — only keep fields that have values
+    const ejemplo={
+      subcontrata_nombre:datosExtraidos.subcontrata_nombre||'',
+      fecha:datosExtraidos.fecha||'',
+      numero_albaran:datosExtraidos.numero_albaran||'',
+      oferta:datosExtraidos.oferta||'',
+      concepto_alb:datosExtraidos.concepto_alb||'',
+      naturaleza:datosExtraidos.naturaleza||'',
+      recurso:datosExtraidos.recurso||'',
+      expediente:datosExtraidos.expediente||'',
+      centro_coste:datosExtraidos.centro_coste||'',
+      seccion:datosExtraidos.seccion||'',
+      coste_total:datosExtraidos.coste_total||0,
+      lineas:(datosExtraidos.lineas||[]).slice(0,3) // keep first 3 lines as example
+    };
+    const existing=await cargarPlantilla(nombreProveedor);
+    const veces=(existing?.veces_usado||0)+1;
+    const key=SB_KEY();
+    const payload={
+      id, nombre:nombreProveedor,
+      ultimo_ejemplo:ejemplo,
+      veces_usado:veces,
+      updated_at:new Date().toISOString()
+    };
+    await fetch(`${sbBase()}/rest/v1/plantillas_proveedor`,{
+      method:'POST',
+      headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(payload)
+    });
+    _plantillasCache[id]=payload;
+    console.log('[Plantilla] Guardada para proveedor:',nombreProveedor,'(uso nº'+veces+')');
+  }catch(e){console.warn('guardarPlantilla error:',e.message);}
+}
+
+async function construirPromptConPlantilla(nombreProveedor, promptBase){
+  const plantilla=await cargarPlantilla(nombreProveedor);
+  if(!plantilla?.ultimo_ejemplo || plantilla.veces_usado<1) return promptBase;
+
+  const ej=plantilla.ultimo_ejemplo;
+  const ejemploStr='\n\nEJEMPLO REAL de albarán anterior de '+nombreProveedor+' (extraído correctamente '+(plantilla.veces_usado)+' vez/veces):\n'
+    +'- Número albarán: '+ej.numero_albaran+'\n'
+    +(ej.naturaleza?'- Naturaleza: '+ej.naturaleza+'\n':'')
+    +(ej.recurso?'- Tipo recurso: '+ej.recurso+'\n':'')
+    +(ej.expediente?'- Expediente: '+ej.expediente+'\n':'')
+    +(ej.centro_coste?'- Centro coste: '+ej.centro_coste+'\n':'')
+    +(ej.lineas?.length?'- Ejemplo líneas: '+ej.lineas.map(l=>l.concepto+' x'+l.cantidad+' a '+l.precio+'€').join('; ')+'\n':'')
+    +'\nUsa este ejemplo como referencia para saber DÓNDE y CÓMO leer los datos en este tipo de documento.';
+
+  return promptBase + ejemploStr;
+}
 function cerrarCombo(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); }
 
 function filtrarProveedoresEdit(q){
@@ -3207,7 +3298,8 @@ async function _analizarUno(overrideData, overrideMime){
     ? PROVEEDORES_GF.slice(0,30).map(p=>p.nombre).join(', ')
     : subcontratas.map(s=>s.nombre).join(', ');
 
-  const prompt='Analiza esta imagen. Puede contener UNO O VARIOS albaranes/facturas separados.\n'
+  // Build base prompt
+  let prompt='Analiza esta imagen. Puede contener UNO O VARIOS albaranes/facturas separados.\n'
     +'Expedientes conocidos: '+expLista+'\n'
     +'Algunos proveedores de ejemplo: '+provMuestra+'\n\n'
     +'Devuelve un ARRAY JSON (uno por documento encontrado):\n'
@@ -3217,6 +3309,11 @@ async function _analizarUno(overrideData, overrideMime){
     +'"coste_total":0,"h_normal":0,"h_extra":0,"h_noct":0,'
     +'"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}]}]\n'
     +'REGLAS: coste_total sin símbolo moneda (16.25 no 16,25€). recurso exactamente: Repuesto, Mano de obra, o Medios. Solo array JSON.';
+
+  // Detect provider name from a quick first pass (if we have templates)
+  // Use template for this provider if available — makes extraction much more accurate
+  const provDetected = Object.keys(_plantillasCache)[0]; // will be refined after detection
+  prompt = await construirPromptConPlantilla(provDetected||'', prompt);
 
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
@@ -3239,17 +3336,33 @@ async function _analizarUno(overrideData, overrideMime){
   const data=await resp.json();
   const text=data.choices?.[0]?.message?.content||'';
   const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+  let results;
   try{
     const parsed=JSON.parse(clean);
-    if(Array.isArray(parsed)) return parsed;
-    return [parsed];
+    results=Array.isArray(parsed)?parsed:[parsed];
   }catch(e){
     const arrMatch=clean.match(/\[[\s\S]*\]/);
-    if(arrMatch){try{const a=JSON.parse(arrMatch[0]);return Array.isArray(a)?a:[a];}catch(e2){}}
-    const objMatch=clean.match(/\{[\s\S]*\}/);
-    if(objMatch){try{return [JSON.parse(objMatch[0])];}catch(e2){}}
-    return null;
+    if(arrMatch){try{const a=JSON.parse(arrMatch[0]);results=Array.isArray(a)?a:[a];}catch(e2){}}
+    if(!results){const objMatch=clean.match(/\{[\s\S]*\}/);if(objMatch){try{results=[JSON.parse(objMatch[0])];}catch(e2){}}}
+    if(!results) return null;
   }
+
+  // If we got results and have a named provider, try to improve with provider-specific template
+  for(const r of results){
+    if(r.subcontrata_nombre){
+      const plantilla=await cargarPlantilla(r.subcontrata_nombre);
+      if(plantilla?.ultimo_ejemplo && plantilla.veces_usado>0){
+        // Fill in fields the IA might have missed using previous successful extractions
+        const ej=plantilla.ultimo_ejemplo;
+        if(!r.naturaleza && ej.naturaleza) r.naturaleza=ej.naturaleza;
+        if(!r.recurso && ej.recurso) r.recurso=ej.recurso;
+        if(!r.expediente && ej.expediente) r.expediente=ej.expediente;
+        if(!r.centro_coste && ej.centro_coste) r.centro_coste=ej.centro_coste;
+        if(!r.seccion && ej.seccion) r.seccion=ej.seccion;
+      }
+    }
+  }
+  return results;
 }
 
 // Sync automático cuando el usuario vuelve a la app (desde otra app o pantalla bloqueada)
