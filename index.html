@@ -885,6 +885,14 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — varios archivos a la vez → crea un albarán por cada uno</div>
     </div>
     <input type="file" id="ia-file-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleIAFiles(this)"/>
+    <div id="ia-pdf-pages" style="display:none;margin-top:10px;background:var(--acl);border-radius:var(--rs);padding:12px 14px">
+      <label style="font-size:13px;font-weight:500;color:var(--act)">📄 ¿Cuántos albaranes contiene el PDF?</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <input type="number" id="ia-num-paginas" min="1" max="20" value="1"
+          style="width:80px;padding:8px;border:1px solid var(--bor);border-radius:var(--rs);font-size:16px;font-family:var(--mono);text-align:center"/>
+        <span style="font-size:13px;color:var(--mu)">albarán(es) — uno por página</span>
+      </div>
+    </div>
     <div id="ia-preview" style="display:none;margin-top:12px">
       <div style="background:var(--bg);border-radius:var(--rs);padding:10px 14px;display:flex;align-items:center;gap:10px">
         <span style="font-size:22px" id="ia-preview-icon">📄</span>
@@ -2580,9 +2588,14 @@ async function analizarDocumento(){
     if(archivo.type==='application/pdf'){
       showSM('ia-sm','ok','📄 Detectando páginas...');
       try{
-        const nPag=await pdfNumPages(archivo.data);
-        showSM('ia-sm','ok','📄 '+archivo.name+': detectadas '+nPag+' página(s)');
-        await new Promise(r=>setTimeout(r,800)); // pause so user sees it
+        // Get page count: use manual input first, then auto-detect
+        const manualN=parseInt(document.getElementById('ia-num-paginas')?.value||'1')||1;
+        let nPag=manualN;
+        if(manualN===1){
+          // try auto-detect, fall back to 1
+          try{ nPag=await pdfNumPages(archivo.data); }catch(e){ nPag=1; }
+        }
+        showSM('ia-sm','ok','📄 '+archivo.name+': '+nPag+' página(s) → creando '+nPag+' albarán(es)...');
         if(nPag>1){
           showSM('ia-sm','ok',archivo.name+': '+nPag+' páginas — analizando cada una...');
           for(let p=1;p<=nPag;p++){
@@ -3035,14 +3048,29 @@ function mostrarPreviewMulti(){
     <div style="font-size:11px;color:var(--fa)">${(f.size/1024).toFixed(0)} KB</div></div>
     <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer">✕</button>
   </div>`).join('')+`<div style="font-size:12px;color:var(--act);background:var(--acl);padding:8px 12px;border-radius:var(--rs);margin-top:4px">
-    ${iaFiles.length===1?'1 documento seleccionado':iaFiles.length+' documentos — se creará un albarán por cada uno'}</div>`;
+    ${iaFiles.length===1?'1 documento seleccionado':iaFiles.length+' documentos — un albarán por archivo'}</div>`;
+  // Show page count panel if single PDF
+  const pdfPanel=document.getElementById('ia-pdf-pages');
+  if(pdfPanel){
+    if(iaFiles.length===1 && iaFiles[0].type==='application/pdf'){
+      pdfPanel.style.display='block';
+      // Try auto-detect
+      pdfNumPages(iaFiles[0].data).then(n=>{
+        if(n>1){const inp=document.getElementById('ia-num-paginas');if(inp){inp.value=n;inp.style.borderColor='var(--ac)';}}
+      }).catch(()=>{});
+    } else {
+      pdfPanel.style.display='none';
+    }
+  }
   const btn=document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent=iaFiles.length===1?'✨ Analizar y rellenar parte':'✨ Analizar '+iaFiles.length+' documentos';}
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent=iaFiles.length===1?'✨ Analizar y rellenar albarán':'✨ Analizar '+iaFiles.length+' documentos';}
 }
 function resetIAModal(){
   iaFiles=[];
   const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='block';
   const prev=document.getElementById('ia-preview');if(prev){prev.style.display='none';prev.innerHTML='';}
+  const pdfPanel=document.getElementById('ia-pdf-pages');if(pdfPanel)pdfPanel.style.display='none';
+  const inp=document.getElementById('ia-num-paginas');if(inp)inp.value='1';
   const res=document.getElementById('ia-result');if(res)res.style.display='none';
   const sm=document.getElementById('ia-sm');if(sm)sm.style.display='none';
   const btn=document.getElementById('ia-btn-analizar');
