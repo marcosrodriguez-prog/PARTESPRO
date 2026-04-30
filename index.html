@@ -358,7 +358,8 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   <div class="ph flex">
     <div><div class="pt">Nuevo <em>albarán</em></div><div class="ps">Rellena los datos del albarán, firma y valida.</div></div>
     <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap">
-      <button class="btn btn-o btn-sm" style="color:var(--da);border-color:#F09595" onclick="descartarParte()">✕ Descartar parte</button>
+      <button class="btn btn-o btn-sm" style="color:var(--da);border-color:#F09595" onclick="descartarParte()">✕ Descartar</button>
+      <button class="btn btn-o btn-sm" id="btn-ver-doc" style="display:none" onclick="verDocumentoActual()">👁 Ver documento</button>
       <button class="btn btn-f btn-sm" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none" onclick="abrirModalIA()">✨ Crear desde documento</button>
     </div>
   </div>
@@ -1611,24 +1612,46 @@ function rr(k,v){if(!v||v==='—')return'';return`<div class="rrow"><span class=
 function rs(t){return`<div class="rsec">${t}</div>`;}
 function buildRecap(id){
   const sc=subcontratas.find(s=>s.id===selectedScId);
+  const scNombre=sc?.nombre||document.getElementById('sc-sel')?.value||'—';
   const total=calcTotal();
+  const fechaAlb=document.getElementById('fecha_albaran')?.value||jornadas[0]?.fecha||'—';
+  const numAlb=document.getElementById('numero_albaran')?.value||'—';
+  const oferta=document.getElementById('oferta')?.value||'';
   let h='';
-  h+=rs('Proveedor y trabajador');
-  h+=rr('Proveedor',sc?.nombre||'—');
-  h+=rr('Trabajador',document.getElementById('trabajador')?.value);
-  h+=rr('Área',document.getElementById('area')?.value);
-  h+=rs('Jornadas ('+jornadas.length+')');
-  jornadas.forEach((j,i)=>{
-    const hs=[j.h_normal?j.h_normal+'h norm':'',j.h_extra?j.h_extra+'h ext':'',j.h_noct?j.h_noct+'h noct':''].filter(Boolean).join(' · ');
-    h+=rr('Jornada '+(i+1)+' · '+j.fecha,([j.h_entrada,j.h_salida].filter(Boolean).join('→'))+(hs?' | '+hs:''));
-  });
-  h+=rs('Conceptos facturados');
-  lineasCoste.filter(l=>Number(l.cantidad)>0).forEach(l=>{h+=rr(l.concepto+' × '+l.cantidad+' '+l.unidad,l.subtotal.toFixed(2)+' €');});
-  h+=rr('TOTAL',total.toFixed(2)+' €');
-  h+=rs('Imputación');
-  h+=rr('Naturaleza',picks.naturaleza);h+=rr('Expediente',document.getElementById('expediente')?.value);
-  h+=rr('Centro coste',document.getElementById('centro_coste')?.value);h+=rr('Sección',document.getElementById('seccion')?.value);
-  h+=rr('Tipo recurso',picks.recurso);
+  // Header block — most important info
+  h+=rs('📋 Albarán');
+  h+=rr('Proveedor', scNombre);
+  h+=rr('Nº Albarán', numAlb);
+  if(oferta) h+=rr('Oferta / Pedido', oferta);
+  h+=rr('Fecha', fechaAlb);
+  h+=rr('Naturaleza', picks.naturaleza||'—');
+  h+=rr('Tipo recurso', picks.recurso||'—');
+  // Trabajador si es mano de obra
+  const trabajador=document.getElementById('trabajador')?.value;
+  if(trabajador){
+    h+=rs('👤 Trabajador');
+    h+=rr('Nombre', trabajador);
+    h+=rr('Área', document.getElementById('area')?.value);
+  }
+  // Jornadas si las hay
+  if(jornadas.some(j=>j.h_normal||j.h_extra||j.h_noct)){
+    h+=rs('🕐 Jornadas ('+jornadas.length+')');
+    jornadas.forEach((j,i)=>{
+      const hs=[j.h_normal?j.h_normal+'h norm':'',j.h_extra?j.h_extra+'h ext':'',j.h_noct?j.h_noct+'h noct':''].filter(Boolean).join(' · ');
+      h+=rr('Jornada '+(i+1)+' · '+j.fecha,([j.h_entrada,j.h_salida].filter(Boolean).join('→'))+(hs?' | '+hs:''));
+    });
+  }
+  // Conceptos
+  const lineas=lineasCoste.filter(l=>Number(l.cantidad)>0);
+  if(lineas.length){
+    h+=rs('💶 Conceptos facturados');
+    lineas.forEach(l=>{h+=rr(l.concepto+' × '+l.cantidad+' '+l.unidad,l.subtotal.toFixed(2)+' €');});
+  }
+  h+=rr('TOTAL', total.toFixed(2)+' €');
+  h+=rs('📂 Imputación');
+  h+=rr('Expediente', document.getElementById('expediente')?.value);
+  h+=rr('Centro coste', document.getElementById('centro_coste')?.value);
+  h+=rr('Sección', document.getElementById('seccion')?.value);
   const e=document.getElementById(id);if(e)e.innerHTML=h;
 }
 
@@ -2335,7 +2358,8 @@ function descartarParte(){
 function resetForm(){
   ['trabajador','area','trabajos','materiales','permiso','responsable','pin',
    'expediente','otros','centro_coste','seccion','numero_albaran','oferta','concepto_alb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  const fa=document.getElementById('fecha_albaran');if(fa)fa.value=new Date().toISOString().split('T')[0];
+  const vd=document.getElementById('btn-ver-doc');if(vd)vd.style.display='none';
+  window._currentDocImg=null;
   const scs=document.getElementById('sc-sel');if(scs)scs.value='';
   const rsp=document.getElementById('resp-sel');if(rsp)rsp.value='';
   const est=document.getElementById('parte-estado');if(est)est.value='';
@@ -2691,6 +2715,9 @@ async function analizarDocumento(){
     cerrarModal('modal-ia');
     if(todosResultados[0]._imgBase64) window._pendingIAImage={dataUrl:todosResultados[0]._imgBase64};
     aplicarDatosIA(todosResultados[0]);
+    // Show "Ver documento" button in nuevo albarán header
+    window._currentDocImg=todosResultados[0]._imgBase64||null;
+    const vd=document.getElementById('btn-ver-doc');if(vd&&window._currentDocImg)vd.style.display='inline-flex';
     return;
   }
 
@@ -2833,6 +2860,21 @@ async function pdfAllPagesToImages(pdfBase64, maxPages){
     results.push(canvas.toDataURL('image/jpeg',0.85).split(',')[1]);
   }
   return results;
+}
+
+// Show document preview button when IA loads a document into nuevo albarán
+function verDocumentoActual(){
+  const img=window._pendingIAImage?.dataUrl || window._currentDocImg;
+  if(!img){ alert('No hay documento cargado.'); return; }
+  const modal=document.createElement('div');modal.className='mbg open';modal.id='modal-ver-doc-actual';
+  const inner=document.createElement('div');inner.className='modal';inner.style.cssText='max-width:700px;max-height:90vh;overflow-y:auto';
+  const title=document.createElement('div');title.className='mtl';title.textContent='Documento cargado';
+  const imgEl=document.createElement('img');imgEl.src=img;imgEl.style.cssText='width:100%;border-radius:var(--rs);margin-bottom:14px';
+  const brow=document.createElement('div');brow.className='brow';
+  const btnC=document.createElement('button');btnC.className='btn btn-o';btnC.textContent='Cerrar';btnC.onclick=()=>modal.remove();
+  brow.appendChild(btnC);
+  inner.appendChild(title);inner.appendChild(imgEl);inner.appendChild(brow);
+  modal.appendChild(inner);document.body.appendChild(modal);
 }
 
 function aplicarDatosIA(d){
@@ -3180,7 +3222,7 @@ async function _analizarUno(overrideData, overrideMime){
     method:'POST',
     headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
     body:JSON.stringify({
-      model:'meta-llama/llama-4-scout-17b-16e-instruct',
+      model:'meta-llama/llama-4-maverick-17b-128e-instruct',
       max_tokens:2000, temperature:0.1,
       messages:[{role:'user',content:[
         {type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},
