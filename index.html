@@ -874,21 +874,44 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 <div class="mbg" id="modal-ia">
   <div class="modal" style="max-width:540px">
     <div class="mtl" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">✨ Crear albarán desde documento</div>
-    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube un PDF o foto. La IA detecta todas las páginas y crea un albarán por cada una automáticamente.</p>
-    <div id="ia-upload-area" onclick="document.getElementById('ia-file-input').click()"
-      style="border:2px dashed var(--bors);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;background:var(--bg)"
-      ondragover="event.preventDefault();this.style.borderColor='#7C3AED'"
-      ondragleave="this.style.borderColor=''"
-      ondrop="event.preventDefault();this.style.borderColor='';handleIADrop(event)">
-      <div style="font-size:32px;margin-bottom:6px">📄</div>
-      <div style="font-size:14px;font-weight:500;color:var(--tx)">Toca para seleccionar o arrastra aquí</div>
-      <div style="font-size:12px;color:var(--fa);margin-top:4px">PDF (todas las páginas) · JPG · PNG</div>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:14px">Sube fotos o PDFs. La IA crea un albarán por cada página o imagen automáticamente.</p>
+
+    <!-- Upload options -->
+    <div id="ia-upload-area" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <!-- Camera button - mobile: opens camera, can press multiple times -->
+      <button onclick="document.getElementById('ia-cam-input').click()"
+        style="border:2px dashed #7C3AED;border-radius:var(--rs);padding:18px 10px;text-align:center;cursor:pointer;background:#F5F3FF;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-size:28px">📷</span>
+        <span style="font-size:12px;font-weight:500;color:#4F46E5">Cámara</span>
+        <span style="font-size:10px;color:var(--mu)">Una foto</span>
+      </button>
+      <!-- Gallery button - allows multiple selection -->
+      <button onclick="document.getElementById('ia-file-input').click()"
+        style="border:2px dashed var(--bors);border-radius:var(--rs);padding:18px 10px;text-align:center;cursor:pointer;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-size:28px">🖼️</span>
+        <span style="font-size:12px;font-weight:500;color:var(--tx)">Galería</span>
+        <span style="font-size:10px;color:var(--mu)">Varias fotos</span>
+      </button>
+      <!-- PDF button -->
+      <button onclick="document.getElementById('ia-pdf-input').click()"
+        style="border:2px dashed var(--bors);border-radius:var(--rs);padding:18px 10px;text-align:center;cursor:pointer;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-size:28px">📄</span>
+        <span style="font-size:12px;font-weight:500;color:var(--tx)">PDF</span>
+        <span style="font-size:10px;color:var(--mu)">Multi-página</span>
+      </button>
     </div>
-    <input type="file" id="ia-file-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleIAFiles(this)"/>
-    <div id="ia-preview" style="display:none;margin-top:10px"></div>
-    <div id="ia-result" style="display:none;margin-top:12px;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--act);max-height:160px;overflow-y:auto"></div>
+
+    <!-- Hidden inputs -->
+    <input type="file" id="ia-cam-input"   accept="image/*" capture="environment" style="display:none" onchange="addIAFiles(this)"/>
+    <input type="file" id="ia-file-input"  accept="image/*" multiple style="display:none" onchange="addIAFiles(this)"/>
+    <input type="file" id="ia-pdf-input"   accept=".pdf,application/pdf" multiple style="display:none" onchange="addIAFiles(this)"/>
+
+    <!-- File list preview -->
+    <div id="ia-preview" style="display:none;margin-top:4px"></div>
+
+    <div id="ia-result" style="display:none;margin-top:12px;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--act);max-height:140px;overflow-y:auto"></div>
     <div id="ia-sm" class="sm" style="margin-top:10px"></div>
-    <div class="brow" style="margin-top:16px">
+    <div class="brow" style="margin-top:14px">
       <button class="btn btn-o" onclick="cerrarModal('modal-ia')">Cancelar</button>
       <button class="btn btn-f" id="ia-btn-analizar" onclick="analizarDocumento()" disabled style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none;opacity:.5">✨ Analizar y crear albaranes</button>
     </div>
@@ -2994,19 +3017,31 @@ function seleccionarCentro(codigo,seccion){
 //  MULTI-FILE IA
 // ══════════════════════════════════════════════════════════════
 let iaFiles=[];
-function handleIADrop(e){const files=[...e.dataTransfer.files];if(files.length)processIAFiles(files);}
-function handleIAFiles(input){const files=[...input.files];if(files.length)processIAFiles(files);}
+function handleIADrop(e){const files=[...e.dataTransfer.files];if(files.length)addIAFilesRaw(files);}
+function handleIAFiles(input){const files=[...input.files];if(files.length)addIAFilesRaw(files);}
 function handleIAFile(input){handleIAFiles(input);}
-function processIAFiles(files){
-  iaFiles=[];
+
+// addIAFiles - ACCUMULATES files (for camera: add one at a time)
+function addIAFiles(input){
+  const files=[...input.files];
+  if(!files.length) return;
+  addIAFilesRaw(files);
+  // Reset input so same file can be added again (camera scenario)
+  input.value='';
+}
+
+function addIAFilesRaw(files){
   const allowed=['image/jpeg','image/jpg','image/png','image/webp','application/pdf'];
   const valid=files.filter(f=>allowed.includes(f.type)&&f.size<=20*1024*1024);
   if(!valid.length){alert('Formato no válido. Usa JPG, PNG o PDF de menos de 20MB.');return;}
   let loaded=0;
   valid.forEach(file=>{
     const r=new FileReader();
-    r.onload=e=>{iaFiles.push({data:e.target.result.split(',')[1],type:file.type,name:file.name,size:file.size});loaded++;
-      if(loaded===valid.length)mostrarPreviewMulti();};
+    r.onload=e=>{
+      iaFiles.push({data:e.target.result.split(',')[1],type:file.type,name:file.name,size:file.size});
+      loaded++;
+      if(loaded===valid.length) mostrarPreviewMulti();
+    };
     r.readAsDataURL(file);
   });
 }
@@ -3015,25 +3050,41 @@ function mostrarPreviewMulti(){
   const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='none';
   const prev=document.getElementById('ia-preview');if(!prev)return;prev.style.display='block';
   const ic=f=>f.type==='application/pdf'?'📄':'🖼️';
-  prev.innerHTML=iaFiles.map((f,i)=>`<div style="background:var(--bg);border-radius:var(--rs);padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:6px">
-    <span style="font-size:20px">${ic(f)}</span>
-    <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
-    <div style="font-size:11px;color:var(--fa)">${(f.size/1024).toFixed(0)} KB</div></div>
-    <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:16px">\u2715</button>
-  </div>`).join('')+
-  (iaFiles.length>1?`<div style="font-size:12px;color:var(--act);background:var(--acl);padding:8px 12px;border-radius:var(--rs);margin-top:4px">${iaFiles.length} archivos — un albarán por archivo</div>`:'');
+  const nPDF=iaFiles.filter(f=>f.type==='application/pdf').length;
+  const nImg=iaFiles.filter(f=>f.type!=='application/pdf').length;
+
+  prev.innerHTML=
+    // File list
+    iaFiles.map((f,i)=>`<div style="background:var(--bg);border-radius:var(--rs);padding:7px 12px;display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <span style="font-size:18px">${ic(f)}</span>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+      <div style="font-size:10px;color:var(--fa)">${(f.size/1024).toFixed(0)} KB</div></div>
+      <button onclick="iaFiles.splice(${i},1);iaFiles.length?mostrarPreviewMulti():resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:15px">\u2715</button>
+    </div>`).join('')+
+    // Add more buttons
+    `<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+      <button onclick="document.getElementById('ia-cam-input').click()" style="flex:1;padding:8px 10px;border:1px dashed #7C3AED;border-radius:var(--rs);background:#F5F3FF;font-size:12px;cursor:pointer;color:#4F46E5">📷 + Foto</button>
+      <button onclick="document.getElementById('ia-file-input').click()" style="flex:1;padding:8px 10px;border:1px dashed var(--bors);border-radius:var(--rs);background:var(--bg);font-size:12px;cursor:pointer">🖼️ + Galería</button>
+      <button onclick="document.getElementById('ia-pdf-input').click()" style="flex:1;padding:8px 10px;border:1px dashed var(--bors);border-radius:var(--rs);background:var(--bg);font-size:12px;cursor:pointer">📄 + PDF</button>
+    </div>`+
+    // Summary
+    `<div style="font-size:12px;color:var(--act);background:var(--acl);padding:8px 12px;border-radius:var(--rs);margin-top:8px">
+      ${iaFiles.length} archivo(s) — ${nPDF>0?nPDF+' PDF(s) todas las páginas · ':''}${nImg>0?nImg+' imagen(es)':''} → un albarán por cada uno
+    </div>`;
+
   const btn=document.getElementById('ia-btn-analizar');
-  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='\u2728 Analizar y crear albaranes';}
+  if(btn){btn.disabled=false;btn.style.opacity='1';
+    btn.textContent=iaFiles.length===1?'\u2728 Analizar y crear albarán':'\u2728 Analizar '+iaFiles.length+' documentos';}
 }
 function resetIAModal(){
   iaFiles=[];iaFileData=null;iaFileType=null;
-  const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='block';
+  const ua=document.getElementById('ia-upload-area');if(ua)ua.style.display='grid';
   const prev=document.getElementById('ia-preview');if(prev){prev.style.display='none';prev.innerHTML='';}
   const res=document.getElementById('ia-result');if(res)res.style.display='none';
   const sm=document.getElementById('ia-sm');if(sm)sm.style.display='none';
   const btn=document.getElementById('ia-btn-analizar');
   if(btn){btn.disabled=true;btn.style.opacity='.5';btn.textContent='\u2728 Analizar y crear albaranes';}
-  const fi=document.getElementById('ia-file-input');if(fi)fi.value='';
+  ['ia-cam-input','ia-file-input','ia-pdf-input'].forEach(id=>{const fi=document.getElementById(id);if(fi)fi.value='';});
   window._pendingIAImage=null;
 }
 async function _analizarUno(overrideData, overrideMime){
