@@ -2586,47 +2586,31 @@ async function analizarDocumento(){
     iaFileData=archivo.data; iaFileType=archivo.type; iaFileName=archivo.name;
 
     if(archivo.type==='application/pdf'){
-      showSM('ia-sm','ok','📄 Detectando páginas...');
+      showSM('ia-sm','ok','📄 Procesando PDF...');
       try{
-        // Get page count: use manual input first, then auto-detect
+        // Get manual page count
         const manualN=parseInt(document.getElementById('ia-num-paginas')?.value||'1')||1;
-        let nPag=manualN;
-        if(manualN===1){
-          // try auto-detect, fall back to 1
-          try{ nPag=await pdfNumPages(archivo.data); }catch(e){ nPag=1; }
-        }
-        showSM('ia-sm','ok','📄 '+archivo.name+': '+nPag+' página(s) → creando '+nPag+' albarán(es)...');
-        if(nPag>1){
-          showSM('ia-sm','ok',archivo.name+': '+nPag+' páginas — analizando cada una...');
-          for(let p=1;p<=nPag;p++){
-            showSM('ia-sm','ok','Analizando página '+p+'/'+nPag+' de '+archivo.name+'...');
-            try{
-              const conv=await pdfToImage(archivo.data, p);
-              const pageBase64=conv.base64;
-              // Pass image data directly — no global mutation
-              const res=await _analizarUno(pageBase64, 'image/jpeg');
-              if(res) todosResultados.push({
-                ...res,
-                _archivo:archivo.name+' (pág.'+p+')',
-                _imgBase64:'data:image/jpeg;base64,'+pageBase64
-              });
-            }catch(e){ console.warn('Error pág',p,':',e.message); }
-            if(p<nPag) await new Promise(r=>setTimeout(r,1500));
-          }
-        } else {
-          // Single page PDF — convert and store image
+
+        // Load PDF once and extract ALL pages as images
+        showSM('ia-sm','ok','📄 Cargando PDF y extrayendo páginas...');
+        const paginas = await pdfAllPagesToImages(archivo.data, manualN);
+        const nPag = paginas.length;
+        showSM('ia-sm','ok','📄 '+nPag+' página(s) extraídas — analizando con IA...');
+
+        for(let p=0; p<nPag; p++){
+          showSM('ia-sm','ok','🤖 Analizando albarán '+(p+1)+'/'+nPag+'...');
           try{
-            const conv=await pdfToImage(archivo.data, 1);
-            const res=await _analizarUno(conv.base64, 'image/jpeg');
+            const res=await _analizarUno(paginas[p], 'image/jpeg');
             if(res) todosResultados.push({
               ...res,
-              _archivo:archivo.name,
-              _imgBase64:'data:image/jpeg;base64,'+conv.base64
+              _archivo:archivo.name+(nPag>1?' (pág.'+(p+1)+')':''),
+              _imgBase64:'data:image/jpeg;base64,'+paginas[p]
             });
-          }catch(e){ console.warn('Error PDF 1 pág:',e.message); }
+          }catch(e){ console.warn('Error analizando pág '+(p+1)+':',e.message); }
+          if(p<nPag-1) await new Promise(r=>setTimeout(r,2000));
         }
       }catch(e){
-        showSM('ia-sm','er','Error con '+archivo.name+': '+e.message);
+        showSM('ia-sm','er','❌ Error procesando PDF: '+e.message);
       }
     } else {
       // Image file — analyze directly
@@ -2750,31 +2734,37 @@ async function _loadPDFJS(){
     s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     s.onload=res; s.onerror=rej; document.head.appendChild(s);
   });
-  // Disable worker to avoid CORS/CSP issues on GitHub Pages
   window.pdfjsLib.GlobalWorkerOptions.workerSrc='';
+}
+
+// Load PDF once, render ALL pages to base64 images — avoids Uint8Array reuse issues
+async function pdfAllPagesToImages(pdfBase64, maxPages){
+  await _loadPDFJS();
+  const pdfBytes = Uint8Array.from(atob(pdfBase64), c=>c.charCodeAt(0));
+  const pdf = await window.pdfjsLib.getDocument({data:pdfBytes, disableWorker:true}).promise;
+  const total = Math.min(pdf.numPages, maxPages||pdf.numPages);
+  const results = [];
+  for(let i=1; i<=total; i++){
+    const page = await pdf.getPage(i);
+    const vp = page.getViewport({scale:1.8});
+    const canvas = document.createElement('canvas');
+    canvas.width=vp.width; canvas.height=vp.height;
+    await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
+    results.push(canvas.toDataURL('image/jpeg',0.85).split(',')[1]);
+  }
+  return results;
 }
 
 async function pdfNumPages(pdfBase64){
   await _loadPDFJS();
-  const pdfData=atob(pdfBase64);
-  const arr=new Uint8Array(pdfData.length);
-  for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
-  const pdf=await window.pdfjsLib.getDocument({data:arr, disableWorker:true}).promise;
+  const pdfBytes = Uint8Array.from(atob(pdfBase64), c=>c.charCodeAt(0));
+  const pdf = await window.pdfjsLib.getDocument({data:pdfBytes, disableWorker:true}).promise;
   return pdf.numPages;
 }
 
 async function pdfToImage(pdfBase64, pageNum){
-  await _loadPDFJS();
-  const pdfData=atob(pdfBase64);
-  const arr=new Uint8Array(pdfData.length);
-  for(let i=0;i<pdfData.length;i++) arr[i]=pdfData.charCodeAt(i);
-  const pdf=await window.pdfjsLib.getDocument({data:arr, disableWorker:true}).promise;
-  const page=await pdf.getPage(pageNum||1);
-  const vp=page.getViewport({scale:1.8});
-  const canvas=document.createElement('canvas');
-  canvas.width=vp.width; canvas.height=vp.height;
-  await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-  return {base64:canvas.toDataURL('image/jpeg',0.85).split(',')[1], numPages:pdf.numPages};
+  const pages = await pdfAllPagesToImages(pdfBase64, pageNum||1);
+  return {base64: pages[pages.length-1], numPages: pages.length};
 }
 
 function aplicarDatosIA(d){
