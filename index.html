@@ -390,32 +390,6 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
         <div class="field"><label>Concepto</label><input type="text" id="concepto_alb" placeholder="Breve descripción"/></div>
       </div>
     </div>
-    <div class="card">
-      <div class="ct">Identificación</div>
-      <div class="fg fg2">
-        <div class="field"><label>Nombre del trabajador</label><input type="text" id="trabajador" placeholder="Nombre y apellidos"/></div>
-        <div class="field"><label>Área / Zona de trabajo</label><input type="text" id="area" placeholder="Ej. Reactor B, Almacén 3..."/></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ct">Jornadas</div>
-      <div id="jornadas-list"></div>
-      <button class="btn btn-o btn-sm" onclick="addJornada()" style="margin-top:4px">+ Añadir fecha</button>
-      <div style="margin-top:13px;background:var(--bg);border-radius:var(--rs);padding:10px 14px;display:flex;gap:20px;flex-wrap:wrap">
-        <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">H. Normales</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-n">0 h</div></div>
-        <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">H. Extra</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-e">0 h</div></div>
-        <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">H. Noct./Fest.</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-f">0 h</div></div>
-        <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Jornadas</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-d">0</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ct">Trabajos</div>
-      <div class="fg fg1"><div class="field"><label>Descripción de los trabajos realizados</label><textarea id="trabajos" placeholder="Describir las tareas realizadas..."></textarea></div></div>
-      <div class="fg fg2">
-        <div class="field"><label>Materiales / Equipos utilizados</label><input type="text" id="materiales" placeholder="Opcional"/></div>
-        <div class="field"><label>Nº permiso de trabajo</label><input type="text" id="permiso" placeholder="Opcional"/></div>
-      </div>
-    </div>
     <div class="brow"><button class="btn btn-f" onclick="goStep(2)">Continuar →</button></div>
   </div>
 
@@ -425,18 +399,49 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <div class="card">
       <div class="ct">Tipo de recurso</div>
       <div class="pg" id="pg-rec">
-        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Repuesto</div>
-        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Mano de obra</div>
-        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Medios</div>
+        <div class="pill" onclick="pickPill('pg-rec',this,'recurso');actualizarVistaCoste()">Repuesto</div>
+        <div class="pill" onclick="pickPill('pg-rec',this,'recurso');actualizarVistaCoste()">Mano de obra</div>
+        <div class="pill" onclick="pickPill('pg-rec',this,'recurso');actualizarVistaCoste()">Medios</div>
       </div>
     </div>
-    <div class="card">
+
+    <!-- JORNADAS — solo visible si Mano de obra -->
+    <div class="card" id="coste-jornadas-block">
+      <div class="ct">Identificación del trabajador</div>
+      <div class="fg fg2">
+        <div class="field"><label>Nombre del trabajador</label><input type="text" id="trabajador" placeholder="Nombre y apellidos"/></div>
+        <div class="field"><label>Área / Zona de trabajo</label><input type="text" id="area" placeholder="Ej. Reactor B, Almacén 3..."/></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="ct" style="margin-bottom:10px">Jornadas</div>
+        <div id="jornadas-list"></div>
+        <button class="btn btn-o btn-sm" onclick="addJornada()" style="margin-top:4px">+ Añadir fecha</button>
+        <div style="margin-top:13px;background:var(--bg);border-radius:var(--rs);padding:10px 14px;display:flex;gap:20px;flex-wrap:wrap">
+          <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">H. Normales</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-n">0.0 h</div></div>
+          <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">H. Extra</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-e">0.0 h</div></div>
+          <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">H. Noct./Fest.</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-f">0.0 h</div></div>
+          <div><div style="font-size:10px;color:var(--fa);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Jornadas</div><div style="font-family:var(--mono);font-size:15px;font-weight:500" id="tot-d">0</div></div>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="ct" style="margin-bottom:10px">Trabajos realizados</div>
+        <div class="fg fg1"><div class="field"><label>Descripción</label><textarea id="trabajos" placeholder="Describir las tareas realizadas..."></textarea></div></div>
+        <div class="fg fg2">
+          <div class="field"><label>Materiales / Equipos</label><input type="text" id="materiales" placeholder="Opcional"/></div>
+          <div class="field"><label>Nº permiso</label><input type="text" id="permiso" placeholder="Opcional"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONCEPTOS — solo visible si Repuesto o Medios -->
+    <div class="card" id="coste-conceptos-block">
       <div class="ct">Conceptos y cantidades</div>
       <div id="db-coste" class="detect-badge" style="display:none"></div>
       <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Introduce la cantidad de cada concepto. Añade líneas libres para conceptos adicionales.</p>
       <div id="lineas-coste-wrap"></div>
       <button class="btn btn-o btn-sm" onclick="addLineaLibre()" style="margin-top:8px">+ Añadir concepto libre</button>
     </div>
+
     <div class="card">
       <div class="ct">Total del albarán</div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
@@ -2372,11 +2377,30 @@ function clearSig(id){const c=document.getElementById(id);if(!c)return;c.getCont
 // ══════════════════════════════════════════════════════════════
 //  STEPPER & PAGES
 // ══════════════════════════════════════════════════════════════
+function actualizarVistaCoste(){
+  const rec=picks.recurso||'';
+  const jornBlock=document.getElementById('coste-jornadas-block');
+  const concBlock=document.getElementById('coste-conceptos-block');
+  if(!jornBlock||!concBlock) return;
+  if(rec==='Mano de obra'){
+    jornBlock.style.display='block';
+    concBlock.style.display='none';
+  } else if(rec==='Repuesto'||rec==='Medios'){
+    jornBlock.style.display='none';
+    concBlock.style.display='block';
+  } else {
+    // Nothing selected yet — show both
+    jornBlock.style.display='block';
+    concBlock.style.display='block';
+  }
+}
+
 function goStep(n){
   document.querySelectorAll('.fstep').forEach(s=>s.classList.remove('active'));
   document.getElementById('fs'+n)?.classList.add('active');
   for(let i=1;i<=6;i++){const e=document.getElementById('si'+i);if(!e)continue;e.className='si';if(i<n)e.classList.add('dn');else if(i===n)e.classList.add('on');}
-  if(n===3){populateScDDs();if(selectedScId&&!lineasCoste.length)onScSel(selectedScId);renderLineasCoste();}
+  if(n===2){actualizarVistaCoste();if(selectedScId&&!lineasCoste.length)onScSel(selectedScId);renderLineasCoste();}
+  if(n===3){populateScDDs();}
   if(n===4){const s=document.getElementById('sig1-name');if(s)s.textContent=document.getElementById('trabajador')?.value||'Trabajador';requestAnimationFrame(()=>reinitCanvas('sig1'));}
   if(n===5){populateRespDD();buildRecap('recap-wrap');requestAnimationFrame(()=>reinitCanvas('sig2'));}
   window.scrollTo(0,0);
@@ -2904,6 +2928,7 @@ function aplicarDatosIA(d){
       document.querySelectorAll('#pg-rec .pill').forEach(p=>{
         if(p.textContent.trim()===found){p.classList.add('on');}else{p.classList.remove('on');}
       });
+      actualizarVistaCoste();
     }
   }
 
