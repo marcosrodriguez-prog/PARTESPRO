@@ -2571,7 +2571,18 @@ async function analizarDocumento(){
           try{
             const resArr=await _analizarUno(paginas[p],'image/jpeg');
             if(resArr) resArr.forEach(r=>todosResultados.push({...r,_archivo:archivo.name+(paginas.length>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]}));
-          }catch(e){ console.error('Error pág '+(p+1)+':',e.message); }
+          }catch(e){
+            if(e.message.includes('Límite') || e.message.includes('429')){
+              showSM('ia-sm','ok','⏳ Límite Groq — esperando 30s para pág '+(p+1)+'...');
+              await new Promise(r=>setTimeout(r,30000));
+              try{
+                const resArr2=await _analizarUno(paginas[p],'image/jpeg');
+                if(resArr2) resArr2.forEach(r=>todosResultados.push({...r,_archivo:archivo.name+(paginas.length>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]}));
+              }catch(e2){showSM('ia-sm','ok','⚠️ Pág '+(p+1)+' fallida tras reintento.');}
+            } else {
+              console.error('Error pág '+(p+1)+':',e.message);
+            }
+          }
           if(p<paginas.length-1) await new Promise(r=>setTimeout(r,2500));
         }
       }catch(e){ showSM('ia-sm','er','❌ Error en PDF: '+e.message); }
@@ -3033,35 +3044,28 @@ async function _analizarUno(overrideData, overrideMime){
     imageBase64=c.base64; imageMime='image/jpeg';
   }
   const expLista=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF.join(', '):'';
-  const provLista=typeof PROVEEDORES_GF!=='undefined'
-    ? PROVEEDORES_GF.map(p=>p.nombre).join('\n')
-    : subcontratas.map(s=>s.nombre).join('\n');
+  // Only send first 30 providers to save tokens — matching done client-side after
+  const provMuestra=typeof PROVEEDORES_GF!=='undefined'
+    ? PROVEEDORES_GF.slice(0,30).map(p=>p.nombre).join(', ')
+    : subcontratas.map(s=>s.nombre).join(', ');
 
-  const prompt='Analiza esta imagen que puede contener UNO O VARIOS albaranes, facturas o partes de trabajo.\n'
-    +'BASE DE DATOS DE PROVEEDORES (busca similitud con nombres en el documento):\n'+provLista+'\n\n'
-    +'Expedientes conocidos: '+expLista+'\n\n'
-    +'IMPORTANTE: Si la imagen contiene VARIOS documentos o albaranes separados, extrae TODOS.\n'
-    +'Devuelve un array JSON con UN objeto por cada albarán/documento encontrado.\n'
-    +'Si solo hay uno, devuelve un array con un solo elemento.\n\n'
-    +'Formato de cada elemento:\n'
-    +'{"subcontrata_nombre":"nombre exacto del proveedor de la lista o del documento","trabajador":"","area":"","fecha":"YYYY-MM-DD",'
-    +'"numero_albaran":"número de albarán o factura","oferta":"número oferta/pedido","concepto_alb":"concepto en una línea",'
-    +'"h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripción de los trabajos","materiales":"","permiso":"",'
-    +'"expediente":"código de la lista si coincide","otros":"","centro_coste":"del sello manuscrito","seccion":"del sello",'
-    +'"naturaleza":"Gasto o Inversion del sello (vacío si no)","recurso":"Repuesto o Mano de obra o Medios del sello (vacío si no)",'
-    +'"coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}\n\n'
-    +'REGLAS:\n'
-    +'- coste_total es número decimal sin símbolo de moneda (1234.56 no 1.234,56€)\n'
-    +'- recurso: EXACTAMENTE Repuesto, Mano de obra, o Medios\n'
-    +'- Si un albarán no tiene algún campo, usa "" o 0\n'
-    +'- Devuelve SOLO el array JSON, sin texto adicional ni markdown';
+  const prompt='Analiza esta imagen. Puede contener UNO O VARIOS albaranes/facturas separados.\n'
+    +'Expedientes conocidos: '+expLista+'\n'
+    +'Algunos proveedores de ejemplo: '+provMuestra+'\n\n'
+    +'Devuelve un ARRAY JSON (uno por documento encontrado):\n'
+    +'[{"subcontrata_nombre":"empresa emisora","numero_albaran":"","oferta":"","concepto_alb":"","fecha":"YYYY-MM-DD",'
+    +'"trabajos":"","materiales":"","expediente":"del sello","centro_coste":"del sello","seccion":"del sello",'
+    +'"naturaleza":"Gasto o Inversion","recurso":"Repuesto o Mano de obra o Medios",'
+    +'"coste_total":0,"h_normal":0,"h_extra":0,"h_noct":0,'
+    +'"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}]}]\n'
+    +'REGLAS: coste_total sin símbolo moneda (16.25 no 16,25€). recurso exactamente: Repuesto, Mano de obra, o Medios. Solo array JSON.';
 
   const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
     headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
     body:JSON.stringify({
       model:'meta-llama/llama-4-scout-17b-16e-instruct',
-      max_tokens:3000, temperature:0.1,
+      max_tokens:2000, temperature:0.1,
       messages:[{role:'user',content:[
         {type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},
         {type:'text',text:prompt}
@@ -3070,22 +3074,22 @@ async function _analizarUno(overrideData, overrideMime){
   });
   if(!resp.ok){
     const err=await resp.json().catch(()=>({}));
-    throw new Error(err?.error?.message||'Error '+resp.status+' de Groq');
+    const msg=err?.error?.message||'Error '+resp.status;
+    if(resp.status===429) throw new Error('Límite de tokens Groq alcanzado. Espera unos minutos e inténtalo de nuevo.');
+    throw new Error(msg);
   }
   const data=await resp.json();
   const text=data.choices?.[0]?.message?.content||'';
   const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-
-  // Try to parse as array first, then as single object
   try{
     const parsed=JSON.parse(clean);
     if(Array.isArray(parsed)) return parsed;
-    return [parsed]; // wrap single object in array
+    return [parsed];
   }catch(e){
     const arrMatch=clean.match(/\[[\s\S]*\]/);
-    if(arrMatch){const a=JSON.parse(arrMatch[0]);return Array.isArray(a)?a:[a];}
+    if(arrMatch){try{const a=JSON.parse(arrMatch[0]);return Array.isArray(a)?a:[a];}catch(e2){}}
     const objMatch=clean.match(/\{[\s\S]*\}/);
-    if(objMatch) return [JSON.parse(objMatch[0])];
+    if(objMatch){try{return [JSON.parse(objMatch[0])];}catch(e2){}}
     return null;
   }
 }
