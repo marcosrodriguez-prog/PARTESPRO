@@ -364,8 +364,8 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
   <div class="stepper">
     <div class="si on" id="si1"><div class="si-dot">1</div>Datos</div><div class="sl"></div>
-    <div class="si" id="si2"><div class="si-dot">2</div>Imputación</div><div class="sl"></div>
-    <div class="si" id="si3"><div class="si-dot">3</div>Coste</div><div class="sl"></div>
+    <div class="si" id="si2"><div class="si-dot">2</div>Coste</div><div class="sl"></div>
+    <div class="si" id="si3"><div class="si-dot">3</div>Imputación</div><div class="sl"></div>
     <div class="si" id="si4"><div class="si-dot">4</div>Firma</div><div class="sl"></div>
     <div class="si" id="si5"><div class="si-dot">5</div>Validación</div><div class="sl"></div>
     <div class="si" id="si6"><div class="si-dot">6</div>Listo</div>
@@ -420,7 +420,35 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 
   <!-- STEP 2: IMPUTACIÓN -->
+  <!-- STEP 2: COSTE -->
   <div class="fstep" id="fs2">
+    <div class="card">
+      <div class="ct">Tipo de recurso</div>
+      <div class="pg" id="pg-rec">
+        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Repuesto</div>
+        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Mano de obra</div>
+        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Medios</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Conceptos y cantidades</div>
+      <div id="db-coste" class="detect-badge" style="display:none"></div>
+      <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Introduce la cantidad de cada concepto. Añade líneas libres para conceptos adicionales.</p>
+      <div id="lineas-coste-wrap"></div>
+      <button class="btn btn-o btn-sm" onclick="addLineaLibre()" style="margin-top:8px">+ Añadir concepto libre</button>
+    </div>
+    <div class="card">
+      <div class="ct">Total del albarán</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+        <span style="color:var(--mu);font-size:14px">Importe total</span>
+        <span style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--act)" id="c-total">0.00 €</span>
+      </div>
+    </div>
+    <div class="brow"><button class="btn btn-o" onclick="goStep(1)">← Atrás</button><button class="btn btn-f" onclick="goStep(3)">Continuar →</button></div>
+  </div>
+
+  <!-- STEP 3: IMPUTACIÓN -->
+  <div class="fstep" id="fs3">
     <div class="card">
       <div class="ct">Naturaleza del gasto</div>
       <div class="field"><label>Tipo</label><div class="pg" id="pg-nat"><div class="pill" onclick="pickPill('pg-nat',this,'naturaleza')">Inversión</div><div class="pill" onclick="pickPill('pg-nat',this,'naturaleza')">Gasto</div></div></div>
@@ -453,36 +481,8 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
         </div>
       </div>
     </div>
-    <div class="card">
-      <div class="ct">Tipo de recurso</div>
-      <div class="pg" id="pg-rec">
-        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Repuesto</div>
-        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Mano de obra</div>
-        <div class="pill" onclick="pickPill('pg-rec',this,'recurso')">Medios</div>
-      </div>
-    </div>
-    <div class="brow"><button class="btn btn-o" onclick="goStep(1)">← Atrás</button><button class="btn btn-f" onclick="goStep(3)">Continuar →</button></div>
-  </div>
-
-  <!-- STEP 3: COSTE -->
-  <div class="fstep" id="fs3">
-    <div class="card">
-      <div class="ct">Conceptos y cantidades</div>
-      <div id="db-coste" class="detect-badge" style="display:none"></div>
-      <p style="font-size:13px;color:var(--mu);margin-bottom:13px">Introduce la cantidad de cada concepto. Añade líneas libres para conceptos adicionales.</p>
-      <div id="lineas-coste-wrap"></div>
-      <button class="btn btn-o btn-sm" onclick="addLineaLibre()" style="margin-top:8px">+ Añadir concepto libre</button>
-    </div>
-    <div class="card">
-      <div class="ct">Total del albarán</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
-        <span style="color:var(--mu);font-size:14px">Importe total</span>
-        <span style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--act)" id="c-total">0.00 €</span>
-      </div>
-    </div>
     <div class="brow"><button class="btn btn-o" onclick="goStep(2)">← Atrás</button><button class="btn btn-f" onclick="goStep(4)">Continuar →</button></div>
   </div>
-
   <!-- STEP 4: FIRMA TRABAJADOR -->
   <div class="fstep" id="fs4">
     <div class="card">
@@ -1369,7 +1369,7 @@ function addLineaLibre(){lineasCoste.push({id:'ll'+Date.now(),concepto:'',unidad
 function renderLineasCoste(){
   const wrap=document.getElementById('lineas-coste-wrap');if(!wrap)return;
   if(!lineasCoste.length){wrap.innerHTML='<p style="font-size:13px;color:var(--fa);padding:10px 0">Selecciona un proveedor para cargar sus tarifas, o añade conceptos libres.</p>';calcTotal();return;}
-  wrap.innerHTML=`<table class="coste-tbl"><thead><tr><th>Concepto</th><th>Unidad</th><th style="text-align:right">€/unidad</th><th style="text-align:right;width:80px">Cantidad</th><th style="text-align:right;width:65px">Dto. %</th><th style="text-align:right">Subtotal</th><th style="width:30px"></th></tr></thead><tbody id="lineas-coste-body"></tbody></table>`;
+  wrap.innerHTML=`<table class="coste-tbl"><thead><tr><th>Concepto</th><th>Unidad</th><th style="text-align:right;width:80px">Cantidad</th><th style="text-align:right">€/unidad</th><th style="text-align:right;width:65px">Dto. %</th><th style="text-align:right">Subtotal</th><th style="width:30px"></th></tr></thead><tbody id="lineas-coste-body"></tbody></table>`;
   const tbody=document.getElementById('lineas-coste-body');
   lineasCoste.forEach((l,i)=>{
     const tr=document.createElement('tr');
@@ -1378,8 +1378,8 @@ function renderLineasCoste(){
     tr.innerHTML=`
       <td>${l.libre?`<input type="text" value="${l.concepto}" placeholder="Concepto..." onchange="lineasCoste[${i}].concepto=this.value" style="${inS}font-family:var(--sans)">`:`<span style="font-size:13.5px">${l.concepto}</span>`}</td>
       <td style="color:var(--mu);font-size:12.5px">${l.libre?`<input type="text" value="${l.unidad}" onchange="lineasCoste[${i}].unidad=this.value" style="${inS}width:50px;font-family:var(--mono)">`:l.unidad}</td>
-      <td style="text-align:right;font-family:var(--mono);color:var(--mu)">${l.libre?`<input type="number" value="${l.precio}" min="0" step="0.01" onchange="lineasCoste[${i}].precio=parseFloat(this.value)||0;updateLinea(${i})" style="${inS}width:75px;text-align:right;font-family:var(--mono)">`:Number(l.precio).toFixed(2)+' €'}</td>
       <td style="text-align:right"><input type="number" id="lc-${i}" value="${l.cantidad||''}" min="0" step="0.5" placeholder="0" oninput="lineasCoste[${i}].cantidad=parseFloat(this.value)||0;updateLinea(${i})"/></td>
+      <td style="text-align:right;font-family:var(--mono);color:var(--mu)">${l.libre?`<input type="number" value="${l.precio}" min="0" step="0.01" onchange="lineasCoste[${i}].precio=parseFloat(this.value)||0;updateLinea(${i})" style="${inS}width:75px;text-align:right;font-family:var(--mono)">`:Number(l.precio).toFixed(2)+' €'}</td>
       <td style="text-align:right"><input type="number" id="lcd-${i}" value="${dto||''}" min="0" max="100" step="0.5" placeholder="0" oninput="lineasCoste[${i}].descuento=parseFloat(this.value)||0;updateLinea(${i})" style="width:55px;padding:4px 6px;border:1px solid var(--bor);border-radius:var(--rs);font-size:12px;font-family:var(--mono);background:var(--bg);text-align:right;outline:none"/></td>
       <td style="text-align:right;font-family:var(--mono);font-weight:500;font-size:13.5px" id="lcs-${i}">${l.cantidad>0?Number(l.subtotal).toFixed(2)+' €':'—'}</td>
       <td><button class="btn-xs btn-d" onclick="lineasCoste.splice(${i},1);renderLineasCoste()">✕</button></td>`;
@@ -1951,8 +1951,8 @@ function renderLineasEdit(){
   if(!editLineas.length){el.innerHTML='<p style="font-size:13px;color:var(--fa);padding:8px 0">Sin conceptos. Añade uno.</p>';return;}
   const inS='padding:4px 7px;border:1px solid var(--bor);border-radius:var(--rs);font-size:13px;background:var(--bg);outline:none;width:100%';
   el.innerHTML=`<table class="coste-tbl" style="margin-bottom:8px"><thead><tr>
-    <th>Concepto</th><th>Unidad</th><th style="text-align:right">€/u</th>
-    <th style="text-align:right">Cant.</th><th style="text-align:right;width:60px">Dto.%</th>
+    <th>Concepto</th><th>Unidad</th><th style="text-align:right">Cant.</th><th style="text-align:right">€/u</th>
+    <th style="text-align:right;width:60px">Dto.%</th>
     <th style="text-align:right">Subtotal</th><th></th>
   </tr></thead><tbody>`+
     editLineas.map((l,i)=>{
@@ -1961,8 +1961,8 @@ function renderLineasEdit(){
       return`<tr>
         <td><input type="text" value="${l.concepto||''}" onchange="editLineas[${i}].concepto=this.value" style="${inS};font-family:var(--sans)"/></td>
         <td><input type="text" value="${l.unidad||'u'}" onchange="editLineas[${i}].unidad=this.value" style="${inS};width:50px;font-family:var(--mono)"/></td>
-        <td><input type="number" value="${l.precio||''}" min="0" step="0.01" placeholder="0" onchange="editLineas[${i}].precio=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:75px;font-family:var(--mono);text-align:right"/></td>
         <td><input type="number" value="${l.cantidad||''}" min="0" step="0.5" placeholder="0" onchange="editLineas[${i}].cantidad=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:70px;font-family:var(--mono);text-align:right"/></td>
+        <td><input type="number" value="${l.precio||''}" min="0" step="0.01" placeholder="0" onchange="editLineas[${i}].precio=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:75px;font-family:var(--mono);text-align:right"/></td>
         <td><input type="number" value="${dto||''}" min="0" max="100" step="0.5" placeholder="0" onchange="editLineas[${i}].descuento=parseFloat(this.value)||0;updateEditLinea(${i})" style="${inS};width:55px;font-family:var(--mono);text-align:right"/></td>
         <td style="text-align:right;font-family:var(--mono);font-size:13px;font-weight:500" id="mep-sub-${i}">${sub>0?sub.toFixed(2)+' €':'—'}</td>
         <td><button class="btn-xs btn-d" onclick="editLineas.splice(${i},1);renderLineasEdit()">✕</button></td>
