@@ -721,6 +721,17 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   <div class="modal" style="max-width:700px;max-height:92vh;overflow-y:auto">
     <div class="mtl">Editar albarán <span id="mep-id" style="font-family:var(--mono);font-size:14px;color:var(--mu)"></span></div>
 
+    <!-- Document image preview (collapsible) -->
+    <div id="mep-doc-preview" style="display:none;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:500;color:var(--mu)">📄 Documento original</span>
+        <button id="mep-doc-toggle" onclick="toggleDocPreview()" style="font-size:11px;color:var(--act);background:none;border:none;cursor:pointer;padding:2px 8px;border-radius:var(--rs);background:var(--acl)">▲ Ocultar</button>
+      </div>
+      <div id="mep-doc-img-wrap" style="max-height:340px;overflow-y:auto;border-radius:var(--rs);border:1px solid var(--bor)">
+        <img id="mep-doc-img" src="" alt="Documento" style="width:100%;display:block;border-radius:var(--rs)"/>
+      </div>
+    </div>
+
     <div class="card"><div class="ct">Proveedor</div>
       <div class="field"><label>Empresa proveedora</label>
         <div class="combo-wrap">
@@ -1891,7 +1902,31 @@ function abrirEditarParte(id){
   const mepRespSel=document.getElementById('mep-resp');
   if(mepRespSel) mepRespSel.value=p.responsable_id||'';
   const mepPin=document.getElementById('mep-pin-val');if(mepPin)mepPin.value='';
+
+  // Load document image if available
+  getAlbaranImageUrl(id).then(imgUrl=>{
+    const panel=document.getElementById('mep-doc-preview');
+    const img=document.getElementById('mep-doc-img');
+    if(imgUrl && panel && img){
+      img.src=imgUrl;
+      panel.style.display='block';
+    } else if(panel){
+      panel.style.display='none';
+    }
+  });
+
   document.getElementById('modal-ep').classList.add('open');
+}
+
+function toggleDocPreview(){
+  const wrap=document.getElementById('mep-doc-img-wrap');
+  const btn=document.getElementById('mep-doc-toggle');
+  if(!wrap||!btn)return;
+  if(wrap.style.display==='none'){
+    wrap.style.display='block'; btn.textContent='▲ Ocultar';
+  } else {
+    wrap.style.display='none'; btn.textContent='▼ Ver documento';
+  }
 }
 
 function addJornadaEdit(){editJornadas.push({fecha:new Date().toISOString().split('T')[0],h_entrada:'',h_salida:'',h_normal:0,h_extra:0,h_noct:0});renderJornadasEdit();}
