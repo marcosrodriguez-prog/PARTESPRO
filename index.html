@@ -366,9 +366,8 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <div class="si on" id="si1"><div class="si-dot">1</div>Datos</div><div class="sl"></div>
     <div class="si" id="si2"><div class="si-dot">2</div>Coste</div><div class="sl"></div>
     <div class="si" id="si3"><div class="si-dot">3</div>Imputación</div><div class="sl"></div>
-    <div class="si" id="si4"><div class="si-dot">4</div>Firma</div><div class="sl"></div>
-    <div class="si" id="si5"><div class="si-dot">5</div>Validación</div><div class="sl"></div>
-    <div class="si" id="si6"><div class="si-dot">6</div>Listo</div>
+    <div class="si" id="si4"><div class="si-dot">4</div>Validación</div><div class="sl"></div>
+    <div class="si" id="si5"><div class="si-dot">5</div>Listo</div>
   </div>
 
   <!-- STEP 1: DATOS -->
@@ -387,7 +386,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <div class="fg fg3">
         <div class="field"><label>Nº albarán</label><input type="text" id="numero_albaran" placeholder="Ej. ALB-2024-001"/></div>
         <div class="field"><label>Nº oferta / pedido</label><input type="text" id="oferta" placeholder="Opcional"/></div>
-        <div class="field"><label>Concepto</label><input type="text" id="concepto_alb" placeholder="Breve descripción"/></div>
+        <div class="field"><label>Fecha</label><input type="date" id="fecha_albaran" /></div>
       </div>
     </div>
     <div class="brow"><button class="btn btn-f" onclick="goStep(2)">Continuar →</button></div>
@@ -428,7 +427,16 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
         <div class="fg fg1"><div class="field"><label>Descripción</label><textarea id="trabajos" placeholder="Describir las tareas realizadas..."></textarea></div></div>
         <div class="fg fg2">
           <div class="field"><label>Materiales / Equipos</label><input type="text" id="materiales" placeholder="Opcional"/></div>
-          <div class="field"><label>Nº permiso</label><input type="text" id="permiso" placeholder="Opcional"/></div>
+          <div class="field"><label>Concepto / Referencia</label><input type="text" id="concepto_alb" placeholder="Breve descripción del trabajo"/></div>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="ct" style="margin-bottom:10px">Firma del trabajador</div>
+        <p style="font-size:13px;color:var(--mu);margin-bottom:10px">Dibuja tu firma con el dedo o el ratón.</p>
+        <div id="sig1-name" style="font-size:12px;color:var(--mu);margin-bottom:6px"></div>
+        <canvas id="sig1" style="border:1px solid var(--bor);border-radius:var(--rs);background:#fff;touch-action:none;cursor:crosshair;width:100%;height:120px"></canvas>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn btn-o btn-sm" onclick="clearSig('sig1')">Borrar firma</button>
         </div>
       </div>
     </div>
@@ -488,18 +496,8 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     </div>
     <div class="brow"><button class="btn btn-o" onclick="goStep(2)">← Atrás</button><button class="btn btn-f" onclick="goStep(4)">Continuar →</button></div>
   </div>
-  <!-- STEP 4: FIRMA TRABAJADOR -->
+  <!-- STEP 4: VALIDACIÓN -->
   <div class="fstep" id="fs4">
-    <div class="card">
-      <div class="ct">Firma del trabajador</div>
-      <p style="font-size:13px;color:var(--mu);margin-bottom:12px">Dibuja tu firma con el dedo o el ratón.</p>
-      <div class="cw"><div class="ctb"><span class="clbl" id="sig1-name">Trabajador</span><button style="background:none;border:none;color:var(--mu);font-size:12px;padding:4px 8px;cursor:pointer;font-family:var(--mono)" onclick="clearSig('sig1')">✕ Borrar</button></div><canvas id="sig1" height="180"></canvas></div>
-    </div>
-    <div class="brow"><button class="btn btn-o" onclick="goStep(3)">← Atrás</button><button class="btn btn-f" onclick="goStep(5)">Enviar al responsable →</button></div>
-  </div>
-
-  <!-- STEP 5: VALIDACIÓN -->
-  <div class="fstep" id="fs5">
     <div class="card"><div class="ct">Resumen del albarán</div><div id="recap-wrap"></div></div>
     <div class="card">
       <div class="ct">Validación — responsable técnico</div>
@@ -528,11 +526,11 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       <div class="cw"><div class="ctb"><span class="clbl">Responsable técnico</span><button style="background:none;border:none;color:var(--mu);font-size:12px;padding:4px 8px;cursor:pointer;font-family:var(--mono)" onclick="clearSig('sig2')">✕ Borrar</button></div><canvas id="sig2" height="180"></canvas></div>
     </div>
     <div id="val-sm" class="sm"></div>
-    <div class="brow"><button class="btn btn-o" onclick="goStep(4)">← Atrás</button><button class="btn btn-f" id="btn-val" onclick="validar()">Validar y cerrar albarán ✓</button></div>
+    <div class="brow"><button class="btn btn-o" onclick="goStep(3)">← Atrás</button><button class="btn btn-f" id="btn-val" onclick="validar()">Validar y cerrar albarán ✓</button></div>
   </div>
 
-  <!-- STEP 6: LISTO -->
-  <div class="fstep" id="fs6">
+  <!-- STEP 5: LISTO -->
+  <div class="fstep" id="fs5">
     <div class="card">
       <div class="sw"><div class="si-ok">✓</div><div class="stl">Albarán <em style="font-style:italic;color:var(--ac)">cerrado</em></div><div class="sref" id="p-ref">—</div></div>
       <div id="recap-final"></div>
@@ -1653,7 +1651,8 @@ async function validar(){
   const tot=getTotals();
   const total=calcTotal();
   const fechas=jornadas.map(j=>j.fecha).filter(Boolean).sort();
-  const fechaLabel=fechas.length>1?fechas[0]+' / '+fechas[fechas.length-1]:(fechas[0]||'');
+  const fechaManual=document.getElementById('fecha_albaran')?.value||'';
+  const fechaLabel=fechas.length>1?fechas[0]+' / '+fechas[fechas.length-1]:(fechas[0]||fechaManual||'');
   const id='PT-'+Date.now().toString().slice(-7);
   const parte={
     id,fecha:fechaLabel,fechas,estado,
@@ -1700,7 +1699,7 @@ async function validar(){
     savePartesLocal(partesCache);
     buildRecap('recap-final');
     document.getElementById('p-ref').textContent = id+' · '+new Date().toLocaleString('es-ES')+' · ✅ Guardado y compartido';
-    goStep(6);
+    goStep(5);
   } catch(e) {
     if(btn){btn.disabled=false;btn.textContent='Validar y cerrar albarán ✓';}
     showSM('val-sm','er','❌ Error: '+e.message+'. Verifica la configuración de Supabase.');
@@ -2336,6 +2335,7 @@ function descartarParte(){
 function resetForm(){
   ['trabajador','area','trabajos','materiales','permiso','responsable','pin',
    'expediente','otros','centro_coste','seccion','numero_albaran','oferta','concepto_alb'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const fa=document.getElementById('fecha_albaran');if(fa)fa.value=new Date().toISOString().split('T')[0];
   const scs=document.getElementById('sc-sel');if(scs)scs.value='';
   const rsp=document.getElementById('resp-sel');if(rsp)rsp.value='';
   const est=document.getElementById('parte-estado');if(est)est.value='';
@@ -2398,11 +2398,10 @@ function actualizarVistaCoste(){
 function goStep(n){
   document.querySelectorAll('.fstep').forEach(s=>s.classList.remove('active'));
   document.getElementById('fs'+n)?.classList.add('active');
-  for(let i=1;i<=6;i++){const e=document.getElementById('si'+i);if(!e)continue;e.className='si';if(i<n)e.classList.add('dn');else if(i===n)e.classList.add('on');}
-  if(n===2){actualizarVistaCoste();if(selectedScId&&!lineasCoste.length)onScSel(selectedScId);renderLineasCoste();}
+  for(let i=1;i<=5;i++){const e=document.getElementById('si'+i);if(!e)continue;e.className='si';if(i<n)e.classList.add('dn');else if(i===n)e.classList.add('on');}
+  if(n===2){actualizarVistaCoste();if(selectedScId&&!lineasCoste.length)onScSel(selectedScId);renderLineasCoste();requestAnimationFrame(()=>{reinitCanvas('sig1');const s=document.getElementById('sig1-name');if(s)s.textContent=document.getElementById('trabajador')?.value||'Trabajador';});}
   if(n===3){populateScDDs();}
-  if(n===4){const s=document.getElementById('sig1-name');if(s)s.textContent=document.getElementById('trabajador')?.value||'Trabajador';requestAnimationFrame(()=>reinitCanvas('sig1'));}
-  if(n===5){populateRespDD();buildRecap('recap-wrap');requestAnimationFrame(()=>reinitCanvas('sig2'));}
+  if(n===4){populateRespDD();buildRecap('recap-wrap');requestAnimationFrame(()=>reinitCanvas('sig2'));}
   window.scrollTo(0,0);
 }
 
