@@ -870,11 +870,11 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 </div>
 
-<!-- MODAL IA — CREAR PARTE DESDE DOCUMENTO -->
+<!-- MODAL IA — CREAR ALBARÁN DESDE DOCUMENTO -->
 <div class="mbg" id="modal-ia">
   <div class="modal" style="max-width:540px">
     <div class="mtl" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">✨ Crear albarán desde documento</div>
-    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF de un albarán manuscrito, albarán o cualquier documento. La IA leerá el contenido y rellenará el formulario automáticamente.</p>
+    <p style="font-size:13.5px;color:var(--mu);margin-bottom:16px">Sube una foto o PDF. Si el PDF tiene varias páginas, la IA crea un albarán por cada una automáticamente.</p>
     <div id="ia-upload-area" onclick="document.getElementById('ia-file-input').click()"
       style="border:2px dashed var(--bors);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)"
       ondragover="event.preventDefault();this.style.borderColor='#7C3AED'"
@@ -882,29 +882,15 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
       ondrop="event.preventDefault();this.style.borderColor='';handleIADrop(event)">
       <div style="font-size:36px;margin-bottom:8px">📄</div>
       <div style="font-size:14px;font-weight:500;color:var(--tx);margin-bottom:4px">Toca para seleccionar o arrastra aquí</div>
-      <div style="font-size:12px;color:var(--fa)">PDF, JPG, PNG — varios archivos a la vez → crea un albarán por cada uno</div>
+      <div style="font-size:12px;color:var(--fa)">PDF (todas las páginas), JPG, PNG</div>
     </div>
     <input type="file" id="ia-file-input" accept="image/*,.pdf" multiple style="display:none" onchange="handleIAFiles(this)"/>
-    <div id="ia-pdf-pages" style="display:none;margin-top:10px;background:var(--acl);border-radius:var(--rs);padding:12px 14px">
-      <label style="font-size:13px;font-weight:500;color:var(--act)">📄 ¿Cuántos albaranes contiene el PDF?</label>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
-        <input type="number" id="ia-num-paginas" min="1" max="20" value="1"
-          style="width:80px;padding:8px;border:1px solid var(--bor);border-radius:var(--rs);font-size:16px;font-family:var(--mono);text-align:center"/>
-        <span style="font-size:13px;color:var(--mu)">albarán(es) — uno por página</span>
-      </div>
-    </div>
-    <div id="ia-preview" style="display:none;margin-top:12px">
-      <div style="background:var(--bg);border-radius:var(--rs);padding:10px 14px;display:flex;align-items:center;gap:10px">
-        <span style="font-size:22px" id="ia-preview-icon">📄</span>
-        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="ia-preview-name"></div><div style="font-size:11px;color:var(--fa)" id="ia-preview-size"></div></div>
-        <button onclick="resetIAModal()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:16px">✕</button>
-      </div>
-    </div>
+    <div id="ia-preview" style="display:none;margin-top:12px"></div>
     <div id="ia-result" style="display:none;margin-top:12px;background:var(--acl);border:1px solid #B8D4B8;border-radius:var(--rs);padding:12px 14px;font-size:13px;color:var(--act);max-height:180px;overflow-y:auto"></div>
     <div id="ia-sm" class="sm" style="margin-top:10px"></div>
     <div class="brow" style="margin-top:16px">
       <button class="btn btn-o" onclick="cerrarModal('modal-ia')">Cancelar</button>
-      <button class="btn btn-f" id="ia-btn-analizar" onclick="analizarDocumento()" disabled style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none;opacity:.5">✨ Analizar y rellenar parte</button>
+      <button class="btn btn-f" id="ia-btn-analizar" onclick="analizarDocumento()" disabled style="background:linear-gradient(135deg,#7C3AED,#4F46E5);border:none;opacity:.5">✨ Analizar y crear albaranes</button>
     </div>
   </div>
 </div>
@@ -2571,11 +2557,11 @@ function processIAFile(file){
 }
 
 
+// ══════════════════════════════════════════════════════════════
+//  ANALIZAR DOCUMENTO — FLUJO AUTOMÁTICO COMPLETO
+// ══════════════════════════════════════════════════════════════
 async function analizarDocumento(){
-  if(!iaFiles || !iaFiles.length){
-    alert('Selecciona al menos un documento primero.');
-    return;
-  }
+  if(!iaFiles||!iaFiles.length){ alert('Selecciona al menos un documento.'); return; }
   const btn=document.getElementById('ia-btn-analizar');
   if(btn){btn.disabled=true;btn.style.opacity='.6';btn.textContent='⏳ Procesando...';}
 
@@ -2583,149 +2569,124 @@ async function analizarDocumento(){
 
   for(let fi=0;fi<iaFiles.length;fi++){
     const archivo=iaFiles[fi];
-    iaFileData=archivo.data; iaFileType=archivo.type; iaFileName=archivo.name;
 
     if(archivo.type==='application/pdf'){
-      showSM('ia-sm','ok','📄 Procesando PDF...');
+      showSM('ia-sm','ok','📄 Cargando PDF y extrayendo páginas...');
       try{
-        // Get manual page count
-        const manualN=parseInt(document.getElementById('ia-num-paginas')?.value||'1')||1;
-
-        // Load PDF once and extract ALL pages as images
-        showSM('ia-sm','ok','📄 Cargando PDF y extrayendo páginas...');
-        const paginas = await pdfAllPagesToImages(archivo.data, manualN);
-        const nPag = paginas.length;
-        showSM('ia-sm','ok','📄 '+nPag+' página(s) extraídas — analizando con IA...');
-
-        for(let p=0; p<nPag; p++){
-          showSM('ia-sm','ok','🤖 Analizando albarán '+(p+1)+'/'+nPag+'...');
+        const paginas=await pdfAllPagesToImages(archivo.data);
+        showSM('ia-sm','ok','📄 '+paginas.length+' página(s) detectadas — analizando...');
+        for(let p=0;p<paginas.length;p++){
+          showSM('ia-sm','ok','🤖 Analizando albarán '+(p+1)+' de '+paginas.length+'...');
           try{
-            const res=await _analizarUno(paginas[p], 'image/jpeg');
-            if(res) todosResultados.push({
-              ...res,
-              _archivo:archivo.name+(nPag>1?' (pág.'+(p+1)+')':''),
-              _imgBase64:'data:image/jpeg;base64,'+paginas[p]
-            });
-          }catch(e){ console.warn('Error analizando pág '+(p+1)+':',e.message); }
-          if(p<nPag-1) await new Promise(r=>setTimeout(r,2000));
+            const res=await _analizarUno(paginas[p],'image/jpeg');
+            if(res) todosResultados.push({...res,_archivo:archivo.name+(paginas.length>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]});
+          }catch(e){console.warn('Error pág '+(p+1),e.message);}
+          if(p<paginas.length-1) await new Promise(r=>setTimeout(r,2000));
         }
-      }catch(e){
-        showSM('ia-sm','er','❌ Error procesando PDF: '+e.message);
-      }
+      }catch(e){ showSM('ia-sm','er','❌ Error en PDF: '+e.message); }
     } else {
-      // Image file — analyze directly
-      showSM('ia-sm','ok','Analizando '+(fi+1)+'/'+iaFiles.length+': '+archivo.name+'...');
+      showSM('ia-sm','ok','🤖 Analizando imagen '+(fi+1)+'/'+iaFiles.length+'...');
       try{
-        const res=await _analizarUno(archivo.data, archivo.type);
-        if(res) todosResultados.push({
-          ...res,
-          _archivo:archivo.name,
-          _imgBase64:'data:'+archivo.type+';base64,'+archivo.data
-        });
-      }catch(e){ console.warn('Error en',archivo.name,':',e.message); }
+        const res=await _analizarUno(archivo.data,archivo.type);
+        if(res) todosResultados.push({...res,_archivo:archivo.name,_imgBase64:'data:'+archivo.type+';base64,'+archivo.data});
+      }catch(e){console.warn('Error imagen:',e.message);}
+      if(fi<iaFiles.length-1) await new Promise(r=>setTimeout(r,2000));
     }
-
-    if(fi<iaFiles.length-1) await new Promise(r=>setTimeout(r,1500));
   }
 
-  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y rellenar parte';}
+  if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y crear albaranes';}
 
-  if(!todosResultados.length){ showSM('ia-sm','er','No se pudo extraer datos de ningún documento.'); return; }
+  if(!todosResultados.length){ showSM('ia-sm','er','❌ No se pudo extraer datos. Prueba con una imagen más clara.'); return; }
 
+  // Single result → fill form manually
   if(todosResultados.length===1){
     cerrarModal('modal-ia');
-    // Store document image for viewing later (page image from IA analysis)
-    if(todosResultados[0]._imgBase64){
-      window._pendingIAImage = { dataUrl: todosResultados[0]._imgBase64 };
-    } else if(iaFiles.length===1 && iaFileData){
-      window._pendingIAImage = { data: iaFileData, type: iaFileType };
-    }
+    if(todosResultados[0]._imgBase64) window._pendingIAImage={dataUrl:todosResultados[0]._imgBase64};
     aplicarDatosIA(todosResultados[0]);
     return;
   }
 
-  // Multiple results — show selection modal with option to save all
-  window._iaResultados=todosResultados;
+  // Multiple results → save all directly to Supabase
   cerrarModal('modal-ia');
-  const modal=document.createElement('div');modal.className='mbg open';modal.id='modal-multi-ia';
-  let mhtml='<div class="modal" style="max-width:620px">'
-    +'<div class="mtl">✨ '+todosResultados.length+' albaranes detectados</div>'
-    +'<p style="font-size:13px;color:var(--mu);margin-bottom:6px">Se han detectado <strong>'+todosResultados.length+' albaranes</strong>. Puedes guardarlos todos de golpe en Supabase o revisar cada uno antes de guardarlo.</p>'
-    +'<div style="background:var(--acl);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px">'
-    +'<button class="btn btn-f" style="width:100%" onclick="guardarTodosIAPartes()">💾 Guardar todos los albaranes automáticamente</button></div>';
-  todosResultados.forEach((r,i)=>{
-    mhtml+='<div style="background:var(--bg);border-radius:var(--rs);padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-      +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">'+(r.proveedor_nombre||'Sin proveedor')+' · '+(r.fecha||'Sin fecha')+'</div>'
-      +'<div style="font-size:12px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(r._archivo||'')+(r.trabajos?' · '+r.trabajos.slice(0,40):'')+'</div></div>'
-      +'<button class="btn btn-o btn-sm" style="white-space:nowrap" onclick="window._pendingIAImage={dataUrl:window._iaResultados['+i+']._imgBase64||\'\'};aplicarDatosIA(window._iaResultados['+i+']);document.getElementById(\'modal-multi-ia\').remove()">✏ Revisar</button></div>';
-  });
-  mhtml+='<div class="brow" style="margin-top:8px"><button class="btn btn-o" onclick="document.getElementById(\'modal-multi-ia\').remove()">Cerrar</button></div></div>';
-  modal.innerHTML=mhtml;
-  document.body.appendChild(modal);
+  showSM('ia-sm','ok','💾 Guardando '+todosResultados.length+' albaranes...');
+  await guardarResultadosIA(todosResultados);
+}
+
+// Guardar array de resultados IA directamente en Supabase
+async function guardarResultadosIA(resultados){
+  function _pc(v){const s=String(v||0).replace(/[€$£\s]/g,'').replace(/\.(?=\d{3}[,])/g,'').replace(',','.');return parseFloat(s)||0;}
+
+  let guardados=0;
+  for(let i=0;i<resultados.length;i++){
+    const d=resultados[i];
+    try{
+      const id='GF-'+Date.now().toString().slice(-7)+'-'+(i<10?'0'+i:i);
+
+      // Match proveedor with database
+      const term=(d.subcontrata_nombre||'').toLowerCase();
+      let scId='', scNombre=d.subcontrata_nombre||'';
+      if(term){
+        // Try exact match first in PROVEEDORES_GF
+        let prov=typeof PROVEEDORES_GF!=='undefined'?PROVEEDORES_GF.find(p=>p.nombre.toLowerCase()===term):null;
+        // Then partial match
+        if(!prov && typeof PROVEEDORES_GF!=='undefined') prov=PROVEEDORES_GF.find(p=>p.nombre.toLowerCase().includes(term)||term.includes(p.nombre.toLowerCase().split(' ')[0]));
+        if(prov){scId=prov.cuenta;scNombre=prov.nombre;}
+        // Also check registered subcontratas
+        const sc=subcontratas.find(s=>s.nombre.toLowerCase().includes(term)||term.includes(s.nombre.toLowerCase()));
+        if(sc){scId=sc.id;scNombre=sc.nombre;}
+      }
+
+      // Match expediente with database
+      let expFull=d.expediente||'';
+      if(expFull && typeof EXPEDIENTES_GF!=='undefined'){
+        const eterm=expFull.toLowerCase();
+        const match=EXPEDIENTES_GF.find(e=>e.toLowerCase().includes(eterm)||eterm.includes(e.toLowerCase().split(' ')[0]));
+        if(match) expFull=match;
+      }
+
+      // Match centro coste with database
+      let ccCode=d.centro_coste||'', seccion=d.seccion||'';
+      if(ccCode && typeof CENTROS_COSTE_GF!=='undefined'){
+        const ccMatch=CENTROS_COSTE_GF.find(c=>c.codigo.toLowerCase().includes(ccCode.toLowerCase())||ccCode.toLowerCase().includes(c.codigo.toLowerCase()));
+        if(ccMatch){ccCode=ccMatch.codigo;if(!seccion)seccion=ccMatch.seccion;}
+      }
+
+      // Build lineas
+      const lineas=(d.lineas||[]).map(l=>({...l,cantidad:Number(l.cantidad)||0,precio:_pc(l.precio),descuento:Number(l.descuento)||0,subtotal:(Number(l.cantidad)||0)*_pc(l.precio)*(1-(Number(l.descuento)||0)/100)}));
+      const total=lineas.reduce((s,l)=>s+(l.subtotal||0),0)||_pc(d.coste_total);
+
+      const parte={
+        id,fecha:d.fecha||new Date().toISOString().split('T')[0],
+        subcontrata_id:scId,subcontrata_nombre:scNombre,
+        numero_albaran:d.numero_albaran||'',oferta:d.oferta||'',concepto_alb:d.concepto_alb||d.trabajos?.slice(0,60)||'',
+        trabajador:d.trabajador||'',area:d.area||'',
+        jornadas:JSON.stringify([{fecha:d.fecha||'',h_normal:Number(d.h_normal)||0,h_extra:Number(d.h_extra)||0,h_noct:Number(d.h_noct)||0}]),
+        h_normal:Number(d.h_normal)||0,h_extra:Number(d.h_extra)||0,h_noct:Number(d.h_noct)||0,
+        lineas_coste:JSON.stringify(lineas),
+        trabajos:d.trabajos||'',materiales:d.materiales||'',permiso:d.permiso||'',
+        naturaleza:d.naturaleza||'',recurso:d.recurso||'',
+        expediente:expFull,otros:d.otros||'',centro_coste:ccCode,seccion:seccion,
+        responsable:'',responsable_id:'',responsable_puesto:'',responsable_email:'',
+        coste:total,estado:'Pendiente',timestamp:new Date().toISOString(),
+        fechas:JSON.stringify([d.fecha||''])
+      };
+      await sbUpsert('partes',parte);
+      if(d._imgBase64) guardarImagenAlbaran(parte.id,d._imgBase64);
+      guardados++;
+    }catch(e){console.error('Error guardando albarán '+i+':',e.message);}
+    if(i<resultados.length-1) await new Promise(r=>setTimeout(r,300));
+  }
+
+  await syncAll(false);
+  alert('✅ '+guardados+' albarán(es) creados y guardados en estado Pendiente.\nPuedes editarlos desde el historial para validarlos.');
+  showPage('historial');
 }
 
 async function guardarTodosIAPartes(){
-  const resultados=window._iaResultados||[];
-  if(!resultados.length) return;
-  const modalEl=document.getElementById('modal-multi-ia');
-  const btn=modalEl?.querySelector('button.btn-f');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Guardando...';}
-
-  let guardados=0, errores=0;
-  for(let i=0;i<resultados.length;i++){
-    const d=resultados[i];
-    if(btn) btn.textContent='⏳ Guardando '+(i+1)+'/'+resultados.length+'...';
-    try{
-      // Build parte object from IA data
-      const id='GF-'+Date.now().toString().slice(-7)+'-'+i;
-      const sc=subcontratas.find(s=>s.nombre.toLowerCase().includes((d.proveedor_nombre||'').toLowerCase()));
-      // Parse coste_total safely (handle "1.234,56", "1234.56€", etc.)
-      function parseCoste(v){
-        if(!v && v!==0) return 0;
-        const s=String(v).replace(/[€$£\s]/g,'').replace(/\.(?=\d{3}[,])/g,'').replace(',','.');
-        return parseFloat(s)||0;
-      }
-      const lineas=(d.lineas||[]).map(l=>({...l,
-        cantidad:Number(l.cantidad)||0,
-        precio:parseCoste(l.precio),
-        descuento:Number(l.descuento)||0,
-        subtotal:(Number(l.cantidad)||0)*parseCoste(l.precio)*(1-(Number(l.descuento)||0)/100)
-      }));
-      const lineasTotal=lineas.reduce((s,l)=>s+(Number(l.subtotal)||0),0);
-      const docTotal=parseCoste(d.coste_total);
-      // Use lineas total if available, otherwise use document total
-      const total=lineasTotal>0 ? lineasTotal : docTotal;
-      const parte={
-        id, fecha:d.fecha||new Date().toISOString().split('T')[0],
-        subcontrata_id:sc?.id||'', subcontrata_nombre:d.subcontrata_nombre||d.proveedor_nombre||'',
-        numero_albaran:d.numero_albaran||'', oferta:d.oferta||'', concepto_alb:d.concepto_alb||'',
-        trabajador:d.trabajador||'', area:d.area||'',
-        jornadas:JSON.stringify([{fecha:d.fecha||'',h_normal:Number(d.h_normal)||0,h_extra:Number(d.h_extra)||0,h_noct:Number(d.h_noct)||0}]),
-        h_normal:Number(d.h_normal)||0, h_extra:Number(d.h_extra)||0, h_noct:Number(d.h_noct)||0,
-        lineas_coste:JSON.stringify(lineas),
-        trabajos:d.trabajos||'', materiales:d.materiales||'', permiso:d.permiso||'',
-        naturaleza:d.naturaleza||'', recurso:d.recurso||'',
-        expediente:d.expediente||'', otros:d.otros||'',
-        centro_coste:d.centro_coste||'', seccion:d.seccion||'',
-        responsable:'', responsable_id:'', responsable_puesto:'', responsable_email:'',
-        coste:total, estado:'Pendiente', timestamp:new Date().toISOString(),
-        fechas:JSON.stringify([d.fecha||''])
-      };
-      await sbUpsert('partes', parte);
-      // Store document image locally (each page linked to its parte)
-      const imgToStore = resultados[i]._imgBase64 || (iaFiles[i] ? 'data:'+iaFiles[i].type+';base64,'+iaFiles[i].data : null);
-      if(imgToStore) guardarImagenAlbaran(parte.id, imgToStore);
-      guardados++;
-    }catch(e){ errores++; console.error('Error guardando albarán '+i+':',e.message); }
-    if(i<resultados.length-1) await new Promise(r=>setTimeout(r,500));
-  }
-
-  if(modalEl) modalEl.remove();
-  syncAll(false); // refresh all devices
-  const msg=guardados+' albarán(es) guardado(s) en Supabase'+(errores?' · '+errores+' error(es)':'')+'.\nEstado: Pendiente (sin firma de responsable).';
-  alert('✅ '+msg);
-  showPage('historial');
+  await guardarResultadosIA(window._iaResultados||[]);
+  const m=document.getElementById('modal-multi-ia');if(m)m.remove();
 }
+
 
 async function _loadPDFJS(){
   if(window.pdfjsLib) return;
