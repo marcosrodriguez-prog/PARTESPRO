@@ -2569,8 +2569,8 @@ async function analizarDocumento(){
         for(let p=0;p<paginas.length;p++){
           showSM('ia-sm','ok','🤖 Albarán '+(p+1)+'/'+paginas.length+' ...');
           try{
-            const res=await _analizarUno(paginas[p],'image/jpeg');
-            if(res) todosResultados.push({...res,_archivo:archivo.name+(paginas.length>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]});
+            const resArr=await _analizarUno(paginas[p],'image/jpeg');
+            if(resArr) resArr.forEach(r=>todosResultados.push({...r,_archivo:archivo.name+(paginas.length>1?' (pág.'+(p+1)+')':''),_imgBase64:'data:image/jpeg;base64,'+paginas[p]}));
           }catch(e){ console.error('Error pág '+(p+1)+':',e.message); }
           if(p<paginas.length-1) await new Promise(r=>setTimeout(r,2500));
         }
@@ -2578,8 +2578,8 @@ async function analizarDocumento(){
     } else {
       showSM('ia-sm','ok','🤖 Analizando imagen '+(fi+1)+'/'+iaFiles.length+'...');
       try{
-        const res=await _analizarUno(archivo.data,archivo.type);
-        if(res) todosResultados.push({...res,_archivo:archivo.name,_imgBase64:'data:'+archivo.type+';base64,'+archivo.data});
+        const resArr=await _analizarUno(archivo.data,archivo.type);
+        if(resArr) resArr.forEach(r=>todosResultados.push({...r,_archivo:archivo.name,_imgBase64:'data:'+archivo.type+';base64,'+archivo.data}));
       }catch(e){console.warn('Error imagen:',e.message);}
       if(fi<iaFiles.length-1) await new Promise(r=>setTimeout(r,2000));
     }
@@ -2681,13 +2681,25 @@ async function guardarTodosIAPartes(){
 
 async function _loadPDFJS(){
   if(window.pdfjsLib) return;
+  // Load PDF.js main library
   await new Promise((res,rej)=>{
     const s=document.createElement('script');
     s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
     s.onload=res; s.onerror=rej; document.head.appendChild(s);
   });
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc=
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  // Load worker as Blob URL to bypass CORS restrictions
+  // (direct Worker URL from cdnjs fails cross-origin in most browsers)
+  try {
+    const workerCode = await fetch('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js')
+      .then(r=>r.text());
+    const blob = new Blob([workerCode], {type:'text/javascript'});
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+    console.log('[PDF.js] Worker cargado como Blob URL');
+  } catch(e) {
+    // Fallback: no worker (main thread mode)
+    console.warn('[PDF.js] Worker fallback - modo hilo principal:', e.message);
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+  }
 }
 
 async function pdfNumPages(pdfBase64){
@@ -3016,52 +3028,66 @@ function resetIAModal(){
 async function _analizarUno(overrideData, overrideMime){
   let imageBase64 = overrideData || iaFileData;
   let imageMime   = overrideMime || iaFileType;
-  // If still PDF (no override), convert to image
   if(imageMime==='application/pdf'){
     const c=await pdfToImage(imageBase64, 1);
     imageBase64=c.base64; imageMime='image/jpeg';
   }
-  const scNombres=subcontratas.map(s=>s.nombre).join(', ')||'(ninguna)';
-  // Build expediente list with codes for matching
   const expLista=typeof EXPEDIENTES_GF!=='undefined'?EXPEDIENTES_GF.join(', '):'';
-  const provLista = typeof PROVEEDORES_GF!=='undefined'
+  const provLista=typeof PROVEEDORES_GF!=='undefined'
     ? PROVEEDORES_GF.map(p=>p.nombre).join('\n')
     : subcontratas.map(s=>s.nombre).join('\n');
-  const prompt='Analiza este documento industrial (albaran, factura, parte de trabajo).\n'
-    +'LISTA COMPLETA DE PROVEEDORES DE LA BASE DE DATOS (uno por línea):\n'+provLista+'\n\n'
+
+  const prompt='Analiza esta imagen que puede contener UNO O VARIOS albaranes, facturas o partes de trabajo.\n'
+    +'BASE DE DATOS DE PROVEEDORES (busca similitud con nombres en el documento):\n'+provLista+'\n\n'
     +'Expedientes conocidos: '+expLista+'\n\n'
-    +'INSTRUCCIONES IMPORTANTES:\n'
-    +'1) PROVEEDOR: Lee TODOS los textos del documento. Busca el nombre de la empresa que emite el documento '
-    +'(puede aparecer en el logo, cabecera, membrete, pie de página, razón social, o cualquier parte). '
-    +'Compara ese nombre con CADA ENTRADA de la lista de proveedores. '
-    +'Usa distancia de similitud: ignora mayúsculas, acentos, SL/SA/SLU al final. '
-    +'Devuelve el nombre EXACTO de la lista si la similitud es >60%, si no el nombre del documento.\n'
-    +'2) NUMERO DE ALBARAN: busca "Albaran nº", "Nº Albaran", "Alb.", "Factura nº", "Ref.", "Documento nº" + numero.\n'
-    +'3) OFERTA/PEDIDO: busca "Oferta", "Pedido", "PO", "OC", "Orden" + numero.\n'
-    +'4) CONCEPTO: resumen de una línea del trabajo o material principal del documento.\n'
-    +'5) COSTE TOTAL: extrae el importe TOTAL final del documento (con IVA si aparece). '
-    +'Solo el numero, sin simbolos. Si hay varios totales usa el mayor (total con IVA).\n'
-    +'6) LINEAS DE DETALLE: cada linea con concepto, unidad, cantidad, precio unitario, % descuento (0 si no hay).\n'
-    +'7) SELLOS MANUSCRITOS: Gasto/Inversion, Expediente (busca en lista), C.Coste, Seccion, Repuesto/M.O./Medios.\n\n'
-    +'Devuelve SOLO JSON valido sin texto ni markdown:\n'
-    +'{"subcontrata_nombre":"nombre EXACTO del proveedor de la lista o del documento","trabajador":"","area":"",'
-    +'"fecha":"YYYY-MM-DD","numero_albaran":"","oferta":"","concepto_alb":"",'
-    +'"h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripcion de los trabajos","materiales":"",'
-    +'"permiso":"","expediente":"","otros":"","centro_coste":"","seccion":"",'
-    +'"naturaleza":"Gasto o Inversion (vacio si no)","recurso":"Repuesto o Mano de obra o Medios (vacio si no)",'
-    +'"coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}.\n'
-    +'REGLA coste_total: es un numero decimal, SIN simbolos de moneda ni separadores de miles con punto. '
-    +'Si el total es 1.234,56€ escribe 1234.56. '
-    +'REGLA recurso: EXACTAMENTE Repuesto, Mano de obra, o Medios.';
-  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+    +'IMPORTANTE: Si la imagen contiene VARIOS documentos o albaranes separados, extrae TODOS.\n'
+    +'Devuelve un array JSON con UN objeto por cada albarán/documento encontrado.\n'
+    +'Si solo hay uno, devuelve un array con un solo elemento.\n\n'
+    +'Formato de cada elemento:\n'
+    +'{"subcontrata_nombre":"nombre exacto del proveedor de la lista o del documento","trabajador":"","area":"","fecha":"YYYY-MM-DD",'
+    +'"numero_albaran":"número de albarán o factura","oferta":"número oferta/pedido","concepto_alb":"concepto en una línea",'
+    +'"h_normal":0,"h_extra":0,"h_noct":0,"trabajos":"descripción de los trabajos","materiales":"","permiso":"",'
+    +'"expediente":"código de la lista si coincide","otros":"","centro_coste":"del sello manuscrito","seccion":"del sello",'
+    +'"naturaleza":"Gasto o Inversion del sello (vacío si no)","recurso":"Repuesto o Mano de obra o Medios del sello (vacío si no)",'
+    +'"coste_total":0,"lineas":[{"concepto":"","unidad":"u","cantidad":0,"precio":0,"descuento":0}],"notas":""}\n\n'
+    +'REGLAS:\n'
+    +'- coste_total es número decimal sin símbolo de moneda (1234.56 no 1.234,56€)\n'
+    +'- recurso: EXACTAMENTE Repuesto, Mano de obra, o Medios\n'
+    +'- Si un albarán no tiene algún campo, usa "" o 0\n'
+    +'- Devuelve SOLO el array JSON, sin texto adicional ni markdown';
+
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
     headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
-    body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:2000,temperature:0.1,
-      messages:[{role:'user',content:[{type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},{type:'text',text:prompt}]}]})});
-  if(!resp.ok){const err=await resp.json().catch(()=>({}));throw new Error(err?.error?.message||'Error '+resp.status+' de Groq');}
+    body:JSON.stringify({
+      model:'meta-llama/llama-4-scout-17b-16e-instruct',
+      max_tokens:3000, temperature:0.1,
+      messages:[{role:'user',content:[
+        {type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},
+        {type:'text',text:prompt}
+      ]}]
+    })
+  });
+  if(!resp.ok){
+    const err=await resp.json().catch(()=>({}));
+    throw new Error(err?.error?.message||'Error '+resp.status+' de Groq');
+  }
   const data=await resp.json();
   const text=data.choices?.[0]?.message?.content||'';
   const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-  try{return JSON.parse(clean);}catch(e){const m=text.match(/\{[\s\S]*\}/);return m?JSON.parse(m[0]):null;}
+
+  // Try to parse as array first, then as single object
+  try{
+    const parsed=JSON.parse(clean);
+    if(Array.isArray(parsed)) return parsed;
+    return [parsed]; // wrap single object in array
+  }catch(e){
+    const arrMatch=clean.match(/\[[\s\S]*\]/);
+    if(arrMatch){const a=JSON.parse(arrMatch[0]);return Array.isArray(a)?a:[a];}
+    const objMatch=clean.match(/\{[\s\S]*\}/);
+    if(objMatch) return [JSON.parse(objMatch[0])];
+    return null;
+  }
 }
 
 // Sync automático cuando el usuario vuelve a la app (desde otra app o pantalla bloqueada)
