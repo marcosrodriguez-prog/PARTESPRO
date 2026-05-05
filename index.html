@@ -720,124 +720,159 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
   </div>
 </div>
 
-<!-- MODAL EDITAR ALBARÁN -->
-<div class="mbg" id="modal-ep">
-  <div class="modal" style="max-width:700px;max-height:92vh;overflow-y:auto">
-    <div class="mtl">Editar albarán <span id="mep-id" style="font-family:var(--mono);font-size:14px;color:var(--mu)"></span></div>
+<!-- MODAL EDITAR ALBARÁN — Vista dividida estilo DocuWare -->
+<div class="mbg" id="modal-ep" style="padding:0;align-items:stretch">
+  <div style="width:100%;height:100vh;display:flex;flex-direction:column;background:var(--sur)">
 
-    <!-- Document image preview (collapsible) -->
-    <div id="mep-doc-preview" style="display:none;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:500;color:var(--mu)">📄 Documento original</span>
-        <button id="mep-doc-toggle" onclick="toggleDocPreview()" style="font-size:11px;color:var(--act);background:none;border:none;cursor:pointer;padding:2px 8px;border-radius:var(--rs);background:var(--acl)">▲ Ocultar</button>
+    <!-- Header bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--bor);flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:15px;font-weight:600">Editar albarán</span>
+        <span id="mep-id" style="font-family:var(--mono);font-size:12px;color:var(--mu);background:var(--bg);border:1px solid var(--bor);padding:2px 8px;border-radius:20px"></span>
+        <span id="mep-learn-badge" style="display:none;font-size:11px;background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:20px;border:1px solid #bbf7d0">✓ Aprendiendo de este proveedor</span>
       </div>
-      <div id="mep-doc-img-wrap" style="max-height:340px;overflow-y:auto;border-radius:var(--rs);border:1px solid var(--bor)">
-        <img id="mep-doc-img" src="" alt="Documento" style="width:100%;display:block;border-radius:var(--rs)"/>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-o btn-sm" onclick="cerrarModal('modal-ep')">Cancelar</button>
+        <button class="btn btn-f btn-sm" onclick="guardarEdicion()" style="background:var(--ac);border-color:var(--ac)">💾 Guardar cambios</button>
       </div>
     </div>
 
-    <div class="card"><div class="ct">Proveedor</div>
-      <div class="field"><label>Empresa proveedora</label>
-        <div class="combo-wrap">
-          <input type="text" class="combo-input" id="mep-sc-inp" placeholder="Buscar proveedor..." autocomplete="off"
-            oninput="filtrarProveedoresEdit(this.value)" onfocus="filtrarProveedoresEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-sc'),200)"/>
-          <input type="hidden" id="mep-sc-hid"/>
-          <div class="combo-list" id="combo-mep-sc"></div>
-        </div>
-      </div>
-      <div class="fg fg3">
-        <div class="field"><label>Nº albarán</label><input type="text" id="mep-num-alb" placeholder="Ej. ALB-2024-001"/></div>
-        <div class="field"><label>Nº oferta / pedido</label><input type="text" id="mep-oferta" placeholder="Opcional"/></div>
-        <div class="field"><label>Concepto</label><input type="text" id="mep-concepto-alb" placeholder="Breve descripción"/></div>
-      </div>
-    </div>
+    <!-- Split content -->
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0">
 
-    <div class="card"><div class="ct">Identificación</div>
-      <div class="fg fg2">
-        <div class="field"><label>Trabajador</label><input type="text" id="mep-trab" placeholder="Nombre y apellidos"/></div>
-        <div class="field"><label>Área / Zona</label><input type="text" id="mep-area" placeholder="Ej. Reactor B..."/></div>
-      </div>
-    </div>
-
-    <div class="card"><div class="ct">Jornadas</div>
-      <div id="mep-jornadas"></div>
-      <button class="btn btn-o btn-sm" onclick="addJornadaEdit()" style="margin-top:8px">+ Añadir fecha</button>
-    </div>
-
-    <div class="card"><div class="ct">Trabajos</div>
-      <div class="field"><label>Descripción</label><textarea id="mep-trab2" rows="3" placeholder="Describir las tareas..."></textarea></div>
-      <div class="fg fg2">
-        <div class="field"><label>Materiales / Equipos</label><input type="text" id="mep-mat" placeholder="Opcional"/></div>
-        <div class="field"><label>Nº permiso</label><input type="text" id="mep-per" placeholder="Opcional"/></div>
-      </div>
-    </div>
-
-    <div class="card"><div class="ct">Naturaleza del gasto</div>
-      <div class="pills" id="mep-pg-nat">
-        <div class="pill" onclick="pickEditPill('mep-pg-nat',this)">Gasto</div>
-        <div class="pill" onclick="pickEditPill('mep-pg-nat',this)">Inversión</div>
-      </div>
-    </div>
-    <div class="card"><div class="ct">Tipo de recurso</div>
-      <div class="pills" id="mep-pg-rec">
-        <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Repuesto</div>
-        <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Mano de obra</div>
-        <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Medios</div>
-      </div>
-    </div>
-
-    <div class="card"><div class="ct">Imputación contable</div>
-      <div class="fg fg2">
-        <div class="field"><label>Expediente</label>
-          <div class="combo-wrap">
-            <input type="text" class="combo-input" id="mep-exp" placeholder="Buscar expediente..." autocomplete="off"
-              oninput="filtrarExpedientesEdit(this.value)" onfocus="filtrarExpedientesEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-exp'),200)"/>
-            <div class="combo-list" id="combo-mep-exp"></div>
+      <!-- LEFT: Document viewer -->
+      <div id="mep-doc-panel" style="width:50%;border-right:1px solid var(--bor);display:flex;flex-direction:column;background:#f8f8f8;min-width:0">
+        <div style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--bor);font-size:12px;color:var(--mu);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <span>📄 Documento original</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="mepZoom(0.2)" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:13px">＋</button>
+            <button onclick="mepZoom(-0.2)" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:13px">－</button>
+            <button onclick="mepFitWidth()" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">Ajustar</button>
           </div>
         </div>
-        <div class="field"><label>Otros</label><input type="text" id="mep-otros" placeholder="Referencia adicional"/></div>
+        <div id="mep-doc-scroll" style="flex:1;overflow:auto;padding:12px;text-align:center">
+          <div id="mep-no-doc" style="padding:40px 20px;color:var(--fa);font-size:13px">
+            <div style="font-size:36px;margin-bottom:8px">📄</div>
+            Sin documento adjunto
+          </div>
+          <img id="mep-doc-img" src="" alt="Documento" style="display:none;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:width .2s" onclick="mepToggleFullDoc()"/>
+        </div>
       </div>
-      <div class="fg fg2">
-        <div class="field"><label>Centro de coste</label>
-          <div class="combo-wrap">
-            <input type="text" class="combo-input" id="mep-cc" placeholder="Buscar centro..." autocomplete="off"
-              oninput="filtrarCentrosEdit(this.value)" onfocus="filtrarCentrosEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-cc'),200)"/>
-            <div class="combo-list" id="combo-mep-cc"></div>
+
+      <!-- RIGHT: Form fields -->
+      <div style="width:50%;overflow-y:auto;padding:14px;min-width:0">
+
+        <!-- IA field proposals banner -->
+        <div id="mep-ia-banner" style="display:none;background:#F5F3FF;border:1px solid #C4B5FD;border-radius:var(--rs);padding:10px 14px;margin-bottom:12px;font-size:12px;color:#4F46E5">
+          ✨ <strong>Campos propuestos por IA.</strong> Revisa y corrige. Al guardar, el sistema aprende para futuros albaranes de este proveedor.
+        </div>
+
+        <div class="card"><div class="ct">Proveedor</div>
+          <div class="field"><label>Empresa proveedora</label>
+            <div class="combo-wrap">
+              <input type="text" class="combo-input" id="mep-sc-inp" placeholder="Buscar proveedor..." autocomplete="off"
+                oninput="filtrarProveedoresEdit(this.value)" onfocus="filtrarProveedoresEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-sc'),200)"/>
+              <input type="hidden" id="mep-sc-hid"/>
+              <div class="combo-list" id="combo-mep-sc"></div>
+            </div>
+          </div>
+          <div class="fg fg3">
+            <div class="field"><label>Nº albarán</label><input type="text" id="mep-num-alb" placeholder="ALB-2024-001"/></div>
+            <div class="field"><label>Oferta / Pedido</label><input type="text" id="mep-oferta" placeholder="Opcional"/></div>
+            <div class="field"><label>Fecha</label><input type="date" id="mep-fecha"/></div>
           </div>
         </div>
-        <div class="field"><label>Sección</label><input type="text" id="mep-sec" placeholder="Auto al elegir centro"/></div>
-      </div>
-    </div>
 
-    <div class="card"><div class="ct" style="display:flex;align-items:center;justify-content:space-between">Conceptos de coste <button class="btn btn-o btn-sm" onclick="addLineaEditLibre()">+ Concepto</button></div>
-      <div id="mep-lineas"></div>
-    </div>
-
-    <div class="card"><div class="ct">Estado y responsable</div>
-      <div class="fg fg2">
-        <div class="field"><label>Estado</label>
-          <select id="mep-estado">
-            <option value="Pendiente">⏳ Pendiente</option>
-            <option value="Validado">✓ Validado</option>
-            <option value="En revisión">🔍 En revisión</option>
-            <option value="Rechazado">✕ Rechazado</option>
-          </select>
+        <div class="card"><div class="ct">Naturaleza del gasto</div>
+          <div class="pills" id="mep-pg-nat">
+            <div class="pill" onclick="pickEditPill('mep-pg-nat',this)">Gasto</div>
+            <div class="pill" onclick="pickEditPill('mep-pg-nat',this)">Inversión</div>
+          </div>
         </div>
-        <div class="field"><label>Responsable</label>
-          <select id="mep-resp"><option value="">— sin responsable —</option></select>
+        <div class="card"><div class="ct">Tipo de recurso</div>
+          <div class="pills" id="mep-pg-rec">
+            <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Repuesto</div>
+            <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Mano de obra</div>
+            <div class="pill" onclick="pickEditPill('mep-pg-rec',this)">Medios</div>
+          </div>
+        </div>
+
+        <div class="card"><div class="ct">Imputación contable</div>
+          <div class="fg fg2">
+            <div class="field"><label>Expediente</label>
+              <div class="combo-wrap">
+                <input type="text" class="combo-input" id="mep-exp" placeholder="Buscar expediente..." autocomplete="off"
+                  oninput="filtrarExpedientesEdit(this.value)" onfocus="filtrarExpedientesEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-exp'),200)"/>
+                <div class="combo-list" id="combo-mep-exp"></div>
+              </div>
+            </div>
+            <div class="field"><label>Otros</label><input type="text" id="mep-otros" placeholder="Referencia adicional"/></div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>Centro de coste</label>
+              <div class="combo-wrap">
+                <input type="text" class="combo-input" id="mep-cc" placeholder="Buscar centro..." autocomplete="off"
+                  oninput="filtrarCentrosEdit(this.value)" onfocus="filtrarCentrosEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-cc'),200)"/>
+                <div class="combo-list" id="combo-mep-cc"></div>
+              </div>
+            </div>
+            <div class="field"><label>Sección</label><input type="text" id="mep-sec" placeholder="Auto al elegir centro"/></div>
+          </div>
+        </div>
+
+        <div id="mep-mano-obra-block" style="display:none">
+          <div class="card"><div class="ct">Identificación del trabajador</div>
+            <div class="fg fg2">
+              <div class="field"><label>Trabajador</label><input type="text" id="mep-trab" placeholder="Nombre y apellidos"/></div>
+              <div class="field"><label>Área</label><input type="text" id="mep-area" placeholder="Zona de trabajo"/></div>
+            </div>
+          </div>
+          <div class="card"><div class="ct">Jornadas</div>
+            <div id="mep-jornadas"></div>
+            <button class="btn btn-o btn-sm" onclick="addJornadaEdit()" style="margin-top:8px">+ Añadir fecha</button>
+          </div>
+        </div>
+
+        <div class="card"><div class="ct" style="display:flex;align-items:center;justify-content:space-between">Conceptos de coste
+          <button class="btn btn-o btn-sm" onclick="addLineaEditLibre()">+ Concepto</button></div>
+          <div id="mep-lineas"></div>
+        </div>
+
+        <div class="card"><div class="ct">Trabajos realizados</div>
+          <div class="field"><label>Descripción</label><textarea id="mep-trab2" rows="3" placeholder="Describir las tareas..."></textarea></div>
+          <div class="fg fg2">
+            <div class="field"><label>Materiales</label><input type="text" id="mep-mat" placeholder="Opcional"/></div>
+            <div class="field"><label>Concepto</label><input type="text" id="mep-concepto-alb" placeholder="Breve descripción"/></div>
+          </div>
+        </div>
+
+        <div class="card"><div class="ct">Estado y responsable</div>
+          <div class="fg fg2">
+            <div class="field"><label>Estado</label>
+              <select id="mep-estado">
+                <option value="Pendiente">⏳ Pendiente</option>
+                <option value="Validado">✓ Validado</option>
+                <option value="En revisión">🔍 En revisión</option>
+                <option value="Rechazado">✕ Rechazado</option>
+              </select>
+            </div>
+            <div class="field"><label>Responsable</label>
+              <select id="mep-resp"><option value="">— sin responsable —</option></select>
+            </div>
+          </div>
+          <div class="fg fg2">
+            <div class="field"><label>PIN del responsable <span style="font-size:11px;color:var(--fa)">(obligatorio si valida)</span></label>
+              <input type="password" id="mep-pin-val" placeholder="••••" maxlength="6" inputmode="numeric"/>
+            </div>
+          </div>
+        </div>
+
+        <div id="mep-sm" class="sm" style="margin-bottom:10px"></div>
+        <div class="brow">
+          <button class="btn btn-o" onclick="cerrarModal('modal-ep')">Cancelar</button>
+          <button class="btn btn-f" onclick="guardarEdicion()">💾 Guardar cambios</button>
         </div>
       </div>
-      <div class="fg fg2">
-        <div class="field"><label>PIN del responsable <span style="font-size:11px;color:var(--fa)">(obligatorio si valida)</span></label>
-          <input type="password" id="mep-pin-val" placeholder="••••" maxlength="6" inputmode="numeric"/>
-        </div>
-      </div>
-    </div>
-
-    <div id="mep-sm" class="sm"></div>
-    <div class="brow">
-      <button class="btn btn-o" onclick="cerrarModal('modal-ep')">Cancelar</button>
-      <button class="btn btn-f" onclick="guardarEdicion()">Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -1882,83 +1917,97 @@ async function enviarCorreoManual(){
 // ══════════════════════════════════════════════════════════════
 //  AUTO-REFRESH — sincroniza datos al entrar a cada sección
 // ══════════════════════════════════════════════════════════════
+// ── Split view helpers ──────────────────────────────────────
+let _mepZoom=1.0;
+function mepZoom(delta){
+  _mepZoom=Math.max(0.3,Math.min(3,_mepZoom+delta));
+  const img=document.getElementById('mep-doc-img');
+  if(img) img.style.width=(_mepZoom*100)+'%';
+}
+function mepFitWidth(){
+  _mepZoom=1.0;
+  const img=document.getElementById('mep-doc-img');
+  if(img) img.style.width='100%';
+}
+function mepToggleFullDoc(){
+  const panel=document.getElementById('mep-doc-panel');
+  if(!panel) return;
+  if(panel.style.width==='100%'){panel.style.width='50%';}
+  else{panel.style.width='100%';}
+}
+
 function abrirEditarParte(id){
   const p=partesCache.find(x=>x.id===id);if(!p)return;
   editParteId=id;
   document.getElementById('mep-id').textContent=id;
+  _mepZoom=1.0;
 
-  // Proveedor — fill combobox
+  // Document image
+  const img=document.getElementById('mep-doc-img');
+  const noDoc=document.getElementById('mep-no-doc');
+  getAlbaranImageUrl(id).then(imgUrl=>{
+    if(imgUrl&&img){
+      img.src=imgUrl; img.style.display='block'; img.style.width='100%';
+      if(noDoc) noDoc.style.display='none';
+    } else {
+      if(img) img.style.display='none';
+      if(noDoc) noDoc.style.display='block';
+    }
+  });
+
+  // Show IA banner if albarán was created from IA
+  const banner=document.getElementById('mep-ia-banner');
+  const learnBadge=document.getElementById('mep-learn-badge');
+  const hasIA=p.documento_img||localStorage.getItem('albaran_img_'+id);
+  if(banner) banner.style.display=hasIA?'block':'none';
+  if(learnBadge&&p.subcontrata_nombre) learnBadge.style.display='inline';
+
+  // Fill proveedor
   const scNombre=p.subcontrata_nombre||p.proveedor_nombre||p.empresa||'';
-  const mepScInp=document.getElementById('mep-sc-inp'); if(mepScInp) mepScInp.value=scNombre;
-  const mepScHid=document.getElementById('mep-sc-hid'); if(mepScHid) mepScHid.value=p.subcontrata_id||p.proveedor_id||'';
+  const mepScInp=document.getElementById('mep-sc-inp');if(mepScInp)mepScInp.value=scNombre;
+  const mepScHid=document.getElementById('mep-sc-hid');if(mepScHid)mepScHid.value=p.subcontrata_id||p.proveedor_id||'';
 
   // Basic fields
-  ['mep-trab','mep-area','mep-trab2','mep-mat','mep-per','mep-exp','mep-otros','mep-cc','mep-sec','mep-num-alb','mep-oferta','mep-concepto-alb'].forEach(fid=>{
-    const fMap={
-      'mep-trab':'trabajador','mep-area':'area','mep-trab2':'trabajos','mep-mat':'materiales',
-      'mep-per':'permiso','mep-exp':'expediente','mep-otros':'otros',
-      'mep-cc':'centro_coste','mep-sec':'seccion',
-      'mep-num-alb':'numero_albaran','mep-oferta':'oferta','mep-concepto-alb':'concepto_alb'
-    };
-    const el=document.getElementById(fid); if(el) el.value=p[fMap[fid]]||'';
-  });
+  const fieldMap={
+    'mep-num-alb':'numero_albaran','mep-oferta':'oferta','mep-trab2':'trabajos',
+    'mep-mat':'materiales','mep-exp':'expediente','mep-otros':'otros',
+    'mep-cc':'centro_coste','mep-sec':'seccion','mep-trab':'trabajador',
+    'mep-area':'area','mep-concepto-alb':'concepto_alb'
+  };
+  Object.entries(fieldMap).forEach(([eid,key])=>{const e=document.getElementById(eid);if(e)e.value=p[key]||'';});
+
+  // Fecha
+  const mepFecha=document.getElementById('mep-fecha');
+  if(mepFecha) mepFecha.value=p.fecha?.split(' ')[0]||'';
 
   // Estado
-  const mepEst=document.getElementById('mep-estado');if(mepEst)mepEst.value=p.estado||'Validado';
+  const mepEst=document.getElementById('mep-estado');if(mepEst)mepEst.value=p.estado||'Pendiente';
 
-  // Naturaleza pills
+  // Pills
   const mepNat=p.naturaleza||'';
-  document.querySelectorAll('#mep-pg-nat .pill').forEach(pl=>{
-    if(pl.textContent.trim()===mepNat)pl.classList.add('on');else pl.classList.remove('on');
-  });
-
-  // Recurso pills
+  document.querySelectorAll('#mep-pg-nat .pill').forEach(pl=>{pl.classList[pl.textContent.trim()===mepNat?'add':'remove']('on');});
   const mepRec=p.recurso||'';
-  document.querySelectorAll('#mep-pg-rec .pill').forEach(pl=>{
-    if(pl.textContent.trim()===mepRec)pl.classList.add('on');else pl.classList.remove('on');
-  });
+  document.querySelectorAll('#mep-pg-rec .pill').forEach(pl=>{pl.classList[pl.textContent.trim()===mepRec?'add':'remove']('on');});
+
+  // Show/hide mano de obra block
+  const moBlock=document.getElementById('mep-mano-obra-block');
+  if(moBlock) moBlock.style.display=mepRec==='Mano de obra'?'block':'none';
 
   // Responsable
-  const mepResp=document.getElementById('mep-resp');if(mepResp)mepResp.value=p.responsable_id||p.responsable||'';
+  populateRespEditDD();
+  setTimeout(()=>{const mepRespSel=document.getElementById('mep-resp');if(mepRespSel)mepRespSel.value=p.responsable_id||'';},100);
+  const mepPin=document.getElementById('mep-pin-val');if(mepPin)mepPin.value='';
 
   // Jornadas
-  editJornadas=JSON.parse(JSON.stringify(Array.isArray(p.jornadas)&&p.jornadas.length?p.jornadas:[{fecha:p.fecha,h_entrada:'',h_salida:'',h_normal:Number(p.h_normal)||0,h_extra:Number(p.h_extra)||0,h_noct:Number(p.h_noct)||0}]));
+  editJornadas=JSON.parse(JSON.stringify(Array.isArray(p.jornadas)&&p.jornadas.length?p.jornadas:[{fecha:p.fecha?.split(' ')[0]||'',h_entrada:'',h_salida:'',h_normal:Number(p.h_normal)||0,h_extra:Number(p.h_extra)||0,h_noct:Number(p.h_noct)||0}]));
   renderJornadasEdit();
 
-  // Lineas de coste con descuento
+  // Lineas
   editLineas=JSON.parse(JSON.stringify(Array.isArray(p.lineas_coste)&&p.lineas_coste.length?p.lineas_coste:p.coste>0?[{id:'l0',concepto:'Importe',unidad:'u',precio:Number(p.coste),cantidad:1,descuento:0,subtotal:Number(p.coste)}]:[]));
   renderLineasEdit();
 
   const s=document.getElementById('mep-sm');if(s)s.style.display='none';
-  populateRespEditDD();
-  const mepRespSel=document.getElementById('mep-resp');
-  if(mepRespSel) mepRespSel.value=p.responsable_id||'';
-  const mepPin=document.getElementById('mep-pin-val');if(mepPin)mepPin.value='';
-
-  // Load document image if available
-  getAlbaranImageUrl(id).then(imgUrl=>{
-    const panel=document.getElementById('mep-doc-preview');
-    const img=document.getElementById('mep-doc-img');
-    if(imgUrl && panel && img){
-      img.src=imgUrl;
-      panel.style.display='block';
-    } else if(panel){
-      panel.style.display='none';
-    }
-  });
-
   document.getElementById('modal-ep').classList.add('open');
-}
-
-function toggleDocPreview(){
-  const wrap=document.getElementById('mep-doc-img-wrap');
-  const btn=document.getElementById('mep-doc-toggle');
-  if(!wrap||!btn)return;
-  if(wrap.style.display==='none'){
-    wrap.style.display='block'; btn.textContent='▲ Ocultar';
-  } else {
-    wrap.style.display='none'; btn.textContent='▼ Ver documento';
-  }
 }
 
 function addJornadaEdit(){editJornadas.push({fecha:new Date().toISOString().split('T')[0],h_entrada:'',h_salida:'',h_normal:0,h_extra:0,h_noct:0});renderJornadasEdit();}
@@ -2045,6 +2094,7 @@ async function guardarEdicion(){
     numero_albaran:document.getElementById('mep-num-alb')?.value||'',
     oferta:document.getElementById('mep-oferta')?.value||'',
     concepto_alb:document.getElementById('mep-concepto-alb')?.value||'',
+    fecha:document.getElementById('mep-fecha')?.value||p.fecha||'',
     trabajador:document.getElementById('mep-trab')?.value||'',
     area:document.getElementById('mep-area')?.value||'',
     estado:nuevoEstado,
@@ -2075,6 +2125,19 @@ async function guardarEdicion(){
   };
   try{
     await sbUpsert('partes',pSB);
+    // APRENDIZAJE: guardar plantilla con los datos corregidos por el usuario
+    const provNombreAprendizaje=sc?.nombre||scNombre;
+    if(provNombreAprendizaje){
+      guardarPlantilla(provNombreAprendizaje,{
+        subcontrata_nombre:provNombreAprendizaje,
+        naturaleza:nat, recurso:rec,
+        expediente:document.getElementById('mep-exp')?.value||'',
+        centro_coste:document.getElementById('mep-cc')?.value||'',
+        seccion:document.getElementById('mep-sec')?.value||'',
+        coste_total:total,
+        lineas:editLineas.slice(0,3)
+      });
+    }
     cerrarModal('modal-ep');
     syncAll(false);
   }catch(e){ showSM('mep-sm','er','Error: '+e.message); }
@@ -3159,6 +3222,11 @@ function seleccionarCentroEdit(codigo,seccion){
 function pickEditPill(groupId,el){
   document.querySelectorAll('#'+groupId+' .pill').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
+  // Show/hide mano de obra block when recurso changes
+  if(groupId==='mep-pg-rec'){
+    const moBlock=document.getElementById('mep-mano-obra-block');
+    if(moBlock) moBlock.style.display=el.textContent.trim()==='Mano de obra'?'block':'none';
+  }
 }
 function populateRespEditDD(){
   const sel=document.getElementById('mep-resp');if(!sel)return;
