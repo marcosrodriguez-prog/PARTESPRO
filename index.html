@@ -254,6 +254,10 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
 .modal{background:var(--sur);border-radius:var(--r);padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;border:1px solid var(--bor)}
 .mtl{font-family:var(--serif);font-size:22px;margin-bottom:16px}
 
+/* ── ZONA SELECTOR (DocuWare-style) ─────────────────────── */
+.btn-zona{background:none;border:none;cursor:pointer;font-size:12px;opacity:.5;padding:0 2px;vertical-align:middle;transition:opacity .15s}
+.btn-zona:hover{opacity:1}
+.zona-seleccionando .btn-zona{opacity:1;color:#7C3AED}
 /* ── SEARCHABLE COMBOBOX ─────────────────────────────────── */
 .combo-wrap{position:relative}
 .combo-input{width:100%;padding:8px 10px;border:1px solid var(--bor);border-radius:var(--rs);
@@ -740,22 +744,35 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
     <!-- Split content -->
     <div style="display:flex;flex:1;overflow:hidden;min-height:0">
 
-      <!-- LEFT: Document viewer -->
-      <div id="mep-doc-panel" style="width:50%;border-right:1px solid var(--bor);display:flex;flex-direction:column;background:#f8f8f8;min-width:0">
-        <div style="padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--bor);font-size:12px;color:var(--mu);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-          <span>📄 Documento original</span>
-          <div style="display:flex;gap:6px">
-            <button onclick="mepZoom(0.2)" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:13px">＋</button>
-            <button onclick="mepZoom(-0.2)" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:13px">－</button>
+      <!-- LEFT: Document viewer with zone selection -->
+      <div id="mep-doc-panel" style="width:50%;border-right:1px solid var(--bor);display:flex;flex-direction:column;background:#f0f0f0;min-width:0">
+        <div style="padding:6px 10px;background:var(--bg);border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;flex-wrap:wrap;gap:6px">
+          <div style="display:flex;gap:5px;align-items:center">
+            <button onclick="mepZoom(0.25)" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer">＋</button>
+            <button onclick="mepZoom(-0.25)" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer">－</button>
             <button onclick="mepFitWidth()" style="border:1px solid var(--bor);background:var(--bg);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">Ajustar</button>
           </div>
-        </div>
-        <div id="mep-doc-scroll" style="flex:1;overflow:auto;padding:12px;text-align:center">
-          <div id="mep-no-doc" style="padding:40px 20px;color:var(--fa);font-size:13px">
-            <div style="font-size:36px;margin-bottom:8px">📄</div>
-            Sin documento adjunto
+          <div id="mep-zona-instruccion" style="font-size:11px;color:#7C3AED;background:#F5F3FF;padding:3px 8px;border-radius:12px;border:1px solid #C4B5FD;display:none">
+            ✏️ Selecciona una zona del documento
           </div>
-          <img id="mep-doc-img" src="" alt="Documento" style="display:none;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:width .2s" onclick="mepToggleFullDoc()"/>
+          <div id="mep-zona-activa" style="font-size:11px;color:var(--mu);display:none">
+            Campo: <strong id="mep-zona-campo-nombre"></strong>
+            <button onclick="cancelarSeleccionZona()" style="margin-left:6px;border:none;background:none;cursor:pointer;color:var(--da);font-size:12px">✕</button>
+          </div>
+        </div>
+        <!-- Canvas overlay for zone selection -->
+        <div id="mep-doc-scroll" style="flex:1;overflow:auto;padding:12px;text-align:center;position:relative">
+          <div id="mep-no-doc" style="padding:40px 20px;color:var(--fa);font-size:13px">
+            <div style="font-size:36px;margin-bottom:8px">📄</div>Sin documento adjunto
+          </div>
+          <div id="mep-canvas-wrap" style="display:none;position:relative;display:inline-block">
+            <img id="mep-doc-img" src="" alt="Documento" style="display:block;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)"/>
+            <canvas id="mep-zona-canvas" style="position:absolute;top:0;left:0;cursor:crosshair;opacity:.8"></canvas>
+          </div>
+        </div>
+        <!-- Field selector bar at bottom -->
+        <div id="mep-campos-bar" style="display:none;flex-wrap:wrap;gap:5px;padding:8px 10px;background:var(--bg);border-top:1px solid var(--bor);max-height:100px;overflow-y:auto">
+          <div style="font-size:11px;color:var(--mu);width:100%;margin-bottom:4px">Toca un campo para asignar la zona:</div>
         </div>
       </div>
 
@@ -768,7 +785,7 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
         </div>
 
         <div class="card"><div class="ct">Proveedor</div>
-          <div class="field"><label>Empresa proveedora</label>
+          <div class="field"><label>Empresa proveedora <button class="btn-zona" onclick="iniciarSeleccionZona('mep-sc-inp','Proveedor')" title="Seleccionar zona en documento">📍</button></label>
             <div class="combo-wrap">
               <input type="text" class="combo-input" id="mep-sc-inp" placeholder="Buscar proveedor..." autocomplete="off"
                 oninput="filtrarProveedoresEdit(this.value)" onfocus="filtrarProveedoresEdit(this.value)" onblur="setTimeout(()=>cerrarCombo('combo-mep-sc'),200)"/>
@@ -777,9 +794,9 @@ canvas{display:block;width:100%;cursor:crosshair;touch-action:none}
             </div>
           </div>
           <div class="fg fg3">
-            <div class="field"><label>Nº albarán</label><input type="text" id="mep-num-alb" placeholder="ALB-2024-001"/></div>
-            <div class="field"><label>Oferta / Pedido</label><input type="text" id="mep-oferta" placeholder="Opcional"/></div>
-            <div class="field"><label>Fecha</label><input type="date" id="mep-fecha"/></div>
+            <div class="field"><label>Nº albarán <button class="btn-zona" onclick="iniciarSeleccionZona('mep-num-alb','Nº Albarán')" title="📍">📍</button></label><input type="text" id="mep-num-alb" placeholder="ALB-2024-001"/></div>
+            <div class="field"><label>Oferta / Pedido <button class="btn-zona" onclick="iniciarSeleccionZona('mep-oferta','Oferta')" title="📍">📍</button></label><input type="text" id="mep-oferta" placeholder="Opcional"/></div>
+            <div class="field"><label>Fecha <button class="btn-zona" onclick="iniciarSeleccionZona('mep-fecha','Fecha')" title="📍">📍</button></label><input type="date" id="mep-fecha"/></div>
           </div>
         </div>
 
@@ -1947,8 +1964,10 @@ function abrirEditarParte(id){
   const noDoc=document.getElementById('mep-no-doc');
   getAlbaranImageUrl(id).then(imgUrl=>{
     if(imgUrl&&img){
+      img.onload=()=>setTimeout(_mepSetupCanvasOnLoad,80);
       img.src=imgUrl; img.style.display='block'; img.style.width='100%';
       if(noDoc) noDoc.style.display='none';
+      const wrap=document.getElementById('mep-canvas-wrap');if(wrap)wrap.style.display='inline-block';
     } else {
       if(img) img.style.display='none';
       if(noDoc) noDoc.style.display='block';
@@ -3180,7 +3199,134 @@ async function construirPromptConPlantilla(nombreProveedor, promptBase){
 
   return promptBase + ejemploStr;
 }
-function cerrarCombo(id){ const el=document.getElementById(id); if(el) el.classList.remove('open'); }
+// ══════════════════════════════════════════════════════════════
+//  ZONA SELECTOR — DocuWare-style zone-to-field assignment
+// ══════════════════════════════════════════════════════════════
+let _zonaCampoActivo=null,_zonaSeleccionando=false,_zonaStartX=0,_zonaStartY=0;
+const _CAMPOS_ZONA=[
+  {id:'mep-sc-inp',label:'Proveedor'},{id:'mep-num-alb',label:'Nº Albarán'},
+  {id:'mep-oferta',label:'Oferta/Pedido'},{id:'mep-fecha',label:'Fecha'},
+  {id:'mep-exp',label:'Expediente'},{id:'mep-cc',label:'Centro Coste'},
+  {id:'mep-sec',label:'Sección'},{id:'mep-trab',label:'Trabajador'},
+  {id:'mep-trab2',label:'Descripción'},{id:'mep-concepto-alb',label:'Concepto'},
+];
+function iniciarSeleccionZona(campoId,campoLabel){
+  const img=document.getElementById('mep-doc-img');
+  if(!img||img.style.display==='none'){alert('Necesitas un documento adjunto para marcar zonas.');return;}
+  _zonaCampoActivo={id:campoId,label:campoLabel};
+  const instr=document.getElementById('mep-zona-instruccion');const activa=document.getElementById('mep-zona-activa');
+  const nombre=document.getElementById('mep-zona-campo-nombre');
+  if(instr)instr.style.display='block';if(activa)activa.style.display='none';if(nombre)nombre.textContent=campoLabel;
+  _setupZonaCanvas();
+}
+function cancelarSeleccionZona(){
+  _zonaCampoActivo=null;_zonaSeleccionando=false;
+  const instr=document.getElementById('mep-zona-instruccion');const activa=document.getElementById('mep-zona-activa');
+  if(instr)instr.style.display='none';if(activa)activa.style.display='none';_clearCanvas();
+}
+function _setupZonaCanvas(){
+  const img=document.getElementById('mep-doc-img');const canvas=document.getElementById('mep-zona-canvas');if(!img||!canvas)return;
+  const w=img.offsetWidth||img.naturalWidth,h=img.offsetHeight||img.naturalHeight;
+  canvas.width=w;canvas.height=h;canvas.style.width=w+'px';canvas.style.height=h+'px';
+  canvas.onmousedown=_zonaMouseDown;canvas.onmousemove=_zonaMouseMove;canvas.onmouseup=_zonaMouseUp;
+  canvas.ontouchstart=_zonaTouchStart;canvas.ontouchmove=_zonaTouchMove;canvas.ontouchend=_zonaTouchEnd;
+}
+function _imgPos(canvas,cx,cy){const r=canvas.getBoundingClientRect();return{x:(cx-r.left)*(canvas.width/r.width),y:(cy-r.top)*(canvas.height/r.height)};}
+function _zonaMouseDown(e){if(!_zonaCampoActivo)return;const p=_imgPos(this,e.clientX,e.clientY);_zonaStartX=p.x;_zonaStartY=p.y;_zonaSeleccionando=true;const i=document.getElementById('mep-zona-instruccion');const a=document.getElementById('mep-zona-activa');if(i)i.style.display='none';if(a)a.style.display='inline-flex';}
+function _zonaMouseMove(e){if(!_zonaSeleccionando)return;const p=_imgPos(this,e.clientX,e.clientY);_drawRect(this,_zonaStartX,_zonaStartY,p.x,p.y);}
+function _zonaMouseUp(e){
+  if(!_zonaSeleccionando||!_zonaCampoActivo)return;_zonaSeleccionando=false;
+  const p=_imgPos(this,e.clientX,e.clientY);
+  const r={x1:Math.min(_zonaStartX,p.x),y1:Math.min(_zonaStartY,p.y),x2:Math.max(_zonaStartX,p.x),y2:Math.max(_zonaStartY,p.y)};
+  if(r.x2-r.x1>8&&r.y2-r.y1>8) _confirmarZona(r);
+}
+function _zonaTouchStart(e){e.preventDefault();const t=e.touches[0];_zonaMouseDown.call(this,{clientX:t.clientX,clientY:t.clientY});}
+function _zonaTouchMove(e){e.preventDefault();const t=e.touches[0];_zonaMouseMove.call(this,{clientX:t.clientX,clientY:t.clientY});}
+function _zonaTouchEnd(e){e.preventDefault();const t=e.changedTouches[0];_zonaMouseUp.call(this,{clientX:t.clientX,clientY:t.clientY});}
+function _drawRect(canvas,x1,y1,x2,y2){
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='rgba(124,58,237,0.15)';ctx.fillRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));
+  ctx.strokeStyle='#7C3AED';ctx.lineWidth=2;ctx.setLineDash([5,3]);
+  ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1));
+}
+function _clearCanvas(){const c=document.getElementById('mep-zona-canvas');if(c){const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);}}
+function _confirmarZona(rect){
+  const campo=_zonaCampoActivo;if(!campo)return;
+  const img=document.getElementById('mep-doc-img');if(!img)return;
+  // Render zone label on canvas
+  const mainC=document.getElementById('mep-zona-canvas');
+  _drawRect(mainC,rect.x1,rect.y1,rect.x2,rect.y2);
+  const mCtx=mainC.getContext('2d');mCtx.fillStyle='#7C3AED';mCtx.font='bold 12px sans-serif';
+  mCtx.fillText('📍 '+campo.label,rect.x1+4,Math.max(14,rect.y1-4));
+  // Extract sub-image
+  const c2=document.createElement('canvas');c2.width=Math.max(1,rect.x2-rect.x1);c2.height=Math.max(1,rect.y2-rect.y1);
+  c2.getContext('2d').drawImage(img,rect.x1,rect.y1,c2.width,c2.height,0,0,c2.width,c2.height);
+  const zonaImg=c2.toDataURL('image/jpeg',0.95);
+  showSM('mep-sm','ok','🔍 Leyendo zona "'+campo.label+'"...');
+  _leerZonaConIA(zonaImg,campo).then(texto=>{
+    if(texto){
+      const el=document.getElementById(campo.id);
+      if(el){el.value=texto.trim();el.style.background='#f0fdf4';el.style.borderColor='#22c55e';}
+      showSM('mep-sm','ok','✅ "'+campo.label+'": '+texto.trim().slice(0,50));
+      _guardarZonaEnPlantilla(campo.id,campo.label,{
+        rectNorm:{x1:rect.x1/img.naturalWidth,y1:rect.y1/img.naturalHeight,x2:rect.x2/img.naturalWidth,y2:rect.y2/img.naturalHeight},
+        textoEjemplo:texto.trim()
+      });
+    } else {showSM('mep-sm','er','No se pudo leer texto. Intenta con una zona más grande o más nítida.');}
+    cancelarSeleccionZona();
+  }).catch(e=>{showSM('mep-sm','er','❌ '+e.message);cancelarSeleccionZona();});
+}
+async function _leerZonaConIA(zonaBase64,campo){
+  const prompt='Lee el texto de esta imagen (recorte de un albarán o factura). Campo: "'+campo.label+'". '
+    +'Devuelve SOLO el texto, sin explicaciones. Si es fecha usa YYYY-MM-DD. Si es número usa punto decimal. '
+    +'Si no hay texto legible devuelve exactamente: VACIO';
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
+    body:JSON.stringify({model:'meta-llama/llama-4-scout-17b-16e-instruct',max_tokens:80,temperature:0,
+      messages:[{role:'user',content:[{type:'image_url',image_url:{url:zonaBase64}},{type:'text',text:prompt}]}]})
+  });
+  if(!resp.ok)throw new Error('Error '+resp.status);
+  const data=await resp.json();
+  const txt=(data.choices?.[0]?.message?.content||'').trim();
+  return txt==='VACIO'?'':txt;
+}
+async function _guardarZonaEnPlantilla(campoId,campoLabel,zonaData){
+  const scNombre=document.getElementById('mep-sc-inp')?.value||'';if(!scNombre)return;
+  const id=_normalizarNombre(scNombre);
+  const existing=await cargarPlantilla(scNombre)||{};
+  const zonas=typeof existing.zonas==='object'&&existing.zonas?{...existing.zonas}:{};
+  zonas[campoId]={label:campoLabel,...zonaData,updated:new Date().toISOString()};
+  const key=SB_KEY();
+  await fetch(`${sbBase()}/rest/v1/plantillas_proveedor`,{
+    method:'POST',
+    headers:{'apikey':key,'Authorization':'Bearer '+key,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+    body:JSON.stringify({id,nombre:scNombre,zonas:zonas,updated_at:new Date().toISOString()})
+  }).catch(e=>console.warn('guardarZona:',e.message));
+  if(_plantillasCache[id])_plantillasCache[id].zonas=zonas;
+}
+function _mepSetupCanvasOnLoad(){
+  const img=document.getElementById('mep-doc-img');const canvas=document.getElementById('mep-zona-canvas');
+  const wrap=document.getElementById('mep-canvas-wrap');const bar=document.getElementById('mep-campos-bar');
+  if(!img||!canvas||!wrap)return;
+  wrap.style.display='inline-block';
+  const w=img.offsetWidth||img.naturalWidth,h=img.offsetHeight||img.naturalHeight;
+  canvas.width=w;canvas.height=h;canvas.style.width=w+'px';canvas.style.height=h+'px';
+  canvas.onmousedown=_zonaMouseDown;canvas.onmousemove=_zonaMouseMove;canvas.onmouseup=_zonaMouseUp;
+  canvas.ontouchstart=_zonaTouchStart;canvas.ontouchmove=_zonaTouchMove;canvas.ontouchend=_zonaTouchEnd;
+  if(bar){
+    bar.style.display='flex';
+    bar.querySelectorAll('.campo-btn').forEach(e=>e.remove());
+    _CAMPOS_ZONA.forEach(c=>{
+      const btn=document.createElement('button');btn.className='campo-btn';btn.textContent='📍 '+c.label;
+      btn.style.cssText='font-size:11px;padding:3px 9px;border-radius:12px;border:1px solid var(--bor);background:var(--bg);cursor:pointer;white-space:nowrap';
+      btn.onclick=()=>iniciarSeleccionZona(c.id,c.label);bar.appendChild(btn);
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  COMBOBOXES — PROVEEDORES, EXPEDIENTES, CENTROS DE COSTE
+// ══════════════════════════════════════════════════════════════
 
 function filtrarProveedoresEdit(q){
   const list=document.getElementById('combo-mep-sc');if(!list)return;
