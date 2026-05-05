@@ -3253,29 +3253,58 @@ function _clearCanvas(){const c=document.getElementById('mep-zona-canvas');if(c)
 function _confirmarZona(rect){
   const campo=_zonaCampoActivo;if(!campo)return;
   const img=document.getElementById('mep-doc-img');if(!img)return;
-  // Render zone label on canvas
+
+  // Scale rect from display coords to natural image coords
+  const scaleX=img.naturalWidth/img.offsetWidth;
+  const scaleY=img.naturalHeight/img.offsetHeight;
+  const nx1=rect.x1*scaleX, ny1=rect.y1*scaleY;
+  const nw=Math.max(1,(rect.x2-rect.x1)*scaleX), nh=Math.max(1,(rect.y2-rect.y1)*scaleY);
+
+  // Draw label on overlay canvas
   const mainC=document.getElementById('mep-zona-canvas');
   _drawRect(mainC,rect.x1,rect.y1,rect.x2,rect.y2);
-  const mCtx=mainC.getContext('2d');mCtx.fillStyle='#7C3AED';mCtx.font='bold 12px sans-serif';
-  mCtx.fillText('📍 '+campo.label,rect.x1+4,Math.max(14,rect.y1-4));
-  // Extract sub-image
-  const c2=document.createElement('canvas');c2.width=Math.max(1,rect.x2-rect.x1);c2.height=Math.max(1,rect.y2-rect.y1);
-  c2.getContext('2d').drawImage(img,rect.x1,rect.y1,c2.width,c2.height,0,0,c2.width,c2.height);
+  const mCtx=mainC.getContext('2d');
+  mCtx.fillStyle='#7C3AED';mCtx.font='bold 12px sans-serif';
+  mCtx.fillText('📍 '+campo.label,rect.x1+4,Math.max(16,rect.y1-4));
+
+  // Extract sub-image using natural coords
+  const c2=document.createElement('canvas');
+  c2.width=Math.round(nw); c2.height=Math.round(nh);
+  c2.getContext('2d').drawImage(img, Math.round(nx1), Math.round(ny1), Math.round(nw), Math.round(nh), 0, 0, Math.round(nw), Math.round(nh));
   const zonaImg=c2.toDataURL('image/jpeg',0.95);
+
+  console.log('[Zona] Extrayendo campo "'+campo.label+'" rect natural:', nx1.toFixed(0), ny1.toFixed(0), nw.toFixed(0)+'x'+nh.toFixed(0));
   showSM('mep-sm','ok','🔍 Leyendo zona "'+campo.label+'"...');
+
   _leerZonaConIA(zonaImg,campo).then(texto=>{
-    if(texto){
+    console.log('[Zona] Groq devolvió:', repr(texto));
+    if(texto&&texto!=='VACIO'){
       const el=document.getElementById(campo.id);
-      if(el){el.value=texto.trim();el.style.background='#f0fdf4';el.style.borderColor='#22c55e';}
+      if(el){
+        el.value=texto.trim();
+        el.style.background='#f0fdf4';
+        el.style.borderColor='#22c55e';
+        // Restore normal style after 3 seconds
+        setTimeout(()=>{el.style.background='';el.style.borderColor='';},3000);
+      }
       showSM('mep-sm','ok','✅ "'+campo.label+'": '+texto.trim().slice(0,50));
       _guardarZonaEnPlantilla(campo.id,campo.label,{
-        rectNorm:{x1:rect.x1/img.naturalWidth,y1:rect.y1/img.naturalHeight,x2:rect.x2/img.naturalWidth,y2:rect.y2/img.naturalHeight},
+        rectNorm:{x1:rect.x1/img.offsetWidth,y1:rect.y1/img.offsetHeight,
+                  x2:rect.x2/img.offsetWidth,y2:rect.y2/img.offsetHeight},
         textoEjemplo:texto.trim()
       });
-    } else {showSM('mep-sm','er','No se pudo leer texto. Intenta con una zona más grande o más nítida.');}
+    } else {
+      showSM('mep-sm','er','⚠️ No se pudo leer texto en esa zona. Selecciona una zona más grande o intenta con otra área.');
+    }
     cancelarSeleccionZona();
-  }).catch(e=>{showSM('mep-sm','er','❌ '+e.message);cancelarSeleccionZona();});
+  }).catch(e=>{
+    console.error('[Zona] Error:', e.message);
+    showSM('mep-sm','er','❌ '+e.message);
+    cancelarSeleccionZona();
+  });
 }
+
+function repr(s){return JSON.stringify(s||'(vacío)');}
 async function _leerZonaConIA(zonaBase64,campo){
   const prompt='Lee el texto de esta imagen (recorte de un albarán o factura). Campo: "'+campo.label+'". '
     +'Devuelve SOLO el texto, sin explicaciones. Si es fecha usa YYYY-MM-DD. Si es número usa punto decimal. '
