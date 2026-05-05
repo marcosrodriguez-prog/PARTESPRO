@@ -2706,14 +2706,17 @@ async function analizarDocumento(){
       try{
         const resArr=await _analizarUno(archivo.data,archivo.type);
         if(resArr) resArr.forEach(r=>todosResultados.push({...r,_archivo:archivo.name,_imgBase64:'data:'+archivo.type+';base64,'+archivo.data}));
-      }catch(e){console.warn('Error imagen:',e.message);}
+      }catch(e){
+        showSM('ia-sm','er','❌ '+e.message);
+        console.error('Error imagen:',e.message);
+      }
       if(fi<iaFiles.length-1) await new Promise(r=>setTimeout(r,2000));
     }
   }
 
   if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✨ Analizar y crear albaranes';}
 
-  if(!todosResultados.length){ showSM('ia-sm','er','❌ No se pudo extraer datos. Prueba con una imagen más clara.'); return; }
+  if(!todosResultados.length){ showSM('ia-sm','er','❌ No se pudo extraer datos. Revisa la consola (F12) para ver el error exacto.'); return; }
 
   // Single result → fill form manually
   if(todosResultados.length===1){
@@ -3319,7 +3322,7 @@ async function _analizarUno(overrideData, overrideMime){
     method:'POST',
     headers:{'Authorization':'Bearer '+getGroqKey(),'Content-Type':'application/json'},
     body:JSON.stringify({
-      model:'meta-llama/llama-4-maverick-17b-128e-instruct',
+      model:'meta-llama/llama-4-scout-17b-16e-instruct',
       max_tokens:2000, temperature:0.1,
       messages:[{role:'user',content:[
         {type:'image_url',image_url:{url:'data:'+imageMime+';base64,'+imageBase64}},
@@ -3331,20 +3334,29 @@ async function _analizarUno(overrideData, overrideMime){
     const err=await resp.json().catch(()=>({}));
     const msg=err?.error?.message||'Error '+resp.status;
     if(resp.status===429) throw new Error('Límite de tokens Groq alcanzado. Espera unos minutos e inténtalo de nuevo.');
+    if(resp.status===404) throw new Error('Modelo no disponible. Contacta con soporte.');
     throw new Error(msg);
   }
   const data=await resp.json();
   const text=data.choices?.[0]?.message?.content||'';
+  if(!text){
+    console.error('[Groq] Respuesta vacía:', JSON.stringify(data).slice(0,200));
+    throw new Error('Groq no devolvió respuesta. Inténtalo de nuevo.');
+  }
   const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+  console.log('[Groq] Respuesta (primeros 300 chars):', clean.slice(0,300));
   let results;
   try{
     const parsed=JSON.parse(clean);
     results=Array.isArray(parsed)?parsed:[parsed];
   }catch(e){
     const arrMatch=clean.match(/\[[\s\S]*\]/);
-    if(arrMatch){try{const a=JSON.parse(arrMatch[0]);results=Array.isArray(a)?a:[a];}catch(e2){}}
-    if(!results){const objMatch=clean.match(/\{[\s\S]*\}/);if(objMatch){try{results=[JSON.parse(objMatch[0])];}catch(e2){}}}
-    if(!results) return null;
+    if(arrMatch){try{const a=JSON.parse(arrMatch[0]);results=Array.isArray(a)?a:[a];}catch(e2){console.warn('[Groq] Array parse failed:',e2.message);}}
+    if(!results){const objMatch=clean.match(/\{[\s\S]*\}/);if(objMatch){try{results=[JSON.parse(objMatch[0])];}catch(e2){console.warn('[Groq] Object parse failed:',e2.message);}}}
+    if(!results){
+      console.error('[Groq] No se pudo parsear JSON. Respuesta completa:', clean.slice(0,500));
+      throw new Error('Groq devolvió texto no estructurado: "'+clean.slice(0,100)+'"');
+    }
   }
 
   // If we got results and have a named provider, try to improve with provider-specific template
